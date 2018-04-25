@@ -219,8 +219,9 @@ TEMPLATES = [
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
-ADMIN_URL = r'^admin/'
+ADMIN_URL = 'admin/'
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
+# This will be used for logging when Debug is False
 ADMINS = [
     ("""Vadim Frolov""", 'mail@vadimfrolov.com'),
 ]

@@ -20,5 +20,5 @@ from django.contrib import admin
 app_name = 'rundatanet'
 urlpatterns = [
     path('', include('rundatanet.runes.urls', namespace='runes')),
-    path('admin/', admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
 ]
