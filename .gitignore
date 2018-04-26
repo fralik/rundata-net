@@ -283,6 +283,7 @@ pip-selfcheck.json
 
 
 
-rundata_net/media/
+rundatanet/media/
 
-
+# do not put environment file under version control!
+.env
