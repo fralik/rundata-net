@@ -827,25 +827,27 @@ function displaySignatureInfo() {
     // NB: check if preparing correct id and querring for all parents at once is faster
     let contents = db.exec("SELECT * FROM all_data where signatureId = '" + row + "'");
 
-    // handle map marker
-    let marker = [];
-    if (row in mapMarkers) {
-      marker = mapMarkers[row];
-    } else {
-      let latIdx = contents[0].columns.indexOf('latitude');
-      let lonIdx = contents[0].columns.indexOf('longitude');
-      let lat = parseFloat(contents[0].values[0][latIdx]);
-      let lon = parseFloat(contents[0].values[0][lonIdx]);
-      if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
-        marker = new L.marker([lat, lon]);
-        let popupText = "<b>" + contents[0].values[0][0] + "</b>";
-        marker.bindPopup(popupText);
-        mapMarkers[row] = marker;
+    if ($('#mapDisplay').is(':visible')) {
+      // handle map marker only if map is visible
+      let marker = '';
+      if (row in mapMarkers) {
+        marker = mapMarkers[row];
+      } else {
+        let latIdx = contents[0].columns.indexOf('latitude');
+        let lonIdx = contents[0].columns.indexOf('longitude');
+        let lat = parseFloat(contents[0].values[0][latIdx]);
+        let lon = parseFloat(contents[0].values[0][lonIdx]);
+        if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
+          marker = new L.marker([lat, lon]);
+          let popupText = "<b>" + contents[0].values[0][0] + "</b>";
+          marker.bindPopup(popupText);
+          mapMarkers[row] = marker;
+        }
       }
-    }
-    if (marker instanceof Object) {
-      marker.addTo(myMap);
-      markersLatLon.push(marker.getLatLng());
+      if (marker instanceof Object) {
+        marker.addTo(myMap);
+        markersLatLon.push(marker.getLatLng());
+      }
     }
 
     let paragraph = '';
