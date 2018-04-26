@@ -1,0 +1,75 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{% static 'css/runinskrifter_style.css' %}" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+    <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
+
+    <style type="text/css">
+      .responsive {
+        width: 100%;
+        height: auto;
+      }
+    </style>
+    <title>Rundata.info - about</title>
+  </head>
+  <body>
+    <header><h1>Rundata.info introduction</h1></header>
+    <section id="about">
+      <h1>About</h1>
+      <p>Hello and welcome ​to Rundata.info website. This is a web version of <a href="http://www.nordiska.uu.se/forskn/samnord.htm/?languageId=1">​​​Scandinavian Runic-text Data Base</a> also known as <abbr title="Samnordisk runtextdatabas">SRDB</abbr>. I will refer to the original database program as Rundata and this web version as Rundata-net. So Rundata-net is available at web address http://www.rundata.info. The database contains information about runic inscriptions discovered mostly in Nordic countries (Scandinavia, Iceland, Scotland, Russia, e.t.c.). This is a close adaptation of original Rundata. Although the interface of Rundata-net is in English (more languages will be available in the future), the database contains a lot of textual information and location descriptions in Swedish. This means that if you do not speak ​​Swedish, then you might struggle to get all the information.</p>
+
+      <p>​​The source code of Rundata-net is open and provided under the terms of GNU GPL license, which ensures that the source code stays open. You can obtain the code from Gitlab repository <a href="https://gitlab.com/fralik/rundata-net">rundata-net</a>. By doing so you are able to run a version of Rundata-net the way you like it: on you own machine, on your dedicated server or in the cloud. It's up to you! You have all the freedom.</p>
+
+      <p>The access to Rundata.info website is provided free of charge for now. There are plans to introduce subscriptions to cover the running costs.</p>
+    </section>
+
+    <section>
+      <h1>Quick overview</h1>
+      <p>Rundata-net is an interface to database. Since the database doesn't change very often I adopted a rather radical approach in constructing this website. Most of the site functions are executed inside user's browser, including the database. When you open the main page, it takes some time to load the site. This is the point where the database is transfered to you. Once it is transfered, the rest of functionality should be quick.</p>
+      <p>Rundata-net consists of several panels.<br>
+      <img src="{% static 'images/panels.jpg' %}" alt="main interface panels" class="responsive">From left to right and from top to bottom:
+        <ol>
+          <li>List of inscription aliases. ​It's a tree view where each node corresponds to individual inscription. Some inscriptions have child node which are aliases. An alias is simply a different ID of a particular inscription. Aliases contains the same information as their parent. If you select one or multiple inscriptions then the information about them in displayed in panel #2 (main display). There are around 10 000 inscriptions in the database. I guess no one would want to select all of them at once, so their display is organized in pages. Each page contains maximum of 50 inscriptions. This is called pagination. When you do a search, chances are that you will end up with less than 50 inscriptions, so they all will be available for selection on a single page.
+          <p>Below the list of inscriptions you will see a status box saying how many inscription is available for selection.</p>
+          <p>​Pagination control. Allows you to navigate through pages.</p>
+          </li>
+
+          <li>​Main display. This is a text are that will show information about selected inscriptions. It is possible to adjust what kind of information will be selected. Use 'show display format dialog' button for this. The main display imitates editable behaviour. This means that if you click on it, you are able to type in or delete text. This is done in order to support keyboard navigation and shortcuts for text: select all, copy, paste.</li>
+
+          <li>​Map. Shows a place mark for selected inscriptions if coordinates are available. It shows the found location of inscription and not the current location. It is known, that some coordinates are wrong. Since Rundata-net is simply a different view program for SMDB, it inherits SMDB's flaws.
+          </li>
+
+          <li>​Horizontal panel of control elements and buttons.
+            <p><code>​Apply filter(s)</code>. A check box that control filters are applied or not. When user searches for something in the database, she essentially filters inscriptions. Hence the name.</p>
+            <p><code>Show display format dialog</code> button toggles the display format dialog. On that dialog you can select what information will be shown on the main display.</p>
+            <p><code>Hide map</code> button. Does what it says.</p>
+          </li>
+
+          <li>​Query builder. This is the area where you will build your queries/searches/filters to the database. A query consists of rules, which can be grouped into groups. Groups and rules are connected by gray lines helping you to trace the relations. Each group has a set of logical operators in it's upper left corner: NOT, AND, OR. They describe how rules inside the group are combined together (AND, OR) and if the group condition should be inversed (NOT). Each rule consists of a filter name, which is followed by operators and value fields. You can see various search example in 'How to search section'. You can create, delete and rearrange rules/groups with drag and drop.
+            <p>The idea behind query builder was to make it user friendly. Search in the original Rundata is performed with help of regular expressions. This is a powerful tool when you master it. It allows one to search by writing such beauties as {b/t}{a/o}. You might need more clicks and a bit more typing with a query builder, but the representation of rules in query builder is more user friendly.</p>
+          </li>
+        </ol>
+      </p>
+    </section>
+
+    <section id="ack">
+      <h1>Acknowledgements</h1>
+      <p>This project won't be possible without help of:
+        <ul>
+          <li><a href="mailto:sofia.pereswetoff-morath@su.se">Sofia Pereswetoff-Morath</a>. Sofia provided scientific input and encouragement.</li>
+          <li><a href="http://runbloggen.gamlebo.se/">Jan Owe</a>. Jan is the maintainer of the original Rundata program and the database.</li>
+          <li><a href="https://www.runinskrifter.net">Marcus Smith</a>. Marcus developed perhaps the first web version of Rundata. I used his website for inspiration and style.</li>
+        </ul>
+      </p>
+    </section>
+  </body>
+</html>

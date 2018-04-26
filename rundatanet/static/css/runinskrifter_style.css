@@ -1,0 +1,433 @@
+html {
+	height: 100%;
+}
+
+body {
+	height: 95%;
+	width: 80%;
+	margin: 0px;
+	padding: 0.5% 2% 1% 2%;
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', Verdana, Helvetica, sans-serif;
+	font-size: 12pt;
+	text-rendering: optimizeLegibility;
+}
+
+body > header > h1,
+body > h1,
+body > header > h1 > a,
+body > h1 > a {
+	font-family: 'Linux Libertine', 'Garamond', Junicode, JunicodeRegular, Junicode-Regular, 'Baskerville', serif;
+	font-size: 24pt;
+	margin: 0.2em 0px;
+	color: #000000;
+	text-decoration: none;
+}
+
+body > header > h2,
+body > h2,
+section > h1 {
+	font-family: 'Linux Libertine', 'Garamond', Junicode, JunicodeRegular, Junicode-Regular, 'Baskerville', serif;
+	font-size: 18pt;
+	margin: 0px 0px 0px 0px;
+	padding: 0.3em 0px;
+	color: #000000;
+	text-decoration: none;
+}
+
+section > h1 {
+	margin: 0px 0px 0px -1%;
+}
+
+body > header > h2,
+body > h2 {
+	margin: 0px 0px 0px 0px;
+}
+
+.signum a { /* Bloody Google Maps! */
+	font-family: inherit !important;
+	font-weight: inherit !important;
+	font-size: inherit !important;
+}
+
+.signum {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', Verdana, Helvetica, sans-serif;
+	font-weight: bold;
+}
+
+body > header > h3,
+body > h3,
+section > h2 {
+	font-family: 'Linux Libertine', 'Garamond', Junicode, JunicodeRegular, Junicode-Regular, 'Baskerville', serif;
+	font-size: 16pt;
+	margin: 0.6em 0px 0.2em -1%;
+	font-style: italic;
+	color: #000000;
+	text-decoration: none;
+}
+
+h1 span {
+	font-family: "Goudy Old Style", "Baskerville", Junicode, JunicodeRegular, Junicode-Regular, Garamond, "Hoefler Text", "Palatino", "Book Antiqua", "Berling Antiqua", "Berling Antikva", serif;
+	font-style: italic;
+	font-size: 1.1em;
+	color: #666666;
+	}
+
+section {
+	padding-left: 1%;
+}
+
+section.details {
+	max-width: 50%;
+}
+
+section#linked-images {
+	max-width: 100%;
+}
+
+section#linked-images figure {
+	position: relative;
+	width: 225px;
+	padding: 10px;
+	margin: 5px;
+	display: inline-block;
+}
+
+/* 80% vertical seperator */
+section#linked-images figure:before {
+    content:"";
+    position: absolute;
+	background: #999999;
+    bottom: 10%;
+    left: 0;
+    height: 80%;
+    width: 1px;
+}
+
+/* 80% horizontal seperator */
+section#linked-images figure:after {
+    content:"";
+    position: absolute;
+	background: #999999;
+    bottom: 0;
+    left: 10%;
+    height: 1px;
+    width: 80%;
+}
+section#linked-images figure img {
+	width: 200px;
+	border: solid 1px #999999;
+	margin: 4px auto;
+	display: block;
+}
+
+section#linked-images figure img.license {
+	width: 80px;
+	height: 15px;
+	border: 0;
+	padding: 2px 0;
+	margin: 2px 0;
+	display: inline-block;
+}
+
+ul.bibliography {
+	text-indent: -1.75em;
+	list-style-type: none;
+}
+
+#map_canvas {
+	height: 75%;
+	margin: 0px 0px 2% 0px;
+}
+
+#messages {
+	color: red;
+	height: 2em;
+	clear: both;
+}
+
+#messages + * {
+	clear: both;
+}
+
+#hits {
+	float: right;
+}
+
+#date-tpq,
+#date-taq,
+.dates {
+	border: 0;
+	color: #990000;
+	font-weight: bold;
+	font-size: 10pt;
+}
+
+input#date-tpq,
+input#date-taq {
+	display: inline;
+	width: 7.2ex;
+	text-align: center;
+}
+
+div#slider div.ui-widget-header,
+div#slider div.ui-slider-range {
+	background-color: #990000;
+	background-image: -webkit-linear-gradient(left, #C53333, #990000);
+	background-image: linear-gradient(to left, #990000, #C53333);
+}
+
+p#range-min,
+p#range-max {
+	margin: 2px 0px;
+}
+
+p#range-max {
+	float: right;
+}
+
+fieldset {
+	float: left;
+	margin-top: 8px;
+}
+
+fieldset#material {
+	clear: left;
+}
+
+p {
+	margin: 0.8em 0 0.4em 0;
+}
+
+p.signum {
+	margin-top: 0px;
+	font-size: 12pt;
+}
+
+p.place,
+dd.place {
+	font-size: 12pt;
+	font-family: 'Linux Libertine', 'Garamond', Junicode, JunicodeRegular, Junicode-Regular, 'Baskerville', serif;
+}
+
+p.right {
+	float: right;
+	clear: none;
+}
+
+abbr[title] {
+	border-bottom: dashed 1px #999999;
+}
+
+body > footer {
+	margin: 8px 0px;
+	padding-bottom: 5px;
+	border-top: solid 2px #999999;
+	clear: both;
+}
+
+body > footer,
+#messages,
+p.toggle,
+.small {
+	font-size: 8pt;
+}
+
+li {
+	margin: 0 0 0.25em 0;
+}
+
+dt,
+.selected {
+	font-weight: bold;
+}
+
+dt, dd { /* Put definition entries on the same line */
+	display: inline;
+	margin: 0;
+}
+
+dd:after { /* Put definition entries on the same line */
+	content: '\A';
+	white-space: pre;
+}
+
+aside,
+cite,
+.previously {
+	font-style: italic;
+}
+
+span.null {
+	font-weight: bold;
+	color: #CCCCCC;
+}
+
+table.styles,
+table.crossforms,
+table.crosses,
+section#coordinates table {
+	text-align: center;
+	border-collapse: collapse;
+}
+table.crosses,
+section#coordinates table {
+	margin-left: 1.5em;
+}
+table.styles,
+table.crossforms {
+	margin: 2em 0.75em;
+}
+table.styles th:first-child,
+table.crossforms th:first-child,
+table.crosses thead th:first-child,
+section#coordinates table thead th:first-child,
+section#coordinates table tbody td:first-child {
+	border-left: none;
+}
+table.crosses thead th:first-child,
+section#coordinates table tbody td {
+	text-align: right;
+}
+table.styles tr td,
+table.crossforms tbody td,
+table.crosses tbody>tr,
+section#coordinates table tbody>tr {
+	border-top: solid 1px #999999;
+}
+table.styles tr:first-child td,
+table.crosses tbody:only-child>tr,
+section#coordinates table tbody:only-child>tr {
+	border-top: none;
+}
+table.styles tr td {
+	border-bottom: solid 1px #999999;
+}
+table.styles tr:last-child td {
+	border-bottom: none;
+}
+table.styles thead th,
+table.crossforms thead th,
+table.crosses tbody td,
+table.crosses thead th,
+section#coordinates table tbody td,
+section#coordinates table thead th {
+	border-left: solid 1px #999999;
+	padding: 0.25em;
+}
+table.styles tbody td,
+table.crossforms tbody td {
+	border-left: solid 1px #999999;
+	padding: 0px;
+	margin: 0px;
+}
+table.styles thead th,
+table.crossforms thead th {
+	font-size: 14pt;
+}
+table.styles tbody th,
+table.crossforms tbody th {
+	font-size: 18pt;
+}
+table.styles tbody th {
+	min-width: 3.25em;
+}
+table.styles th,
+table.crossforms th {
+	padding: 0.25em;
+	min-width: 1.25em;
+}
+
+section#coordinates table thead th.osgridref,
+section#coordinates table tbody td.osgridref {
+	padding-right: 0.75em;
+}
+
+table.styles td:first-of-type,
+table.crossforms th:nth-child(2),
+table.crossforms td:first-of-type,
+section#coordinates table thead th.osgridref~th:nth-child(2),
+section#coordinates table tbody td.osgridref~td:nth-child(2) {
+	border-left: double 3px #999999;
+}
+
+section#coordinates {
+	float: right;
+	margin-right: 18%;
+	padding-left: 1em;
+	border-left: dashed 1px #999999;
+}
+
+section#coordinates h1 {
+	margin: 0px 0px 0.2em -1%;
+}
+
+section#coordinates figure {
+	margin: 1em 0px 0.25em 0px;
+	padding: 0.25em;
+	border: solid 1px #999999;
+	background: #F0FCFF;
+	text-align: right;
+	min-width: 30em;
+}
+
+section#coordinates figure figcaption {
+	display: block;
+	float: left;
+	clear: both;
+	font-weight: bold;
+	padding: 0.25em;
+	margin-right: 0.5em;
+	min-width: 10.5em;
+}
+
+img#cross {
+	float: left;
+}
+
+section#certain,
+section#uncertain {
+	float: left;
+	margin-right: 6%;
+	padding-left: 1em;
+	max-width: 33%;
+}
+
+img#cross + section#certain,
+img#cross + section#uncertain {
+	clear: left;
+}
+
+.hash {
+	font-family: "DejaVu Sans Mono", Monaco, Consolas, "Courier Prime", "Courier New", Courier, monospace;
+}
+
+button.toggle {
+	margin: 13px 0px;
+	float: right;
+}
+
+figure div.timeline-event-tape {
+	background-color: #990000;
+}
+
+/* MONSPACED TEXT */
+pre,
+tt,
+code,
+samp,
+kbd {
+	font-family: "DejaVu Sans Mono", Monaco, Consolas, "Courier Prime", "Courier New", Courier, monospace;
+	font-size: 0.8em;
+	}
+
+var {
+	font-style: italic;
+	}
+
+var:before {
+	content: "<";
+}
+
+var:after {
+	content: ">";
+}
