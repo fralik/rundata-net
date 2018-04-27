@@ -42,7 +42,7 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://localhost/rundatanet'),
     'runes_db': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(APPS_DIR.path('static').path('runes.sqlite3')),
+        'NAME': str(APPS_DIR.path('static').path('runes').path('runes.sqlite3')),
     }
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
