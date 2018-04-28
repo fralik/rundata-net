@@ -143,6 +143,9 @@ class MetaInformation(models.Model):
     class Meta:
         db_table = 'meta_information'
 
+    def __str__(self):
+        return "Meta for {}".format(self.signature.signature.signature_text)
+
 class SignatureMetaRelation(models.Model):
     signature = models.OneToOneField(Signature,
         on_delete = models.CASCADE,

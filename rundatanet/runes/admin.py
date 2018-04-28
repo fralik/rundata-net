@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy
 
 # Register your models here.
 from .models import *
@@ -27,4 +28,42 @@ export_csv.short_description = u"Export CSV"
 class MyModelAdmin(admin.ModelAdmin):
     actions = [export_csv]
 
+class ImageInline(admin.TabularInline):
+    model=ImageLink
+    extra = 3
+
+class SignatureInline(admin.TabularInline):
+    """docstring for SignatureInline"""
+    model = SignatureMetaRelation
+    extra = 1
+    readonly_fields = ('signature',)
+    can_delete = False
+
+
+class MetaInformationAdmin(MyModelAdmin):
+    inlines = [SignatureInline, ImageInline]
+    fieldsets = (
+        (None,          {'fields': (('lost', 'new_reading'),)}),
+        ('Object',      {'fields': ('dating', 'rune_type', 'style', 'carver', 'material', 'materialType')}),
+        ('Location',    {'fields': ('found_location', 'parish', 'district', 'municipality', 'original_site', 'parish_code')}),
+        ('Coordinates', {'fields': (('latitude', 'longitude'), ('present_latitude', 'present_longitude'),)}),
+        ('Other',       {'fields': ('objectInfo', 'additional', 'reference')}),
+    )
+    change_form_template = 'admin/change_form_meta.html'
+
 admin.site.register(CrossForm)
+admin.site.register(Signature)
+admin.site.register(CrossDefinition);
+admin.site.register(Cross);
+admin.site.register(MaterialType);
+admin.site.register(Material);
+admin.site.register(MetaInformation, MetaInformationAdmin);
+admin.site.register(SignatureMetaRelation);
+admin.site.register(ImageLink);
+admin.site.register(NormalisationNorse);
+admin.site.register(NormalisationScandinavian);
+admin.site.register(TransliteratedText);
+admin.site.register(TranslationEnglish);
+
+admin.site.site_header = ugettext_lazy('Rundata-net administration')
+admin.site.site_title = ugettext_lazy('Rundata-net admin')
