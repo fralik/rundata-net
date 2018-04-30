@@ -2,7 +2,7 @@
 Rundata-net
 ###########
 
-Rundata-net is a web version of `Scandinavian Runic-text Data Base`_. It is written in Python/Django and uses JavaScript (jQuery) extensively.
+Rundata-net is a web version of `Scandinavian Runic-text Data Base`_ (SRDB). It is written in Python/Django and uses JavaScript (jQuery) extensively.
 
 The original Rundata app is a desktop application with native support of Windows platform only. I first wrote a cross-platform version, `Rundata-qt`_, in C++/Qt, but after a while decided to give web version a try. Merely as a proof of concept in the beginning. As for now, Rundata-net supersedes Rundata-qt.
 
@@ -10,9 +10,24 @@ Rundata-net tries to be a close clone of Rundata. This means that I didn't try t
 
 There is a website that runs the latest version of Rundata-net. You can find it at https://www.rundata.info. Just to be clear, ``Rundata-net`` is the name of this project. ``www.rundata.info`` is a website that runs ``Rundata-net``. The source code of ``Rundata-net`` is provided under the terms of GNU GPLv3 license. This means that you can grab a copy of ``Rundata-net`` and run it on your website or local machine.
 
-Just a couple of words about how ``Rundata-net`` works. It is a single page application (SPA) that runs in your browser. It has a server side and a client side. Server side is powered by Django, but it is not used for a lot of things now. The client side is where all the magic happens. I took a quite radical approach regarding the database (some might event call it *wrong*). Because the database is known not to change very often, I decided to expose it to the client size completely. So that, once loaded, there are no server requests to search the database. I plan to continue with this approach when I introduce user settings. Modern browsers can do a lot of things inside them, so why not use this?! Of course, this has potential limitations on user's hardware. However, modern smartphones are so powerful that handling a small database like SRDB in the browser is not a problem at all. Because of this client size processing, the loading of the website takes some time.
+Just a couple of words about how ``Rundata-net`` works. It is a single page application (SPA) that runs in your browser. It has a server side and a client side. Server side is powered by Django, but it is not used for a lot of things now. The client side is where all the magic happens. I took a quite radical approach regarding the database (some might even call it *wrong*). Because the database is known not to change very often, I decided to expose it to the client side completely. So that, once loaded, there are no server requests to search the database. I plan to continue with this approach when I introduce user settings. Modern browsers can do a lot of things inside them, so why not use this?! Of course, this has potential limitations on user's hardware. However, modern smartphones are so powerful that handling a small database like SRDB in the browser is not a problem at all. Because of this client size processing, the loading of the website takes some time.
 
-The client side utilizes a lot of excellent Javascript libraries.
+The client side utilizes a lot of excellent Javascript libraries. Here is the list of external libraries and frameworks used on the client side in no particular order:
+
+* `Bootstrap <https://getbootstrap.com/>`_, released under `MIT <https://github.com/twbs/bootstrap/blob/master/LICENSE>`_.
+* `jQuery <https://jquery.com/>`_, released under `MIT <https://jquery.org/license/>`_.
+* `jQuery UI <https://jqueryui.com/>`_, released under `MIT <https://jquery.org/license/>`_.
+* `jsTree <https://www.jstree.com/>`_, released under `MIT <https://raw.githubusercontent.com/vakata/jstree/master/LICENSE-MIT>`_.
+* `Leaflet <http://leafletjs.com/>`_, released under `BSD-2-Clause <https://github.com/Leaflet/Leaflet/blob/master/LICENSE>`_.
+* `Simple pagination <https://github.com/flaviusmatis/simplePagination.js>`_, released under `MIT <https://github.com/flaviusmatis/simplePagination.js/blob/master/LICENSE.txt>`_.
+* `jQuery autoComplete <https://github.com/Pixabay/jQuery-autoComplete>`_, released under MIT.
+* `Font Awesome <https://fontawesome.com/>`_, `has various licenses <https://fontawesome.com/license>`_ for different parts.
+* `jQuery QueryBuilder <https://querybuilder.js.org>`_, released under `MIT <https://github.com/mistic100/jQuery-QueryBuilder/blob/dev/LICENSE>`_.
+* `Awesome Bootstrap Checkbox <https://github.com/flatlogic/awesome-bootstrap-checkbox>`_, released under `MIT <https://github.com/flatlogic/awesome-bootstrap-checkbox/blob/master/LICENSE>`_.
+* `Bootbox.js <http://bootboxjs.com/>`_, released under `MIT <https://github.com/makeusabrew/bootbox/blob/master/LICENSE.md>`_.
+* `SQLite compiled to javascript <https://github.com/kripken/sql.js/>`_, released under `MIT <https://github.com/kripken/sql.js/blob/master/LICENSE>`_.
+* `jQuery Multiselect <http://crlcu.github.io/multiselect/>`_, released under `MIT <https://github.com/crlcu/multiselect/blob/master/LICENSE>`_.
+
 
 License
 -------
