@@ -246,3 +246,5 @@ MANAGERS = ADMINS
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# Whether to use Google Analytics or not.
+USE_GA = env.bool('USE_GA', False)

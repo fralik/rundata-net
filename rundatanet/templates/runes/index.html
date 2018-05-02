@@ -1,10 +1,21 @@
 {% load static %}
+{% load settings %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rundata-net</title>
+    {% get_from_settings 'USE_GA' as use_ga %}
+    {% if use_ga %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-116856737-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-116856737-2');
+    </script>
+    {% endif %}
 
     <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'runes/jstree/themes/default/style.min.css' %}" />
