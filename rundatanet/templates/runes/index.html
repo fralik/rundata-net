@@ -245,7 +245,7 @@ var rootIds = []; // Map of parent/root inscription IDs
 var rootsJson = []; // JSON representation for rootIds
 var sumRootChildren = 0; // number of all children signatures in current search
 var origianlSumRootChildren = 0; // reference of sumRootChildren, similar to originalData.
-var treeItemsPerPage = 50; // global variable for jsTree pagination
+var treeItemsPerPage = 100; // global variable for jsTree pagination
 var curPaginationPage = 1;
 var signatureNames = []; // names of all signatures in the DB
 var signaturesSelectize = [];
@@ -432,7 +432,7 @@ function applyFilters() {
   }
 
   console.log('Got SQL: ' + result.sql);
-  var contents = db.exec("SELECT signatureId, signature_text FROM all_data WHERE " + result.sql);
+  var contents = db.exec("SELECT signatureId, signature_text, lost, new_reading FROM all_data WHERE " + result.sql);
   if (contents.length == 0) {
     // no results
     rootsJson = [];
