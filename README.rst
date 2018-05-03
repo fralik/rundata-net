@@ -14,23 +14,24 @@ Just a couple of words about how ``Rundata-net`` works. It is a single page appl
 
 The client side utilizes a lot of excellent Javascript libraries. Here is the list of external libraries and frameworks used on the client side in no particular order:
 
-* `Bootstrap <https://getbootstrap.com/>`_, released under `MIT <https://github.com/twbs/bootstrap/blob/master/LICENSE>`_.
-* `jQuery <https://jquery.com/>`_, released under `MIT <https://jquery.org/license/>`_.
-* `jQuery UI <https://jqueryui.com/>`_, released under `MIT <https://jquery.org/license/>`_.
-* `jsTree <https://www.jstree.com/>`_, released under `MIT <https://raw.githubusercontent.com/vakata/jstree/master/LICENSE-MIT>`_.
-* `Leaflet <http://leafletjs.com/>`_, released under `BSD-2-Clause <https://github.com/Leaflet/Leaflet/blob/master/LICENSE>`_.
-* `Simple pagination <https://github.com/flaviusmatis/simplePagination.js>`_, released under `MIT <https://github.com/flaviusmatis/simplePagination.js/blob/master/LICENSE.txt>`_.
+* `Bootstrap <https://getbootstrap.com/>`_, released under :extlink:`MIT <https://github.com/twbs/bootstrap/blob/master/LICENSE>`.
+* `jQuery <https://jquery.com/>`_, released under :extlink:`MIT <https://jquery.org/license/>`.
+* `jQuery UI <https://jqueryui.com/>`_, released under :extlink:`MIT <https://jquery.org/license/>`.
+* `jsTree <https://www.jstree.com/>`_, released under :extlink:`MIT <https://raw.githubusercontent.com/vakata/jstree/master/LICENSE-MIT>`.
+* `Leaflet <http://leafletjs.com/>`_, released under :extlink:`BSD-2-Clause <https://github.com/Leaflet/Leaflet/blob/master/LICENSE>`.
+* `Simple pagination <https://github.com/flaviusmatis/simplePagination.js>`_, released under :extlink:`MIT <https://github.com/flaviusmatis/simplePagination.js/blob/master/LICENSE.txt>`.
 * `jQuery autoComplete <https://github.com/Pixabay/jQuery-autoComplete>`_, released under MIT.
-* `Font Awesome <https://fontawesome.com/>`_, `has various licenses <https://fontawesome.com/license>`_ for different parts.
-* `jQuery QueryBuilder <https://querybuilder.js.org>`_, released under `MIT <https://github.com/mistic100/jQuery-QueryBuilder/blob/dev/LICENSE>`_.
-* `Awesome Bootstrap Checkbox <https://github.com/flatlogic/awesome-bootstrap-checkbox>`_, released under `MIT <https://github.com/flatlogic/awesome-bootstrap-checkbox/blob/master/LICENSE>`_.
-* `Bootbox.js <http://bootboxjs.com/>`_, released under `MIT <https://github.com/makeusabrew/bootbox/blob/master/LICENSE.md>`_.
-* `SQLite compiled to javascript <https://github.com/kripken/sql.js/>`_, released under `MIT <https://github.com/kripken/sql.js/blob/master/LICENSE>`_.
-* `jQuery Multiselect <http://crlcu.github.io/multiselect/>`_, released under `MIT <https://github.com/crlcu/multiselect/blob/master/LICENSE>`_.
+* `Font Awesome <https://fontawesome.com/>`_, has various :extlink:`licenses <https://fontawesome.com/license>` for different parts.
+* `jQuery QueryBuilder <https://querybuilder.js.org>`_, released under :extlink:`MIT <https://github.com/mistic100/jQuery-QueryBuilder/blob/dev/LICENSE>`.
+* `Awesome Bootstrap Checkbox <https://github.com/flatlogic/awesome-bootstrap-checkbox>`_, released under :extlink:`MIT <https://github.com/flatlogic/awesome-bootstrap-checkbox/blob/master/LICENSE>`.
+* `Bootbox.js <http://bootboxjs.com/>`_, released under :extlink:`MIT <https://github.com/makeusabrew/bootbox/blob/master/LICENSE.md>`.
+* `SQLite compiled to javascript <https://github.com/kripken/sql.js/>`_, released under :extlink:`MIT <https://github.com/kripken/sql.js/blob/master/LICENSE>`.
+* `jQuery Multiselect <http://crlcu.github.io/multiselect/>`_, released under :extlink:`MIT <https://github.com/crlcu/multiselect/blob/master/LICENSE>`.
 
 
+*******
 License
--------
+*******
 
 Copyright (c) 2018, Vadim Frolov
 
@@ -47,17 +48,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see http://www.gnu.org/licenses/.
 
-:License: GPLv3
-
-================
+****************
 Acknowledgements
-================
+****************
 
 This project won't be possible without the help of:
 
 * `Sofia Pereswetoff-Morath`_. Sofia provided scientific input and encouragement.
 * `Jan Owe`_. Jan is the maintainer of the original Rundata program and the database.
 * `Marcus Smith`_. Marcus developed perhaps the first web version of Rundata. I used his website for inspiration and CSS styles.
+
+**********
+References
+**********
+
+.. target-notes::
 
 .. _`Scandinavian Runic-text Data Base`: http://www.nordiska.uu.se/forskn/samnord.htm/?languageId=1
 .. _`Rundata-qt`: https://bitbucket.org/fralik/rundata-qt

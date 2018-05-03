@@ -19,6 +19,7 @@ Getting started
    :maxdepth: 2
 
    getting-started/install
+   getting-started/user_guide
 
 
 Indices and tables
