@@ -52,11 +52,11 @@ From left to right and from top to bottom:
    or not. When user searches for something in the database, she essentially
    filters inscriptions. Hence the name.
 
-   :guilabel:`[Show display format dialog]` button toggles the display format
+   :guilabel:`Show display format dialog` button toggles the display format
    dialog. On that dialog you can select what information will be shown on
    the main display.
 
-   :guilabel:`[Hide map]` button. Does what it says.
+   :guilabel:`Hide map` button. Does what it says.
 
 #. ​Query builder. This is the area where you will build your
    queries/searches/filters to the database. A query consists of rules, which

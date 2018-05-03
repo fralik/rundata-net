@@ -827,16 +827,22 @@ function displaySignatureInfo() {
 
   let markersLatLon = [];
 
+  let properParents = [];
+  let jsTreeObj = $('#jstree').jstree(true);
   for (let i = 0; i < indices.length; i++) {
-    row = indices[i];
-    let parentId = $('#jstree').jstree(true).get_parent(row);
+    let row = indices[i];
+    let parentId = jsTreeObj.get_parent(row);
     if (parentId !== '#') {
       // if parent is not the tree root node, then the selected node is a child
       row = parentId;
     }
+    properParents.push(row);
+  }
 
-    // NB: check if preparing correct id and querring for all parents at once is faster
-    let contents = db.exec("SELECT * FROM all_data where signatureId = '" + row + "'");
+  let contents = db.exec("SELECT * FROM all_data where signatureId IN (" + properParents.join(',') + ")");
+
+  for (let i = 0; i < indices.length; i++) {
+    let row = properParents[i];
 
     if ($('#mapDisplay').is(':visible')) {
       // handle map marker only if map is visible
@@ -846,11 +852,11 @@ function displaySignatureInfo() {
       } else {
         let latIdx = contents[0].columns.indexOf('latitude');
         let lonIdx = contents[0].columns.indexOf('longitude');
-        let lat = parseFloat(contents[0].values[0][latIdx]);
-        let lon = parseFloat(contents[0].values[0][lonIdx]);
+        let lat = parseFloat(contents[0].values[i][latIdx]);
+        let lon = parseFloat(contents[0].values[i][lonIdx]);
         if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
           marker = new L.marker([lat, lon]);
-          let popupText = "<b>" + contents[0].values[0][0] + "</b>";
+          let popupText = "<b>" + contents[0].values[i][0] + "</b>";
           marker.bindPopup(popupText);
           mapMarkers[row] = marker;
         }
@@ -871,7 +877,7 @@ function displaySignatureInfo() {
       }
 
       if (userSelectedDisplay[j] == 'images') {
-        let dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[0][2] + "'");
+        let dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[i][2] + "'");
         let indirectImages = 'No images.';
         if (dbImages.length > 0) {
           indirectImages = '<ul>';
@@ -881,7 +887,7 @@ function displaySignatureInfo() {
           indirectImages += '</ul>';
         }
 
-        dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[0][2] + "' AND direct_url <> '' LIMIT 9");
+        dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[i][2] + "' AND direct_url <> '' LIMIT 9");
         if (dbImages.length == 0) {
           paragraph += indirectImages;
           continue;
@@ -906,7 +912,7 @@ function displaySignatureInfo() {
       }
 
       let columnIdx = contents[0].columns.indexOf(userSelectedDisplay[j]);
-      let columnData = contents[0].values[0][columnIdx];
+      let columnData = contents[0].values[i][columnIdx];
 
       if (jQuery.inArray(userSelectedDisplay[j], customColumns) != -1) {
         let cssStyle = 'normalization';
@@ -949,7 +955,7 @@ function displaySignatureInfo() {
 
       if (userSelectedDisplay[j] === 'crosses') {
         let numCrossesColumnIdx = contents[0].columns.indexOf('num_crosses');
-        let numCrosses = contents[0].values[0][numCrossesColumnIdx];
+        let numCrosses = contents[0].values[i][numCrossesColumnIdx];
         if (numCrosses == 0) {
           paragraph += 'No crosses';
           continue;
@@ -968,7 +974,7 @@ function displaySignatureInfo() {
         paragraph += '<tbody>';
 
         let metaIdIdx = contents[0].columns.indexOf('id');
-        let allCrosses = crossesForMeta(contents[0].values[0][metaIdIdx]);
+        let allCrosses = crossesForMeta(contents[0].values[i][metaIdIdx]);
 
         for (let k = 0; k < allCrosses.length; k++) {
           if (allCrosses[k][0].length > 0) {
@@ -1209,8 +1215,10 @@ $(function() {
       $('#loading').hide();
       applyPagination();
   })
-  .on('select_node.jstree', function(node, selected) {
-    displaySignatureInfo();
+  .on('changed.jstree', function(node, eventObj) {
+    if (eventObj.action == 'select_node') {
+      displaySignatureInfo();
+    }
   })
   .jstree({
       'core': {
