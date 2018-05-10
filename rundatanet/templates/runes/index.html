@@ -278,7 +278,7 @@ function applyPagination() {
   if (total == 0) {
     $('#lblNumAvailable').html('Sorry, no inscriptions has been found.');
   } else {
-    $('#lblNumAvailable').html(`Total ${total}: ${rootsJson.length} signatures + ${sumRootChildren} aliases.`);
+    $('#lblNumAvailable').html(`${rootsJson.length} signatures.`);
   }
 
   $('#mainDisplay').empty();
@@ -295,9 +295,9 @@ function dbToJson(columnNames, values, rootsWithChildren = null) {
 
   let dbJson = values.map(function(v, i) {
       var hasChildren = false;
-      if (rootsWithChildren !== null && rootsWithChildren.has(v[0])) {
-          hasChildren = true;
-      }
+      //if (rootsWithChildren !== null && rootsWithChildren.has(v[0])) {
+          //hasChildren = true;
+      //}
 
       let additional = '';
       if (lostIdx != -1 && newReadingIdx != -1) {
@@ -401,8 +401,18 @@ function selectizeFilter(fieldId) {
 }
 
 function prepareAutoComplete(fieldId) {
-  var str = `SELECT DISTINCT ${fieldId} FROM all_data WHERE ${fieldId} NOT NULL AND ${fieldId} <> '' ORDER BY ${fieldId} COLLATE NOCASE;`;
-  var contents = db.exec(str);
+  let contents = [];
+  if (fieldId.indexOf('normalisation') != -1) {
+    let str = `SELECT DISTINCT search_value FROM ${fieldId}`;
+    contents = db.exec(str);
+  } else if (fieldId.indexOf('runes_personalname') != -1) {
+    let str = `SELECT DISTINCT value FROM ${fieldId}`;
+    contents = db.exec(str);
+  } else {
+    let str = `SELECT DISTINCT ${fieldId} FROM all_data WHERE ${fieldId} NOT NULL AND ${fieldId} <> '' ORDER BY ${fieldId} COLLATE NOCASE;`;
+    contents = db.exec(str);
+  }
+
   return {
     id: fieldId,
     label: humanNameForColumnName(fieldId),
@@ -432,7 +442,7 @@ function applyFilters() {
   }
 
   console.log('Got SQL: ' + result.sql);
-  var contents = db.exec("SELECT signatureId, signature_text, lost, new_reading FROM all_data WHERE " + result.sql);
+  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data WHERE " + result.sql);
   if (contents.length == 0) {
     // no results
     rootsJson = [];
@@ -447,8 +457,9 @@ function applyFilters() {
 
   rootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
 
-  contents = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IN (SELECT signatureId FROM all_data WHERE " + result.sql + ")");
-  sumRootChildren = contents[0].values[0][0];
+  //contents = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IN (SELECT signatureId FROM all_data WHERE " + result.sql + ")");
+  //sumRootChildren = contents[0].values[0][0];
+  sumRootChildren = 0;
 }
 
 
@@ -461,15 +472,16 @@ function onDbLoaded(e) {
   db = new SQL.Database(uInt8Array);
 
   // get all root signatures (that are not aliases)
-  var contents = db.exec("SELECT signatureId, signature_text, lost, new_reading FROM all_data");
+  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
   var rootsWithChildren = db.exec("SELECT * FROM signatures_with_children");
   // make a hash map for quick read access
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
   rootIds = new Map(contents[0].values.map((v, i) => [v[0], 1]));
   rootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
-  sumRootChildren = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IS NOT NULL");
-  sumRootChildren = sumRootChildren[0].values[0][0];
+  //sumRootChildren = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IS NOT NULL");
+  //sumRootChildren = sumRootChildren[0].values[0][0];
+  sumRootChildren = 0;
 
   originalData = rootsJson;
   origianlSumRootChildren = sumRootChildren
@@ -599,14 +611,28 @@ function onDbLoaded(e) {
     prepareAutoComplete('dating'),
     prepareAutoComplete('carver'),
     prepareAutoComplete('material'),
-    prepareAutoComplete('norse_normalization'),
-    prepareAutoComplete('scandinavian_normalization'),
+    prepareAutoComplete('normalisation_norse'),
+    prepareAutoComplete('normalisation_scandinavian'),
     prepareAutoComplete('english_translation'),
     prepareAutoComplete('transliteration'),
     prepareAutoComplete('style'),
     prepareAutoComplete('reference'),
     prepareAutoComplete('additional'),
     prepareAutoComplete('objectInfo'),
+    prepareAutoComplete('runes_personalname'),
+    {
+      id: 'has_personal_name',
+      label: 'Has personal name?',
+      type: 'integer',
+      input: 'radio',
+      field: 'num_names',
+      values: [
+        {1: 'Yes'},
+        {0: 'No'}
+      ],
+      default_value: 1,
+      operators: ['equal'],
+    },
     {
       id: 'alternatives',
       label: 'Has alternative(s)?',
@@ -745,6 +771,13 @@ function onDbLoaded(e) {
     if (rule.id === 'signature_country') {
       e.value = "(" + rule.value.map(function (v, i) { return rule.field + " LIKE ('"+v+"%')"; }).join(' OR ') + ")";
     }
+    if (rule.id === 'has_personal_name') {
+      if (rule.value == 1) {
+        e.value = rule.field + '> 0';
+      } else {
+        e.value = rule.field + '= 0';
+      }
+    }
   })
   ;
 
@@ -799,11 +832,11 @@ function fetchTreeData(obj, cb) {
 
     // we do not check the boundaries!
     cb.call(this, rootsJson.slice(start, end));
-  } else {
+  }/* else {
     var contents = db.exec("SELECT * FROM signatures where parent_id = '" + obj.id + "'");
     var children = dbToJson(contents[0].columns, contents[0].values);
     cb.call(this, children);
-  }
+  }*/
 }
 
 function displaySignatureInfo() {
@@ -817,7 +850,7 @@ function displaySignatureInfo() {
   let indices = $('#jstree').jstree(true).get_selected();
 
   let finalText = '';
-  let customColumns = ['transliteration', 'english_translation', 'scandinavian_normalization', 'norse_normalization'];
+  let customColumns = ['transliteration', 'english_translation', 'normalisation_scandinavian', 'normalisation_norse'];
 
   const paragraphSymbol = '§';
   const sidesMarker = '§A';
@@ -839,7 +872,7 @@ function displaySignatureInfo() {
     properParents.push(row);
   }
 
-  let contents = db.exec("SELECT * FROM all_data where signatureId IN (" + properParents.join(',') + ")");
+  let contents = db.exec("SELECT * FROM all_data where signature_id IN (" + properParents.join(',') + ")");
 
   for (let i = 0; i < indices.length; i++) {
     let row = properParents[i];
@@ -850,11 +883,13 @@ function displaySignatureInfo() {
       if (row in mapMarkers) {
         marker = mapMarkers[row];
       } else {
+        console.log('Getting lat/lon')
         let latIdx = contents[0].columns.indexOf('latitude');
         let lonIdx = contents[0].columns.indexOf('longitude');
         let lat = parseFloat(contents[0].values[i][latIdx]);
         let lon = parseFloat(contents[0].values[i][lonIdx]);
         if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
+          console.log('Got lat/lon')
           marker = new L.marker([lat, lon]);
           let popupText = "<b>" + contents[0].values[i][0] + "</b>";
           marker.bindPopup(popupText);
@@ -1014,6 +1049,7 @@ function displaySignatureInfo() {
 
   $('#mainDisplay').html(finalText);
   if (markersLatLon.length > 0) {
+    console.log('Got some markers');
     let markersBounds = L.latLngBounds(markersLatLon);
     myMap.fitBounds(markersBounds);
   }
@@ -1051,7 +1087,7 @@ function crossesForMeta(metaId) {
 }
 
 function displayFields() {
-  var displayOptions = [
+  let displayOptions = [
     {
       value: 'signature_text',
       text: 'Signature'
@@ -1121,11 +1157,11 @@ function displayFields() {
       text: 'Other information'
     },
     {
-      value: 'norse_normalization',
+      value: 'normalisation_norse',
       text: 'Normalization to Old West Norse'
     },
     {
-      value: 'scandinavian_normalization',
+      value: 'normalisation_scandinavian',
       text: 'Normalisation to Old Scandinavian'
     },
     {
@@ -1151,13 +1187,32 @@ function displayFields() {
     {
       value: 'reference',
       text: 'References'
-    }
+    },
   ];
   return displayOptions;
 }
 
+function humanNames() {
+  let namesMap = [
+    {
+      value: 'runes_personalname',
+      text: 'Personal Name'
+    }
+  ];
+  return namesMap;
+}
+
 function humanNameForColumnName(columnName) {
-  return displayFields().find(x => x.value === columnName).text;
+  let a = displayFields().find(x => x.value === columnName);
+  if (a) {
+    return a.text;
+  }
+  a = humanNames().find(x => x.value === columnName);
+  if (a) {
+    return a.text;
+  }
+  return "Undefined";
+  //return displayFields().find(x => x.value === columnName).text;
 }
 
 function initMultiselect() {
