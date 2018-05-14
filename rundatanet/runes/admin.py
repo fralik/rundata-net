@@ -32,16 +32,18 @@ class ImageInline(admin.TabularInline):
     model=ImageLink
     extra = 3
 
-class SignatureInline(admin.TabularInline):
-    """docstring for SignatureInline"""
-    model = SignatureMetaRelation
-    extra = 1
-    readonly_fields = ('signature',)
-    can_delete = False
+# class SignatureInline(admin.TabularInline):
+#     """docstring for SignatureInline"""
+#     model = SignatureMetaRelation
+#     extra = 1
+#     readonly_fields = ('signature',)
+#     can_delete = False
 
 
 class MetaInformationAdmin(MyModelAdmin):
-    inlines = [SignatureInline, ImageInline]
+    inlines = [
+        #SignatureInline,
+        ImageInline]
     fieldsets = (
         (None,          {'fields': (('lost', 'new_reading'),)}),
         ('Object',      {'fields': ('dating', 'rune_type', 'style', 'carver', 'material', 'materialType')}),
@@ -58,7 +60,7 @@ admin.site.register(Cross);
 admin.site.register(MaterialType);
 admin.site.register(Material);
 admin.site.register(MetaInformation, MetaInformationAdmin);
-admin.site.register(SignatureMetaRelation);
+# admin.site.register(SignatureMetaRelation);
 admin.site.register(ImageLink);
 admin.site.register(NormalisationNorse);
 admin.site.register(NormalisationScandinavian);

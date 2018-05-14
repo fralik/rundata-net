@@ -21,6 +21,9 @@ class Signature(models.Model):
 
     class Meta:
         db_table = "signatures"
+        indexes = [
+            models.Index(fields=['signature_text']),
+        ]
 
 class CrossForm(models.Model):
     """CrossForm is a building block of crosses. Each cross consists of a list of CrossForms"""
@@ -139,85 +142,135 @@ class MetaInformation(models.Model):
     # not in original Excel:
     lost = models.BooleanField(default=False)
     new_reading = models.BooleanField(default=False)
+    # If inscription is purely ornamental
+    ornamental = models.BooleanField(default=False)
 
-    class Meta:
-        db_table = 'meta_information'
-
-    def __str__(self):
-        return "Meta for {}".format(self.signature.signature.signature_text)
-
-class SignatureMetaRelation(models.Model):
     signature = models.OneToOneField(Signature,
         on_delete = models.CASCADE,
         related_name = 'meta'
         )
-    meta = models.OneToOneField(MetaInformation,
-        on_delete = models.CASCADE,
-        related_name = 'signature'
-        )
+
+    def __str__(self):
+        return "Meta for {}".format(self.signature.signature_text)
+
+    class Meta:
+        db_table = 'meta_information'
+        indexes = [
+            models.Index(fields=['found_location']),
+            models.Index(fields=['parish']),
+            models.Index(fields=['municipality']),
+            models.Index(fields=['current_location']),
+            models.Index(fields=['style']),
+        ]
+
+# class SignatureMetaRelation(models.Model):
+#     signature = models.OneToOneField(Signature,
+#         on_delete = models.CASCADE,
+#         related_name = 'meta'
+#         )
+#     meta = models.OneToOneField(MetaInformation,
+#         on_delete = models.CASCADE,
+#         related_name = 'signature'
+#         )
 
 class ImageLink(models.Model):
     meta = models.ForeignKey(MetaInformation, on_delete=models.CASCADE,related_name='images')
     link_url = models.URLField()
     direct_url = models.URLField(blank=True)
 
-class NormalisationNorse(models.Model):
+class PersonalName(models.Model):
+    """ Storage of personal names from all text files. """
+
+    value = models.CharField(max_length=60, unique=True, blank=False, null=False)
+    """str: Personal name value"""
+
+    def __str__(self):
+        return "{}".format(self.value)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['value'])
+        ]
+
+class NameUsage(models.Model):
+    """ Information about how a personal name is used in text. """
+
+    name = models.ForeignKey(PersonalName,
+        on_delete = models.CASCADE,
+        related_name="usage")
+
+    word_index = models.PositiveIntegerField(default=0, blank=False, null=False)
+    """int: Index of the word inside the text, e.g. 5 means this name is
+         the fith word in the text."""
+
+    signature = models.ForeignKey(Signature,
+        on_delete = models.CASCADE,
+        related_name = "personal_names"
+    )
+
+    def __str__(self):
+        return "Signature {}, name {}, word index {}".format(self.signature.signature_text,
+            self.name.value, self.word_index)
+
+class TextModel(models.Model):
+    # original value which can be displayed to user
+    value = models.TextField(blank=True, null=False)
+    # stripped version of value suitable for search
+    search_value = models.TextField(blank=True, null=False)
+
+    def __str__(self):
+        return '{}: {}'.format(self.signature.signature_text, self.value)
+
+    class Meta:
+        abstract = True
+
+
+class NormalisationNorse(TextModel):
     signature = models.OneToOneField(Signature,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name='normalisation_norse',
     )
-    value = models.TextField()
-
-    def __str__(self):
-        return '{}: {}'.format(self.signature.signature_text, self.value)
-
     class Meta:
         db_table = 'normalisation_norse'
+        indexes = [
+            models.Index(fields=['search_value']),
+        ]
 
-class NormalisationScandinavian(models.Model):
+class NormalisationScandinavian(TextModel):
     signature = models.OneToOneField(Signature,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name='normalisation_scandinavian',
     )
-    value = models.TextField()
-
-    def __str__(self):
-        return '{}: {}'.format(self.signature.signature_text, self.value)
-
     class Meta:
         db_table = 'normalisation_scandinavian'
+        indexes = [
+            models.Index(fields=['search_value']),
+        ]
 
-class TransliteratedText(models.Model):
+class TransliteratedText(TextModel):
     signature = models.OneToOneField(Signature,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name='transliteration',
     )
-    value = models.TextField()
-
-    def __str__(self):
-        if self.signature and self.value:
-            return '{}: {}'.format(self.signature.signature_text, self.value)
-        else:
-            return 'Object is not complete'
-
     class Meta:
         db_table = 'transliterated_text'
+        indexes = [
+            models.Index(fields=['search_value']),
+        ]
 
 
-class TranslationEnglish(models.Model):
+class TranslationEnglish(TextModel):
     signature = models.OneToOneField(Signature,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name="translation_english",
     )
-    value = models.TextField()
-
-    def __str__(self):
-        return '{}: {}'.format(self.signature.signature_text, self.value)
-
     class Meta:
         db_table = 'translation_english'
+        indexes = [
+            models.Index(fields=['search_value']),
+        ]
 
