@@ -225,11 +225,10 @@
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <!-- query builder styles -->
-<link href="{% static 'query-builder/bootstrap-datepicker3.min.css' %}" rel="stylesheet">
-<link href="{% static 'query-builder/bootstrap-slider.min.css' %}" rel="stylesheet">
-<link href="{% static 'query-builder/selectize.bootstrap3.css' %}" rel="stylesheet">
+<!-- <link href="{% static 'query-builder/bootstrap-datepicker3.min.css' %}" rel="stylesheet"> -->
+<!-- <link href="{% static 'query-builder/bootstrap-slider.min.css' %}" rel="stylesheet"> -->
+<!-- <link href="{% static 'query-builder/selectize.bootstrap3.css' %}" rel="stylesheet"> -->
 <link href="{% static 'query-builder/bootstrap-select.min.css' %}" rel="stylesheet">
-<!-- <link href="https://querybuilder.js.org/dist/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" rel="stylesheet"> -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/awesome-bootstrap-checkbox/0.3.7/awesome-bootstrap-checkbox.css" rel="stylesheet">
 <link href="{% static 'query-builder/query-builder.default.min.css' %}" rel="stylesheet">
 <!--<link href="{% static 'runes/chosen/chosen.min.css' %}" rel="stylesheet">-->
@@ -246,11 +245,10 @@
 
 <!-- begin of query builder js -->
 <script src="{% static 'query-builder/moment.min.js' %}"></script>
-<script src="{% static 'query-builder/bootstrap-datepicker.min.js' %}"></script>
-<script src="{% static 'query-builder/bootstrap-slider.min.js' %}"></script>
-<script src="{% static 'query-builder/selectize.min.js' %}"></script>
+<!-- <script src="{% static 'query-builder/bootstrap-datepicker.min.js' %}"></script> -->
+<!--<script src="{% static 'query-builder/bootstrap-slider.min.js' %}"></script>-->
+<!-- <script src="{% static 'query-builder/selectize.min.js' %}"></script> -->
 <script src="{% static 'query-builder/bootstrap-select.min.js' %}"></script>
-<!--<script src="{% static 'runes/query-builder/query-builder.standalone.js' %}"></script>-->
 <script src="{% static 'query-builder/query-builder.standalone.min.js' %}"></script>
 <script src="{% static 'query-builder/interact.min.js' %}"></script>
 <!--<script type="text/javascript" src="{% static 'runes/chosen/chosen.jquery.min.js' %}"></script>-->
@@ -264,6 +262,8 @@
 <script src="{% static 'runes/multiselect.min.js' %}"></script>
 <script src="{% static 'runes/pixabay/jquery.auto-complete.min.js' %}"></script>
 <!-- <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script> -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
 
 <script type="text/javascript">
 // Globals:
@@ -475,7 +475,7 @@ function prepareAutoComplete(fieldId) {
     type: 'string',
     plugin: 'autoComplete',
     plugin_config: {
-      minChars: 2,
+      minChars: 0,
       delay: 100,
       source: function (term, suggest) {
         var matches = [];
@@ -484,7 +484,8 @@ function prepareAutoComplete(fieldId) {
             matches.push(contents[0].values[i][0]);
         }
         suggest(matches);
-      }
+      },
+      menuClass: ' clusterize-content ',
     },
     size: 70,
     operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
@@ -593,7 +594,7 @@ function onDbLoaded(e) {
       type: 'string',
       plugin: 'autoComplete',
       plugin_config: {
-        minChars: 2,
+        minChars: 0,
         delay: 50,
         source: function(term, suggest) {
           var matches = [];
@@ -611,7 +612,8 @@ function onDbLoaded(e) {
           }
           console.log('Found ' + matches.length + ' matches');
           suggest(matches);
-        }
+        },
+        menuClass: 'clusterize-content ',
       },
       size: 40,
       operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
@@ -629,7 +631,6 @@ function onDbLoaded(e) {
       plugin_config: {
         plugins: ['remove_button'],
         valueSetter: function (rule, value) {
-          console.log('We are in value setter');
           rule.$el.find('.rule-value-container input')[0].selectize.setValue(value);
         },
         // valueGetter: function (rule, value) {
@@ -762,7 +763,6 @@ function onDbLoaded(e) {
   })
   .on('rulesChanged.queryBuilder', function () {
       if ($('#chkApplyFilters').is(":checked")) {
-          console.log('Rules changed and filter is checked')
           applyFilters();
           applyPagination();
       }
@@ -776,14 +776,12 @@ function onDbLoaded(e) {
         e.value = rule.field + ' IN root_signatures and ' + rule.field +
           ' NOT ' + sqlOperator() + ' signatures_with_children';
       }
-      console.log(e.value);
     }
     if (rule.operator === 'cross_form') {
       e.value = 'id IN (SELECT meta_id FROM crosses WHERE crosses.id in (SELECT cross_id FROM cross_definitions WHERE form_id="' + rule.value[0].form + '" AND is_certain="' + rule.value[0].is_certain + '"))';
     }
     if (rule.id === 'material_type') {
       e.value = rule.field + ' IN (SELECT id FROM material_types WHERE name ' + sqlOperator(sqlValue) + ')';
-      console.log(e.value);
     }
     if (rule.id === 'signature_country') {
       e.value = "(" + rule.value.map(function (v, i) { return rule.field + " LIKE ('"+v+"%')"; }).join(' OR ') + ")";
@@ -795,30 +793,34 @@ function onDbLoaded(e) {
         e.value = rule.field + '= 0';
       }
     }
+    if (rule.id === 'signature_text') {
+      e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
+      + rule.field + ' ' + sqlOperator(sqlValue) + '))';
+    }
   })
   ;
 
-  if (!window.Selectize.prototype.positionDropdownOriginal) {
-    window.Selectize.prototype.positionDropdownOriginal = window.Selectize.prototype.positionDropdown;
-    window.Selectize.prototype.positionDropdown = function () {
-      this.settings.dropdownDirection = 'up';
-      if (this.settings.dropdownDirection === 'up') {
-        let $control = this.$control;
-        let offset = this.settings.dropdownParent === 'body' ? $control.offset() : $control.position();
+  // if (!window.Selectize.prototype.positionDropdownOriginal) {
+  //   window.Selectize.prototype.positionDropdownOriginal = window.Selectize.prototype.positionDropdown;
+  //   window.Selectize.prototype.positionDropdown = function () {
+  //     this.settings.dropdownDirection = 'up';
+  //     if (this.settings.dropdownDirection === 'up') {
+  //       let $control = this.$control;
+  //       let offset = this.settings.dropdownParent === 'body' ? $control.offset() : $control.position();
 
-        this.$dropdown.css({
-          width: $control.outerWidth(),
-          top: offset.top - this.$dropdown.outerHeight(),
-          left: offset.left
-        });
-        this.$dropdown.addClass('direction-' + this.settings.dropdownDirection);
-        this.$control.addClass('direction-' + this.settings.dropdownDirection);
-        this.$wrapper.addClass('direction-' + this.settings.dropdownDirection);
-      } else {
-        window.Selectize.prototype.positionDropdownOriginal.apply(this, arguments);
-      }
-    };
-  }
+  //       this.$dropdown.css({
+  //         width: $control.outerWidth(),
+  //         top: offset.top - this.$dropdown.outerHeight(),
+  //         left: offset.left
+  //       });
+  //       this.$dropdown.addClass('direction-' + this.settings.dropdownDirection);
+  //       this.$control.addClass('direction-' + this.settings.dropdownDirection);
+  //       this.$wrapper.addClass('direction-' + this.settings.dropdownDirection);
+  //     } else {
+  //       window.Selectize.prototype.positionDropdownOriginal.apply(this, arguments);
+  //     }
+  //   };
+  // }
 
   // button handlers
   $('#btnDisplayFormat').on('click', onDisplayFormatClicked);
@@ -912,7 +914,6 @@ function displaySignatureInfo() {
         let lat = parseFloat(contents[0].values[i][latIdx]);
         let lon = parseFloat(contents[0].values[i][lonIdx]);
         if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
-          console.log('Got lat/lon')
           marker = new L.marker([lat, lon]);
           let popupText = "<b>" + contents[0].values[i][signNameIdx] + "</b>";
           marker.bindPopup(popupText);
@@ -1077,7 +1078,6 @@ function displaySignatureInfo() {
 
   $('#mainDisplay').html(finalText);
   if (markersLatLon.length > 0) {
-    console.log('Got some markers');
     let markersBounds = L.latLngBounds(markersLatLon);
     myMap.fitBounds(markersBounds);
   }
