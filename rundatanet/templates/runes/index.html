@@ -2,7 +2,7 @@
 {% load settings %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rundata-net</title>
@@ -33,66 +33,56 @@
     <meta name="theme-color" content="#ffffff">
 
     <style type="text/css">
-        .my-fixed-height {
-          max-height: 500px;
-          min-height: 500px;
-          height: 500px;
-        }
-        .myscrollable {
-          overflow-y: scroll;
-          max-height: 90%;
-          height: 90%;
-        }
-        .vert-small {
-          height: 8%;
-          border: 0px solid green;
-        }
-        .border-1 {
-          border: 1px solid #ccc;
-        }
-        .group-full-heigth {
-          max-height: 100%;
-          min-height: 100%;
-          height: 100%;
-        }
-        .border-left-bottom {
-          border-left: 1px solid #ccc;
-          border-bottom: 1px solid #ccc;
-        }
-        .border-bottom-right {
-          border-right: 1px solid #ccc;
-          border-bottom: 1px solid #ccc;
-        }
-        body {
-          font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', Verdana, Helvetica, sans-serif;
-        }
-        .transliteration {
-          font-weight: bold;
-        }
-
-        .normalization {
-          font-style: italic;
-          font-weight: normal;
-        }
-
-        th {
-          text-align: center;
-        }
-        span.null {
-          font-weight: bold;
-          color: #CCCCCC;
-        }
-
-        .white-text {
-          color:#fff!important;
-        }
-/*        #loading-image {
-          position: absolute;
-          top: 100px;
-          left: 240px;
-          z-index: 100;
-        }
-*/
+      .my-fixed-height {
+        max-height: 500px;
+        min-height: 500px;
+        height: 500px;
+        margin-bottom: 15px;
+      }
+      .jstree-scrollable {
+        overflow-y: scroll;
+        max-height: 95%;
+        height: 95%;
+      }
+      .border-1 {
+        border: 1px solid #ccc;
+      }
+      .group-full-heigth {
+        max-height: 100%;
+        min-height: 100%;
+        height: 100%;
+      }
+      .border-left-bottom {
+        border-left: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      .border-bottom-right {
+        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      .border-bottom {
+        border-bottom: 1px solid #ccc;
+      }
+      body {
+        font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', Verdana, Helvetica, sans-serif;
+      }
+      .transliteration {
+        font-weight: bold;
+      }
+      .normalization {
+        font-style: italic;
+        font-weight: normal;
+      }
+      th {
+        text-align: center;
+      }
+      span.null {
+        font-weight: bold;
+        color: #CCCCCC;
+      }
+      .white-text {
+        color:#fff!important;
+      }
       .navbar-static-top {
         margin-bottom: 0px;
       }
@@ -100,6 +90,16 @@
       .vertical-align {
         display: flex;
         align-items: center;
+      }
+      .inscription-section {
+        border-bottom: 2px solid #999;
+      }
+      .search-status {
+        padding-left: 10px;
+        padding-top: 5px;
+      }
+      .zero-padding-left {
+        padding-left: 0px;
       }
     </style>
   </head>
@@ -122,18 +122,17 @@
     </div>
 
     <div class="row">
-      <div id="leftPanel" class="col-md-3 col-sm-3 panel panel-default my-fixed-height" style="padding-right: 0; padding-left: 0; border-width: 0;">
-        <div class="list-group group-full-heigth" style="padding-left: 0px; padding-right: 2px; position: relative;">
-          <div id="jstree" class="myscrollable border-bottom-right"></div>
-          <div id="lblNumAvailable" class="" style="padding-left: 15px;">Info</div>
-          <div id="jstree-nav" class="" style="padding-top: 0.5em; position: absolute; bottom: 0; padding-left: 15px;"></div>
+      <div id="leftPanel" class="col-md-3 col-sm-3 my-fixed-height table-bordered" style="padding: 0;">
+        <div class="list-group group-full-heigth" style="padding-right: 0px; position: relative;">
+          <div id="jstree" class="jstree-scrollable border-bottom"></div>
+          <div id="lblNumAvailable" class="search-status"></div>
         </div>
       </div>
       <div id="mainDisplay" contentEditable="true" class="col-md-5 col-sm-7 table-bordered my-fixed-height pre-scrollable"></div>
       <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
     </div>
 
-    <form class="row pl-4" role="group">
+    <form class="row" role="group">
       <div class="checkbox col-md-2">
         <input type="checkbox" id="chkApplyFilters">
         <label for="chkApplyFilters">Apply filter(s)</label>
@@ -145,8 +144,8 @@
     </form>
 
     <section role="group" class="row vertical-align">
-      <div class="col-md-3">Quickly copy symbols to clipboard:</div>
-      <div class="col-md-9 btn-group" role="group">
+      <div class="col-md-2 zero-padding-left">Copy symbols to clipboard:</div>
+      <div class="col-md-10 btn-group" role="group">
         <button type="button" class="btn clip" id="btnOUmlautSmall">ö</button>
         <button type="button" class="btn clip" id="btnOUmlaut">Ö</button>
         <button type="button" class="btn clip" id="btnAaSmall">å</button>
@@ -341,9 +340,27 @@ function dbToJson(columnNames, values, rootsWithChildren = null) {
   return dbJson;
 }
 
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 function onDisplayFormatClicked() {
-  var selectedValues = [];
+  formatDialog.toggle();
   if (formatDialog.is(':visible')) {
+    $('#btnDisplayFormat').html('Hide display format dialog');
+  } else {
+    $('#btnDisplayFormat').html('Show display format dialog');
+  }
+
+  var selectedValues = [];
+  if (!formatDialog.is(':visible')) {
     $('#multiselect_to option').each(function() { selectedValues.push($(this).val()); });
     if (selectedValues === null || selectedValues.length == 0) {
       $('#alertObj').html('Nothing is selected on format dialog! Please select at least one field.');
@@ -358,16 +375,12 @@ function onDisplayFormatClicked() {
     $('#alertObj').addClass('hidden');
   }
 
-  if (selectedValues.length > 0) {
-    userSelectedDisplay = selectedValues;
-    displaySignatureInfo();
-  }
-
-  formatDialog.toggle();
-  if (formatDialog.is(':visible')) {
-    $('#btnDisplayFormat').html('Hide display format dialog');
-  } else {
-    $('#btnDisplayFormat').html('Show display format dialog');
+  if (selectedValues.length > 0 && !(formatDialog.is(':visible'))) {
+    if (!arraysEqual(userSelectedDisplay, selectedValues)) {
+      console.log('Going to update display');
+      userSelectedDisplay = selectedValues;
+      displaySignatureInfo();
+    }
   }
 }
 
@@ -545,7 +558,7 @@ function onDbLoaded(e) {
   var allMaterialTypes = (contents[0].values);
   let materialTypeFilter = {
     id: 'material_type',
-    field: 'materialType_id',
+    field: 'material_type',
     label: 'Material type',
     type: 'string',
     plugin: 'autoComplete',
@@ -870,21 +883,36 @@ function displaySignatureInfo() {
 
   let markersLatLon = [];
 
-  let properParents = [];
-  let jsTreeObj = $('#jstree').jstree(true);
-  for (let i = 0; i < indices.length; i++) {
-    let row = indices[i];
-    let parentId = jsTreeObj.get_parent(row);
-    if (parentId !== '#') {
-      // if parent is not the tree root node, then the selected node is a child
-      row = parentId;
-    }
-    properParents.push(row);
-  }
+  // let properParents = [];
+  // let jsTreeObj = $('#jstree').jstree(true);
+  // for (let i = 0; i < indices.length; i++) {
+  //   let row = indices[i];
+  //   let parentId = jsTreeObj.get_parent(row);
+  //   if (parentId !== '#') {
+  //     // if parent is not the tree root node, then the selected node is a child
+  //     row = parentId;
+  //   }
+  //   properParents.push(row);
+  // }
 
-  let contents = db.exec("SELECT * FROM all_data where signature_id IN (" + properParents.join(',') + ")");
+  let indicesStr = indices.join(',');
+  let contents = db.exec("SELECT * FROM all_data where signature_id IN (" + indicesStr + ")");
   if (!contents || contents.length == 0)
     return;
+
+  // Map of aliases. Key is parent ID, value - list of alias names
+  let aliasByParent = {};
+  let aliasContents = db.exec('SELECT id, signature_text, parent_id FROM signatures WHERE parent_id IN (' + indicesStr + ')');
+  if (aliasContents && aliasContents.length > 0) {
+    aliasContents[0].values.map(function (v, i) {
+      if (!(v[2] in aliasByParent)) {
+        aliasByParent[v[2]] = [];
+      }
+      curValue = aliasByParent[v[2]];
+      curValue.push(v[1]);
+      aliasByParent[v[2]] = curValue;
+    });
+  }
 
   let latIdx = contents[0].columns.indexOf('latitude');
   let lonIdx = contents[0].columns.indexOf('longitude');
@@ -892,7 +920,8 @@ function displaySignatureInfo() {
   let metaIdIdx = contents[0].columns.indexOf('id');
 
   for (let i = 0; i < indices.length; i++) {
-    let row = properParents[i];
+    let row = indices[i];
+    let signatureName = contents[0].values[i][signNameIdx];
 
     if ($('#mapDisplay').is(':visible')) {
       // handle map marker only if map is visible
@@ -904,7 +933,7 @@ function displaySignatureInfo() {
         let lon = parseFloat(contents[0].values[i][lonIdx]);
         if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
           marker = new L.marker([lat, lon]);
-          let popupText = "<b>" + contents[0].values[i][signNameIdx] + "</b>";
+          let popupText = "<b>" + signatureName + "</b>";
           marker.bindPopup(popupText);
           mapMarkers[row] = marker;
         }
@@ -915,7 +944,7 @@ function displaySignatureInfo() {
       }
     }
 
-    let paragraph = '';
+    let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
     for (let j = 0; j < userSelectedDisplay.length; j++) {
       let humanName = humanNameForColumnName(userSelectedDisplay[j]);
       if (showHeaders) {
@@ -957,7 +986,7 @@ function displaySignatureInfo() {
           }
           paragraph += `<div class="col-md-4"><a href="${v[1]}" contentEditable="false" target="_blank"><img src="${v[2]}" class="img-responsive"></a></div>`;
         });
-        paragraph += '</div>';
+        paragraph += '</div></div>';
 
         if (indirectImages !== 'No images.') {
           paragraph += '<br>' + indirectImages;
@@ -1059,10 +1088,20 @@ function displaySignatureInfo() {
         continue;
       }
 
+      if (userSelectedDisplay[j] === 'signature_text') {
+        if (row in aliasByParent) {
+          columnData += ' (' + aliasByParent[row].join(';') + ')';
+        }
+      }
+
+      if (columnData == '' && showHeaders) {
+        columnData = '<i>Absent</i>';
+      }
       paragraph += columnData;
     }
+    paragraph += '</article>';
 
-    finalText += '<p>' + paragraph + '</p>';
+    finalText += paragraph;
   }
 
   $('#mainDisplay').html(finalText);
@@ -1158,7 +1197,7 @@ function displayFields() {
       text: 'Material'
     },
     {
-      value: 'materialType_id',
+      value: 'material_type',
       text: 'Material type'
     },
     {
