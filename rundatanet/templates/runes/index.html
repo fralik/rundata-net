@@ -227,7 +227,7 @@
 <!-- query builder styles -->
 <!-- <link href="{% static 'query-builder/bootstrap-datepicker3.min.css' %}" rel="stylesheet"> -->
 <!-- <link href="{% static 'query-builder/bootstrap-slider.min.css' %}" rel="stylesheet"> -->
-<!-- <link href="{% static 'query-builder/selectize.bootstrap3.css' %}" rel="stylesheet"> -->
+<link href="{% static 'query-builder/selectize.bootstrap3.css' %}" rel="stylesheet">
 <link href="{% static 'query-builder/bootstrap-select.min.css' %}" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/awesome-bootstrap-checkbox/0.3.7/awesome-bootstrap-checkbox.css" rel="stylesheet">
 <link href="{% static 'query-builder/query-builder.default.min.css' %}" rel="stylesheet">
@@ -247,7 +247,7 @@
 <script src="{% static 'query-builder/moment.min.js' %}"></script>
 <!-- <script src="{% static 'query-builder/bootstrap-datepicker.min.js' %}"></script> -->
 <!--<script src="{% static 'query-builder/bootstrap-slider.min.js' %}"></script>-->
-<!-- <script src="{% static 'query-builder/selectize.min.js' %}"></script> -->
+<script src="{% static 'query-builder/selectize.min.js' %}"></script>
 <script src="{% static 'query-builder/bootstrap-select.min.js' %}"></script>
 <script src="{% static 'query-builder/query-builder.standalone.min.js' %}"></script>
 <script src="{% static 'query-builder/interact.min.js' %}"></script>
@@ -285,6 +285,8 @@ var myMap = null; // Global handle to map object
 var mapMarkers = {}; // Collection of created map markers. This is used in order to create
   // markers only once.
 var markers = []; // Leaflet markers group
+var numSelectedSignatures = [];
+var renderIsDone = false;
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'found_location'];
@@ -491,7 +493,7 @@ function prepareAutoComplete(fieldId) {
     },
     size: 70,
     operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
-      "ends_with", "not_ends_with", "is_empty", 'is_not_empty', 'is_null', 'is_not_null'],
+      "ends_with", "not_ends_with", "is_empty", 'is_not_empty'],
   }
 }
 
@@ -552,7 +554,7 @@ function onDbLoaded(e) {
   contents = db.exec("SELECT id, signature_text FROM signatures");
   signaturesSelectize = dbToJson(contents[0].columns, contents[0].values);
 
-  applyPagination();
+  $('#jstree').jstree(true).refresh();
 
   contents = db.exec('SELECT meta_id, count(1) AS num FROM crosses GROUP BY meta_id ORDER BY num DESC LIMIT 1');
   var maxCrosses = contents[0].values[0][1];
@@ -564,12 +566,12 @@ function onDbLoaded(e) {
   var allMaterialTypes = (contents[0].values);
   let materialTypeFilter = {
     id: 'material_type',
-    field: 'material_type',
+    field: 'materialType_id',
     label: 'Material type',
     type: 'string',
     plugin: 'autoComplete',
     plugin_config: {
-      minChars: 2,
+      minChars: 0,
       delay: 100,
       source: function (term, suggest) {
         var matches = [];
@@ -866,9 +868,6 @@ function fetchTreeData(obj, cb) {
   }*/
 }
 
-var numSelectedSignatures = [];
-var renderIsDone = false;
-
 function displaySignatureInfo() {
   $('#mainDisplay').empty();
   for (let key in mapMarkers) {
@@ -968,21 +967,6 @@ function displaySignatureInfo() {
   renderIsDone = true;
   renderParams.mainDisplay.innerHTML += "<img src='{% static 'runes/jstree/themes/default/throbber.gif' %}'><br>";
   setTimeout(signatureRenderHelper, 10, renderParams);
-
-  // for (let i = 0; i < indices.length; i++) {
-  //   let row = indices[i];
-  //   let signatureName = contents[0].values[i][signNameIdx];
-
-  //   renderParams.curRowIdx = i;
-  //   if (row in aliasByParent) {
-  //     renderParams.aliases = aliasByParent[row];
-  //   } else {
-  //     renderParams.aliases = [];
-  //   }
-  //   setTimeout(renderSignature, 50, renderParams);
-  // }
-
-  //$('#mainDisplay').html(finalText);
 }
 
 function signatureRenderHelper(renderParams) {
@@ -1047,7 +1031,7 @@ function renderSignature(renderParams) {
       if (dbImages.length > 0) {
         indirectImages = '<ul>';
         dbImages[0].values.map(function (v, i) {
-          indirectImages += `<li><a href="${v[0]}" contentEditable="false">${v[0]}</a></li>`;
+          indirectImages += `<li><a href="${v[0]}" contentEditable="false" target="_blank">${v[0]}</a></li>`;
         });
         indirectImages += '</ul>';
       }

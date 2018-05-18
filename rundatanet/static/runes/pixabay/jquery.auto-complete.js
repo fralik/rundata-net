@@ -114,7 +114,6 @@
             if (!o.minChars) that.on('focus.autocomplete', function(){ that.last_val = '\n'; that.trigger('keyup.autocomplete'); });
 
             function suggest(data, val) {
-                let last_data = that.cache[val];
                 that.cache[val] = data;
                 if (! data.length) {
                     that.sc.hide();
@@ -126,13 +125,7 @@
                     // protect against completions after submit
                     ! that.submitting
                 ) {
-                    // check if data has changed. Perhaps we do not neet to recreate it
-                    if (last_data == data) {
-                        that.updateSC(0);
-                        return;
-                    }
-
-                    let s = [];
+                    var s = [];
                     for (var i=0;i<data.length;i++) {
                         s.push(o.renderItem(data[i], val));
                     }
