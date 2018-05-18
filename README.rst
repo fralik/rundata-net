@@ -19,7 +19,7 @@ The client side utilizes a lot of excellent Javascript libraries. Here is the li
 * `jQuery UI <https://jqueryui.com/>`_, released under :extlink:`MIT <https://jquery.org/license/>`.
 * `jsTree <https://www.jstree.com/>`_, released under :extlink:`MIT <https://raw.githubusercontent.com/vakata/jstree/master/LICENSE-MIT>`.
 * `Leaflet <http://leafletjs.com/>`_, released under :extlink:`BSD-2-Clause <https://github.com/Leaflet/Leaflet/blob/master/LICENSE>`.
-* `Simple pagination <https://github.com/flaviusmatis/simplePagination.js>`_, released under :extlink:`MIT <https://github.com/flaviusmatis/simplePagination.js/blob/master/LICENSE.txt>`.
+* `Marker Clustering <https://github.com/Leaflet/Leaflet.markercluster>`_ plugin for Leaflet, released under :extlink:`MIT <https://github.com/Leaflet/Leaflet.markercluster/blob/master/MIT-LICENCE.txt>`.
 * `jQuery autoComplete <https://github.com/Pixabay/jQuery-autoComplete>`_, released under MIT.
 * `Font Awesome <https://fontawesome.com/>`_, has various :extlink:`licenses <https://fontawesome.com/license>` for different parts.
 * `jQuery QueryBuilder <https://querybuilder.js.org>`_, released under :extlink:`MIT <https://github.com/mistic100/jQuery-QueryBuilder/blob/dev/LICENSE>`.
