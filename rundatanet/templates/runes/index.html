@@ -860,6 +860,9 @@ function fetchTreeData(obj, cb) {
   }*/
 }
 
+var numSelectedSignatures = [];
+var renderIsDone = false;
+
 function displaySignatureInfo() {
   $('#mainDisplay').empty();
   for (let key in mapMarkers) {
@@ -882,18 +885,6 @@ function displaySignatureInfo() {
   const showHeaders = $('#chkDisplayHeaders').is(":checked");
 
   let markersLatLon = [];
-
-  // let properParents = [];
-  // let jsTreeObj = $('#jstree').jstree(true);
-  // for (let i = 0; i < indices.length; i++) {
-  //   let row = indices[i];
-  //   let parentId = jsTreeObj.get_parent(row);
-  //   if (parentId !== '#') {
-  //     // if parent is not the tree root node, then the selected node is a child
-  //     row = parentId;
-  //   }
-  //   properParents.push(row);
-  // }
 
   let indicesStr = indices.join(',');
   let contents = db.exec("SELECT * FROM all_data where signature_id IN (" + indicesStr + ")");
@@ -918,6 +909,23 @@ function displaySignatureInfo() {
   let lonIdx = contents[0].columns.indexOf('longitude');
   let signNameIdx = 0;
   let metaIdIdx = contents[0].columns.indexOf('id');
+  let mainDisplayDom = document.getElementById('mainDisplay');
+
+  let renderParams = {
+    latIdx: latIdx,
+    lonIdx: lonIdx,
+    metaIdIdx: metaIdIdx,
+    userSelectedDisplay: userSelectedDisplay,
+    showHeaders: showHeaders,
+    mainDisplay: mainDisplayDom,
+    allRows: contents[0].values,
+    curRowIdx: 0,
+    columns: contents[0].columns,
+    aliasByParent: aliasByParent,
+    signNameIdx: signNameIdx,
+  };
+
+  numSelectedSignatures = indices.length;
 
   for (let i = 0; i < indices.length; i++) {
     let row = indices[i];
@@ -943,172 +951,234 @@ function displaySignatureInfo() {
         markersLatLon.push(marker.getLatLng());
       }
     }
-
-    let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
-    for (let j = 0; j < userSelectedDisplay.length; j++) {
-      let humanName = humanNameForColumnName(userSelectedDisplay[j]);
-      if (showHeaders) {
-        paragraph += '<h4>' + humanName + '</h4>';
-      } else if (paragraph.length > 0) {
-        paragraph += '<br>';
-      }
-
-      if (userSelectedDisplay[j] == 'images') {
-        let directImages = db.exec("SELECT id, link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[i][metaIdIdx] + "' AND direct_url <> '' LIMIT 9");
-        let dbImages = [];
-        if (directImages.length > 0) {
-          let ids = directImages[0].values.map(function (v, i) { return v[0]; });
-          ids = ids.join(',');
-          dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[i][metaIdIdx] + "' AND id NOT IN (" + ids + ")");
-        } else {
-          dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + contents[0].values[i][metaIdIdx] + "'");
-        }
-        let indirectImages = 'No images.';
-        if (dbImages.length > 0) {
-          indirectImages = '<ul>';
-          dbImages[0].values.map(function (v, i) {
-            indirectImages += `<li><a href="${v[0]}" contentEditable="false">${v[0]}</a></li>`;
-          });
-          indirectImages += '</ul>';
-        }
-
-        if (directImages.length == 0) {
-          paragraph += indirectImages;
-          continue;
-        }
-
-        paragraph += '<div class="container-fluid"><div class="row">';
-        directImages[0].values.map(function (v, i) {
-          if (i % 3 == 0) {
-            paragraph += "</div>";
-            if (i < 9)
-              paragraph += '<div class="row">';
-          }
-          paragraph += `<div class="col-md-4"><a href="${v[1]}" contentEditable="false" target="_blank"><img src="${v[2]}" class="img-responsive"></a></div>`;
-        });
-        paragraph += '</div></div>';
-
-        if (indirectImages !== 'No images.') {
-          paragraph += '<br>' + indirectImages;
-        }
-
-        continue;
-      }
-
-      let columnIdx = contents[0].columns.indexOf(userSelectedDisplay[j]);
-      let columnData = contents[0].values[i][columnIdx];
-
-      if (jQuery.inArray(userSelectedDisplay[j], customColumns) != -1) {
-        let cssStyle = 'normalization';
-        if (~userSelectedDisplay[j].indexOf('transliteration')) {
-          cssStyle = 'transliteration';
-        } else if (~userSelectedDisplay[j].indexOf('english_translation')) {
-          cssStyle = '';
-        }
-
-        if (~columnData.indexOf(paragraphSymbol)) {
-          let parts = columnData.split(paragraphSymbol);
-          let listHeader = '';
-          if (~columnData.indexOf(sidesMarker)) {
-            listHeader = 'Sides:';
-          } else if (~columnData.indexOf(readingMarker)) {
-            listHeader = 'Reading variants:';
-          }
-
-          paragraph += listHeader;
-          paragraph += '<ol type="A">';
-          for (let k = 0; k < parts.length; k++) {
-            let part = parts[k];
-            let partData = '';
-
-            if (!part.trim())
-              continue;
-
-            if (part.length > 2)
-              partData = part.substr(2);
-
-            paragraph += '<li><span class="' + cssStyle + '">' + partData + '</span></li>';
-          }
-          paragraph += '</ol>';
-        } else {
-          // no parts in the columnData
-          paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
-        }
-        continue;
-      }
-
-      if (userSelectedDisplay[j] === 'crosses') {
-        let numCrossesColumnIdx = contents[0].columns.indexOf('num_crosses');
-        let numCrosses = contents[0].values[i][numCrossesColumnIdx];
-        if (numCrosses == 0) {
-          paragraph += 'No crosses';
-          continue;
-        }
-
-        paragraph += '<table class="crosses" border="1">';
-        paragraph += '<thead><tr>';
-        paragraph += '<th>A</th>';
-        paragraph += '<th>B</th>';
-        paragraph += '<th>C</th>';
-        paragraph += '<th>D</th>';
-        paragraph += '<th>E</th>';
-        paragraph += '<th>F</th>';
-        paragraph += '<th>G</th>';
-        paragraph += '</th></thead>';
-        paragraph += '<tbody>';
-
-        let allCrosses = crossesForMeta(contents[0].values[i][metaIdIdx]);
-        for (let k = 0; k < allCrosses.length; k++) {
-          if (allCrosses[k][0].length > 0) {
-            // this is a cross from undefined group
-            paragraph += '<tr><td colspan="7">' + allCrosses[k][0][0].name + '</td></tr>';
-            continue;
-          }
-          paragraph += '<tr>';
-          // we have 8 groups in total, 0 being free-text and not a real group
-          for (let gr = 1; gr < 8; gr++) {
-            let crossForms = allCrosses[k][gr];
-            if (crossForms.length == 0) {
-              paragraph += '<td><span class="null">&#8709;</span></td>';
-              continue;
-            }
-            paragraph += '<td>';
-            paragraph += allCrosses[k][gr].map(function (v, i) {
-              let url = staticBase + v.name + '.png';
-              let res = '<img src="' + url + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
-              if (v.isCerain == 0) {
-                res += '?';
-              }
-              return res;
-            }).join(', ');
-            paragraph += '</td>';
-          }
-        }
-        paragraph += '</tbody></table>';
-        continue;
-      }
-
-      if (userSelectedDisplay[j] === 'signature_text') {
-        if (row in aliasByParent) {
-          columnData += ' (' + aliasByParent[row].join(';') + ')';
-        }
-      }
-
-      if (columnData == '' && showHeaders) {
-        columnData = '<i>Absent</i>';
-      }
-      paragraph += columnData;
-    }
-    paragraph += '</article>';
-
-    finalText += paragraph;
   }
-
-  $('#mainDisplay').html(finalText);
   if (markersLatLon.length > 0) {
     let markersBounds = L.latLngBounds(markersLatLon);
     myMap.fitBounds(markersBounds);
   }
+
+  renderIsDone = true;
+  renderParams.mainDisplay.innerHTML += "<img src='{% static 'runes/jstree/themes/default/throbber.gif' %}'><br>";
+  setTimeout(signatureRenderHelper, 10, renderParams);
+
+  // for (let i = 0; i < indices.length; i++) {
+  //   let row = indices[i];
+  //   let signatureName = contents[0].values[i][signNameIdx];
+
+  //   renderParams.curRowIdx = i;
+  //   if (row in aliasByParent) {
+  //     renderParams.aliases = aliasByParent[row];
+  //   } else {
+  //     renderParams.aliases = [];
+  //   }
+  //   setTimeout(renderSignature, 50, renderParams);
+  // }
+
+  //$('#mainDisplay').html(finalText);
+}
+
+function signatureRenderHelper(renderParams) {
+  if (numSelectedSignatures == 0) {
+    return;
+  }
+
+  if (renderParams.curRowIdx < numSelectedSignatures) {
+    if (!renderIsDone) {
+      setTimeout(signatureRenderHelper, 50, renderParams);
+      return;
+    }
+
+    setTimeout(renderSignature, 20, renderParams);
+  } else {
+    let idx = renderParams.mainDisplay.innerHTML.indexOf('<article');
+    if (idx != -1) {
+      renderParams.mainDisplay.innerHTML = renderParams.mainDisplay.innerHTML.slice(idx);
+    }
+  }
+}
+
+// Depends on global variables: db
+function renderSignature(renderParams) {
+  renderIsDone = false;
+
+  let curRow = renderParams.allRows[renderParams.curRowIdx];
+  let userSelectedDisplay = renderParams.userSelectedDisplay;
+  let showHeaders = renderParams.showHeaders;
+  let metaIdIdx = renderParams.metaIdIdx;
+  let columns = renderParams.columns;
+  let aliasByParent = renderParams.aliasByParent;
+  let signatureName = curRow[renderParams.signNameIdx];
+
+  let customColumns = ['transliteration', 'english_translation', 'normalisation_scandinavian', 'normalisation_norse'];
+  const paragraphSymbol = '§';
+  const sidesMarker = '§A';
+  const readingMarker = '§P';
+  let staticBase = "{% static 'runes/images/cross_forms/' %}";
+
+  let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
+
+  for (let j = 0; j < userSelectedDisplay.length; j++) {
+    let humanName = humanNameForColumnName(userSelectedDisplay[j]);
+    if (showHeaders) {
+      paragraph += '<h4>' + humanName + '</h4>';
+    } else if (paragraph.length > 0) {
+      paragraph += '<br>';
+    }
+
+    if (userSelectedDisplay[j] == 'images') {
+      let directImages = db.exec("SELECT id, link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "' AND direct_url <> '' LIMIT 9");
+      let dbImages = [];
+      if (directImages.length > 0) {
+        let ids = directImages[0].values.map(function (v, i) { return v[0]; });
+        ids = ids.join(',');
+        dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "' AND id NOT IN (" + ids + ")");
+      } else {
+        dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "'");
+      }
+      let indirectImages = 'No images.';
+      if (dbImages.length > 0) {
+        indirectImages = '<ul>';
+        dbImages[0].values.map(function (v, i) {
+          indirectImages += `<li><a href="${v[0]}" contentEditable="false">${v[0]}</a></li>`;
+        });
+        indirectImages += '</ul>';
+      }
+
+      if (directImages.length == 0) {
+        paragraph += indirectImages;
+        continue;
+      }
+
+      paragraph += '<div class="container-fluid"><div class="row">';
+      directImages[0].values.map(function (v, i) {
+        if (i % 3 == 0) {
+          paragraph += "</div>";
+          if (i < 9)
+            paragraph += '<div class="row">';
+        }
+        paragraph += `<div class="col-md-4"><a href="${v[1]}" contentEditable="false" target="_blank"><img src="${v[2]}" class="img-responsive"></a></div>`;
+      });
+      paragraph += '</div></div>';
+
+      if (indirectImages !== 'No images.') {
+        paragraph += '<br>' + indirectImages;
+      }
+
+      continue;
+    }
+
+    let columnIdx = columns.indexOf(userSelectedDisplay[j]);
+    let columnData = curRow[columnIdx];
+
+    if (jQuery.inArray(userSelectedDisplay[j], customColumns) != -1) {
+      let cssStyle = 'normalization';
+      if (~userSelectedDisplay[j].indexOf('transliteration')) {
+        cssStyle = 'transliteration';
+      } else if (~userSelectedDisplay[j].indexOf('english_translation')) {
+        cssStyle = '';
+      }
+
+      if (~columnData.indexOf(paragraphSymbol)) {
+        let parts = columnData.split(paragraphSymbol);
+        let listHeader = '';
+        if (~columnData.indexOf(sidesMarker)) {
+          listHeader = 'Sides:';
+        } else if (~columnData.indexOf(readingMarker)) {
+          listHeader = 'Reading variants:';
+        }
+
+        paragraph += listHeader;
+        paragraph += '<ol type="A">';
+        for (let k = 0; k < parts.length; k++) {
+          let part = parts[k];
+          let partData = '';
+
+          if (!part.trim())
+            continue;
+
+          if (part.length > 2)
+            partData = part.substr(2);
+
+          paragraph += '<li><span class="' + cssStyle + '">' + partData + '</span></li>';
+        }
+        paragraph += '</ol>';
+      } else {
+        // no parts in the columnData
+        paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
+      }
+      continue;
+    }
+
+    if (userSelectedDisplay[j] === 'crosses') {
+      let numCrossesColumnIdx = columns.indexOf('num_crosses');
+      let numCrosses = curRow[numCrossesColumnIdx];
+      if (numCrosses == 0) {
+        paragraph += 'No crosses';
+        continue;
+      }
+
+      paragraph += '<table class="crosses" border="1">';
+      paragraph += '<thead><tr>';
+      paragraph += '<th>A</th>';
+      paragraph += '<th>B</th>';
+      paragraph += '<th>C</th>';
+      paragraph += '<th>D</th>';
+      paragraph += '<th>E</th>';
+      paragraph += '<th>F</th>';
+      paragraph += '<th>G</th>';
+      paragraph += '</th></thead>';
+      paragraph += '<tbody>';
+
+      let allCrosses = crossesForMeta(curRow[metaIdIdx]);
+      for (let k = 0; k < allCrosses.length; k++) {
+        if (allCrosses[k][0].length > 0) {
+          // this is a cross from undefined group
+          paragraph += '<tr><td colspan="7">' + allCrosses[k][0][0].name + '</td></tr>';
+          continue;
+        }
+        paragraph += '<tr>';
+        // we have 8 groups in total, 0 being free-text and not a real group
+        for (let gr = 1; gr < 8; gr++) {
+          let crossForms = allCrosses[k][gr];
+          if (crossForms.length == 0) {
+            paragraph += '<td><span class="null">&#8709;</span></td>';
+            continue;
+          }
+          paragraph += '<td>';
+          paragraph += allCrosses[k][gr].map(function (v, i) {
+            let url = staticBase + v.name + '.png';
+            let res = '<img src="' + url + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
+            if (v.isCerain == 0) {
+              res += '?';
+            }
+            return res;
+          }).join(', ');
+          paragraph += '</td>';
+        }
+      }
+      paragraph += '</tbody></table>';
+      continue;
+    }
+
+    if (userSelectedDisplay[j] === 'signature_text') {
+      if (signatureName in aliasByParent) {
+        columnData += ' (' + aliasByParent[signatureName].join(';') + ')';
+      }
+    }
+
+    if (columnData == '' && showHeaders) {
+      columnData = '<i>Absent</i>';
+    }
+    paragraph += columnData;
+  }
+  paragraph += '</article>';
+
+  renderParams.mainDisplay.innerHTML += paragraph;
+
+  // prepare for the next run
+  renderParams.curRowIdx += 1;
+  renderIsDone = true;
+  setTimeout(signatureRenderHelper, 10, renderParams);
 }
 
 /* Find all crosses related to particular metaId.
