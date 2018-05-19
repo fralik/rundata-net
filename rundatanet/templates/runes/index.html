@@ -1022,6 +1022,8 @@ function renderSignature(renderParams) {
   const sidesMarker = '§A';
   const readingMarker = '§P';
   let staticBase = "{% static 'runes/images/cross_forms/' %}";
+  let signIdIdx = columns.indexOf('signature_id');
+  let signatureId = curRow[signIdIdx];
 
   let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
 
@@ -1169,8 +1171,8 @@ function renderSignature(renderParams) {
     }
 
     if (userSelectedDisplay[j] === 'signature_text') {
-      if (signatureName in aliasByParent) {
-        columnData += ' (' + aliasByParent[signatureName].join(';') + ')';
+      if (signatureId in aliasByParent) {
+        columnData += ' (' + aliasByParent[signatureId].join('|') + ')';
       }
     }
 
