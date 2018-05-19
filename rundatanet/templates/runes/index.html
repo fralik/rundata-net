@@ -496,6 +496,7 @@ function prepareAutoComplete(fieldId) {
         suggest(matches);
       },
       menuClass: ' clusterize-content ',
+      attachToParent: true,
     },
     size: 70,
     operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
@@ -503,10 +504,13 @@ function prepareAutoComplete(fieldId) {
   }
 }
 
+// Applies user-defined filters in order to obtain valid IDs
+// Returns true on success, false on any failure.
+//
 function applyFilters() {
   var result = $('#builder').queryBuilder('getSQL', false);
   if (!result || !result.sql.length) {
-    return;
+    return false;
   }
 
   console.log('Got SQL: ' + result.sql);
@@ -515,7 +519,7 @@ function applyFilters() {
     // no results
     rootsJson = [];
     sumRootChildren = 0;
-    return ;
+    return false;
   }
 
   // hash map of inscription IDs that have children.
@@ -528,6 +532,7 @@ function applyFilters() {
   //contents = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IN (SELECT signatureId FROM all_data WHERE " + result.sql + ")");
   //sumRootChildren = contents[0].values[0][0];
   sumRootChildren = 0;
+  return true;
 }
 
 
@@ -782,8 +787,8 @@ function onDbLoaded(e) {
   })
   .on('rulesChanged.queryBuilder', function () {
       if ($('#chkApplyFilters').is(":checked")) {
-          applyFilters();
-          applyPagination();
+          if (applyFilters())
+            applyPagination();
       }
   })
   // SQL export (second half)
@@ -847,12 +852,13 @@ function onDbLoaded(e) {
 
   $('#chkApplyFilters').on('change', function() {
     if (this.checked) {
-      applyFilters();
+      if (applyFilters())
+        applyPagination();
     } else {
       rootsJson = originalData;
       sumRootChildren = origianlSumRootChildren;
+      applyPagination();
     }
-    applyPagination();
   });
 }
 

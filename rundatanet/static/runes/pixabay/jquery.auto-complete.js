@@ -1,5 +1,5 @@
 /*
-    jQuery autoComplete v1.0.7-fralik.1
+    jQuery autoComplete v1.0.7-fralik.2
     Copyright (c) 2014 Simon Steinberger / Pixabay
               (c) 2018 Vadim Frolov
     License: http://www.opensource.org/licenses/mit-license.php
@@ -39,19 +39,18 @@
             that.cache = {};
             that.last_val = '';
             that.submitting = false;
-            that.attachedToBody = false;
 
             that.updateSC = function(resize, next){
-                if (that.attachedToBody) {
+                if (o.attachToParent) {
                     that.sc.css({
                         width: that.outerWidth(),
-                        top: that.offset().top - that.sc.outerHeight(),
-                        left: that.offset().left,
+                        top: -that.sc.outerHeight() + 2,
                     });
                 } else {
                     that.sc.css({
                         width: that.outerWidth(),
-                        top: -that.sc.outerHeight() + 2,
+                        top: that.offset().top - that.sc.outerHeight(),
+                        left: that.offset().left,
                     });
                 }
                 if (!resize) {
@@ -72,7 +71,7 @@
             }
             $(window).on('resize.autocomplete', that.updateSC);
 
-            if (that.parent()) {
+            if (o.attachToParent) {
                 that.sc.appendTo(that.parent());
             } else {
                 that.sc.appendTo('body');
@@ -96,6 +95,7 @@
                 var item = $(this), v = item.attr('data-val');
                 if (v || item.hasClass('autocomplete-suggestion')) { // else outside click
                     that.val(v);
+                    that.change(); // be sure value change is propagated
                     o.onSelect(e, v, item);
                     that.sc.hide();
                 }
@@ -234,6 +234,9 @@
         menuClass: '',
         // User-defined ID of the auto-complete container. If empty, ID will be generated.
         id: '',
+        // If false, then the container with suggestions is attached directly to body.
+        // If true, then the container is attached to the parent of input element.
+        attachToParent: false,
         renderItem: function (item, search){
             // escape special characters
             search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
