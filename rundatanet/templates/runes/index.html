@@ -291,6 +291,13 @@ var renderIsDone = false;
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'found_location'];
 
+// An extension of Leaflet marker that provides information about inscription
+MarkerWithData = L.Marker.extend({
+   options: {
+      inscription: '',
+   }
+});
+
 function applyPagination() {
   $('#jstree').jstree(true).refresh();
 
@@ -385,7 +392,6 @@ function onDisplayFormatClicked() {
 
   if (selectedValues.length > 0 && !(formatDialog.is(':visible'))) {
     if (!arraysEqual(userSelectedDisplay, selectedValues)) {
-      console.log('Going to update display');
       userSelectedDisplay = selectedValues;
       displaySignatureInfo();
     }
@@ -601,7 +607,6 @@ function onDbLoaded(e) {
         delay: 50,
         source: function(term, suggest) {
           var matches = [];
-          console.log('doing the search of ' + term);
           for (i = 0; i < signaturesSelectize.length; i++) {
             if (signaturesSelectize[i].text.startsWith(term)) {
               matches.push(signaturesSelectize[i].text);
@@ -613,7 +618,6 @@ function onDbLoaded(e) {
               continue;
             }
           }
-          console.log('Found ' + matches.length + ' matches');
           suggest(matches);
         },
         menuClass: 'clusterize-content ',
@@ -946,7 +950,7 @@ function displaySignatureInfo() {
         let lat = parseFloat(contents[0].values[i][latIdx]);
         let lon = parseFloat(contents[0].values[i][lonIdx]);
         if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
-          marker = new L.marker([lat, lon]);
+          marker = new MarkerWithData([lat, lon], {inscription: signatureName});
           let popupText = "<b>" + signatureName + "</b>";
           marker.bindPopup(popupText);
           mapMarkers[row] = marker;
@@ -1104,7 +1108,7 @@ function renderSignature(renderParams) {
     if (userSelectedDisplay[j] === 'crosses') {
       let numCrossesColumnIdx = columns.indexOf('num_crosses');
       let numCrosses = curRow[numCrossesColumnIdx];
-      if (numCrosses == 0) {
+      if (!numCrosses || numCrosses == 0) {
         paragraph += 'No crosses';
         continue;
       }
@@ -1184,6 +1188,8 @@ function crossesForMeta(metaId) {
   // we do not check that this meta contains any crosses. This should be done in parent call
   let cc = db.exec("SELECT id FROM crosses WHERE meta_id = '" + metaId + "'");
   let contents = db.exec("SELECT cross_id, cross_forms.id, cross_forms.name, cross_forms.group_id, cross_definitions.is_certain FROM cross_definitions INNER JOIN cross_forms ON (cross_definitions.form_id = cross_forms.id) WHERE cross_id IN (SELECT id FROM crosses WHERE meta_id = '" + metaId + "') ORDER BY cross_id");
+  if (!contents)
+    return [];
 
   let lastCrossId = -1;
   let crosses = [];
@@ -1413,6 +1419,10 @@ $(function() {
   markers = L.markerClusterGroup({
     showCoverageOnHover: false,
     removeOutsideVisibleBounds: false,
+  });
+  markers.on('click', function (a) {
+    var section = document.getElementById(a.layer.options.inscription);
+    section.parentNode.scrollTop = section.offsetTop;
   });
   markers.addTo(myMap);
 
