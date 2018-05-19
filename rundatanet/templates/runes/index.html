@@ -393,7 +393,7 @@ function onDisplayFormatClicked() {
   if (selectedValues.length > 0 && !(formatDialog.is(':visible'))) {
     if (!arraysEqual(userSelectedDisplay, selectedValues)) {
       userSelectedDisplay = selectedValues;
-      displaySignatureInfo();
+      displaySignatureInfo(false);
     }
   }
 }
@@ -878,14 +878,20 @@ function fetchTreeData(obj, cb) {
   }*/
 }
 
-function displaySignatureInfo() {
-  $('#mainDisplay').empty();
-  for (let key in mapMarkers) {
-    if (mapMarkers.hasOwnProperty(key)) {
-      mapMarkers[key].remove();
-    }
+function displaySignatureInfo(makeMarkers) {
+  if (makeMarkers === undefined) {
+    makeMarkers = true;
   }
-  markers.clearLayers();
+
+  $('#mainDisplay').empty();
+  if (makeMarkers) {
+    for (let key in mapMarkers) {
+      if (mapMarkers.hasOwnProperty(key)) {
+        mapMarkers[key].remove();
+      }
+    }
+    markers.clearLayers();
+  }
 
   let indices = $('#jstree').jstree(true).get_selected();
   if (indices.length == 0)
@@ -943,7 +949,7 @@ function displaySignatureInfo() {
 
   numSelectedSignatures = indices.length;
 
-  if ($('#mapDisplay').is(':visible')) {
+  if ($('#mapDisplay').is(':visible') && makeMarkers) {
     for (let i = 0; i < indices.length; i++) {
       let row = indices[i];
       let signatureName = contents[0].values[i][signNameIdx];
