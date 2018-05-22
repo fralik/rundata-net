@@ -287,6 +287,7 @@ var mapMarkers = {}; // Collection of created map markers. This is used in order
 var markers = []; // Leaflet markers group
 var numSelectedSignatures = [];
 var renderIsDone = false;
+var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'found_location'];
@@ -391,9 +392,11 @@ function onDisplayFormatClicked() {
   }
 
   if (selectedValues.length > 0 && !(formatDialog.is(':visible'))) {
-    if (!arraysEqual(userSelectedDisplay, selectedValues)) {
+    const newShowHeaders = $('#chkDisplayHeaders').is(":checked");
+    if (!arraysEqual(userSelectedDisplay, selectedValues) || newShowHeaders != lastShowHeaders) {
       userSelectedDisplay = selectedValues;
       displaySignatureInfo(false);
+      lastShowHeaders = newShowHeaders;
     }
   }
 }
@@ -1029,9 +1032,12 @@ function renderSignature(renderParams) {
 
   for (let j = 0; j < userSelectedDisplay.length; j++) {
     let humanName = humanNameForColumnName(userSelectedDisplay[j]);
+    let columnIdx = columns.indexOf(userSelectedDisplay[j]);
+    let columnData = curRow[columnIdx];
+
     if (showHeaders) {
       paragraph += '<h4>' + humanName + '</h4>';
-    } else if (paragraph.length > 0) {
+    } else if (paragraph.length > 0 && columnData !== '') {
       paragraph += '<br>';
     }
 
@@ -1076,9 +1082,6 @@ function renderSignature(renderParams) {
 
       continue;
     }
-
-    let columnIdx = columns.indexOf(userSelectedDisplay[j]);
-    let columnData = curRow[columnIdx];
 
     if (jQuery.inArray(userSelectedDisplay[j], customColumns) != -1) {
       let cssStyle = 'normalization';
