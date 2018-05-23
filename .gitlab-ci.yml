@@ -38,8 +38,9 @@ staging:
     - ssh-keyscan -p $STAGING_PORT $STAGING_SERVER >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
 
+    # prepare pull script
+    - echo "cd ~" > ~/pull.sh
+    - echo git pull >> ~/.pull.sh
+
   script:
-    - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
-    - cd ~
-    - pwd
-    - git pull
+    - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s' < ~/pull.sh
