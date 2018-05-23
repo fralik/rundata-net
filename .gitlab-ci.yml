@@ -44,3 +44,4 @@ staging:
 
   script:
     - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s' < ~/pull.sh
+    - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT cd /home/webapps/rundata.info; git pull
