@@ -39,6 +39,7 @@ staging:
     - chmod 644 ~/.ssh/known_hosts
 
   script:
-    - echo Our connection is $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
     - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
+    - cd ~
+    - pwd
     - git pull
