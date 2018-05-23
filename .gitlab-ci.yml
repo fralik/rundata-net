@@ -1,4 +1,5 @@
 image: ubuntu
+# python:latest
 
 # test:
 #   script:
@@ -22,6 +23,20 @@ staging:
     ## https://gitlab.com/gitlab-examples/ssh-private-key/issues/1#note_48526556
     ##
     - echo "$SSH_TOKEN" | tr -d '\r' | ssh-add - > /dev/null
+
+    ##
+    ## Create the SSH directory and give it the right permissions
+    ##
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    ##
+    ## Use ssh-keyscan to scan the keys of your private server.
+    ## You can copy and repeat that command if you have
+    ## more than one server to connect to.
+    ##
+    - ssh-keyscan $STAGING_SERVER >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
 
   script:
     - ssh $DEPLOYMENT_SSH_CONNECTION
