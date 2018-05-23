@@ -1,3 +1,5 @@
+image: ubuntu
+
 # test:
 #   script:
 #   - apt-get update -qy
@@ -6,11 +8,13 @@
 #   - python manage.py test
 
 staging:
+  # image per job
+  # image: ubuntu
   type: deploy
   before_script:
     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
     # Run ssh-agent inside the build environment
-    - ssh-agent -s
+    - eval $(ssh-agent -s)
     ##
     ## Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
     ## We're using tr to fix line endings which makes ed25519 keys work
