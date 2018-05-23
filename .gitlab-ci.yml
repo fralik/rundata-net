@@ -35,9 +35,10 @@ staging:
     ## You can copy and repeat that command if you have
     ## more than one server to connect to.
     ##
-    - ssh-keyscan $STAGING_SERVER >> ~/.ssh/known_hosts
+    - ssh-keyscan $STAGING_SERVER -p $STAGING_PORT >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
 
   script:
-    - ssh $DEPLOYMENT_SSH_CONNECTION
+    - echo Our connection is $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
+    - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
     - git pull
