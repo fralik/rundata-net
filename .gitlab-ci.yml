@@ -43,6 +43,5 @@ staging:
     - echo git pull >> ~/.pull.sh
 
   script:
-    - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
-    - hostname
-    - ssh $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s' < ~/pull.sh
+    #- ssh -t $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
+    - ssh -t $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s' < ~/pull.sh
