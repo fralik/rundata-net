@@ -44,4 +44,5 @@ staging:
 
   script:
     #- ssh -t $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
-    - ssh -tt $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s ' < ~/pull.sh
+    #- ssh -tt $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s ' < ~/pull.sh
+    -echo nothing
