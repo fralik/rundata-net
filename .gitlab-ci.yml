@@ -1,5 +1,5 @@
-image: ubuntu
-# python:latest
+#image: ubuntu
+python:3.6
 
 # test:
 #   script:
@@ -8,14 +8,25 @@ image: ubuntu
 #   - pip install -r requirements/local.txt
 #   - python manage.py test
 
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+  - ~/.cache/pip/
+
 staging:
   # image per job
   # image: ubuntu
   type: deploy
   before_script:
+    # install requirement packages
+    - apt-get update -qy
+    - apt-get install -y python-dev python-pip
     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+
     # Run ssh-agent inside the build environment
     - eval $(ssh-agent -s)
+
     ##
     ## Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
     ## We're using tr to fix line endings which makes ed25519 keys work
@@ -42,7 +53,13 @@ staging:
     - echo "cd /home/webapps/rundata.info" > ~/pull.sh
     - echo git pull >> ~/.pull.sh
 
+    - pip install -r requirements/production.txt
+
   script:
+    - cd $CI_PROJECT_DIR
+    - pwd
+    - export DJANGO_SETTINGS_MODULE=config.settings.production
+    #- python manage.py collectstatic
     #- ssh -t $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT
     #- ssh -tt $STAGING_USER@$STAGING_SERVER -p $STAGING_PORT 'bash -s ' < ~/pull.sh
-    -echo nothing
+    - echo nothing
