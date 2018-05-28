@@ -2,7 +2,7 @@
 Quick user guide
 ================
 
-.. module:: rundata
+.. module:: rundata.userguide
 
 This section gives a quick introduction to Rundata-net interface.
 
@@ -28,13 +28,17 @@ From left to right and from top to bottom:
 
 Below is the description of each of these labels.
 
+.. _guide-list-of-inscriptions:
+
 List of inscriptions
 ====================
 
-​It's a list where each node corresponds to an individual inscription. Some
-inscriptions changed their name/ID throughout years. One example is isncription
-:samp:`Öl 2`, which had names :samp:`B 1076` and :samp:`L 1324`. The list of
-inscriptions contains the most recent names only, i.e. no :samp:`B 1076` nor
+​It's a list where each node corresponds to an individual inscription.
+inscriptions are referenced by a unique name/ID called signature, see
+:doc:`/db/signature`. Some inscriptions changed their name/ID
+throughout years. One example is isncription :samp:`Öl 2`, which had
+names :samp:`B 1076` and :samp:`L 1324`. The list of inscriptions
+contains the most recent names only, i.e. no :samp:`B 1076` nor
 :samp:`L 1324`. The former names (if any) are presented on the
 :ref:`main display<main-display-info>` when inscription is selected.
 

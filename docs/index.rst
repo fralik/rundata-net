@@ -21,6 +21,14 @@ Getting started
    getting-started/install
    getting-started/user_guide
 
+Database description
+--------------------
+
+.. toctree::
+    :maxdepth: 2
+
+    db/signature
+    db/data
 
 Indices and tables
 ------------------
