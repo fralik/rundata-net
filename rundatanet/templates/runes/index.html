@@ -289,6 +289,8 @@ var markers = []; // Leaflet markers group
 var numSelectedSignatures = [];
 var renderIsDone = false;
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
+var gRegExp = null;         // Two variables used in SQLite custom function to perform regex match
+var gRegExpString = null;
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'found_location'];
@@ -475,7 +477,7 @@ function prepareAutoComplete(ruleId, opt) {
   let fieldId = opt.fieldId || ruleId;
   let operators = opt.operators || ['equal', 'not_equal', 'begins_with',
         "not_begins_with", "contains", "not_contains", "ends_with",
-        "not_ends_with", "is_empty", 'is_not_empty'];
+        "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
 
   let contents = [];
   if (ruleId.indexOf('normalisation') != -1) {
@@ -557,6 +559,18 @@ function onDbLoaded(e) {
   var uInt8Array = new Uint8Array(this.response);
   db = new SQL.Database(uInt8Array);
 
+  db.create_function('regex', function (fieldData, regexValue) {
+    if (gRegExp == null || gRegExpString != regexValue) {
+        gRegExpString = regexValue;
+        gRegExp = new RegExp(regexValue);
+      }
+    let res = 1;
+    if (gRegExp.exec(fieldData) == null) {
+        res = 0;
+    }
+    return res;
+  });
+
   // get all root signatures (that are not aliases)
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
   var rootsWithChildren = db.exec("SELECT * FROM signatures_with_children");
@@ -614,7 +628,7 @@ function onDbLoaded(e) {
   // Initialzie QueryBuilder
   //////////////////////////////////////
   var glob_operators = ['equal', 'not_equal', 'begins_with_glob', "not_begins_with_glob", "contains_glob",
-   "not_contains_glob", "ends_with", "not_ends_with", "is_empty", 'is_not_empty'];
+   "not_contains_glob", "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
   var queryBuilderFilters = [
     {
       id: 'signature_text',
@@ -644,7 +658,7 @@ function onDbLoaded(e) {
       },
       size: 40,
       operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
-        "ends_with", "not_ends_with"],
+        "ends_with", "not_ends_with", "my_regex"],
     },
     {
       id: 'signature_country',
@@ -780,6 +794,7 @@ function onDbLoaded(e) {
       { type: 'not_begins_with_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'not_contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_regex', nb_inputs: 1, multiple: false, apply_to: ['string'] },
     ]),
 
     lang: {
@@ -790,6 +805,7 @@ function onDbLoaded(e) {
         not_begins_with_glob: "doesn't begin with",
         contains_glob: "contains",
         not_contains_glob: "doesn't contain",
+        my_regex: 'matches expression',
       }
     },
 
@@ -801,7 +817,8 @@ function onDbLoaded(e) {
       begins_with_glob: {op: 'GLOB ?', mod: '{0}*'},
       not_begins_with_glob: {op: 'NOT GLOB ?', mod: '{0}*'},
       contains_glob: { op: 'GLOB ?', mod: '*{0}*'},
-      not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'}
+      not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'},
+      my_regex: { op: 'REGEX ?', mod: '{0}'},
     },
     plugins: {
       'bt-tooltip-errors': null,
@@ -849,12 +866,11 @@ function onDbLoaded(e) {
       e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
       + rule.field + ' ' + sqlOperator(sqlValue) + '))';
     }
-    // if (rule.id.indexOf('normalisation') != -1) {
-    //   e.value = `signature_id IN (SELECT signature_id FROM ${rule.id} where ${e.value})`;
-    // }
-    // if (rule.id.indexOf('transliteration') != -1) {
-    //   e.value = `signature_id IN (SELECT signature_id FROM transliterated_text where ${e.value})`;
-    // }
+    if (sqlOperator().indexOf('REGEX') != -1) {
+      // Let's convert it to a function call. A better approacy might exist,
+      // see ruleExpression in query-builder.standalone.js
+      e.value = `regex(${rule.field}, ${sqlValue})`;
+    }
   })
   ;
 
