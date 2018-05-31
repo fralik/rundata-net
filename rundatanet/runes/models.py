@@ -144,6 +144,8 @@ class MetaInformation(models.Model):
     new_reading = models.BooleanField(default=False)
     # If inscription is purely ornamental
     ornamental = models.BooleanField(default=False)
+    # If inscription is recent (Santida)
+    recent = models.BooleanField(default=False)
 
     signature = models.OneToOneField(Signature,
         on_delete = models.CASCADE,

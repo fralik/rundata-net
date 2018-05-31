@@ -470,13 +470,22 @@ function prepareBooleanRule(opt) {
   };
 }
 
-function prepareAutoComplete(fieldId) {
+function prepareAutoComplete(ruleId, opt) {
+  if (!opt) opt = {};
+  let fieldId = opt.fieldId || ruleId;
+  let operators = opt.operators || ['equal', 'not_equal', 'begins_with',
+        "not_begins_with", "contains", "not_contains", "ends_with",
+        "not_ends_with", "is_empty", 'is_not_empty'];
+
   let contents = [];
-  if (fieldId.indexOf('normalisation') != -1) {
-    let str = `SELECT DISTINCT search_value FROM ${fieldId}`;
+  if (ruleId.indexOf('normalisation') != -1) {
+    let str = `SELECT DISTINCT search_value FROM ${ruleId}`;
     contents = db.exec(str);
-  } else if (fieldId.indexOf('runes_personalname') != -1) {
-    let str = `SELECT DISTINCT value FROM ${fieldId}`;
+  } else if (ruleId.indexOf('runes_personalname') != -1) {
+    let str = `SELECT DISTINCT value FROM ${ruleId}`;
+    contents = db.exec(str);
+  } else if (ruleId.indexOf('transliteration') != -1) {
+    let str = 'SELECT DISTINCT search_value FROM transliterated_text';
     contents = db.exec(str);
   } else {
     let str = `SELECT DISTINCT ${fieldId} FROM all_data WHERE ${fieldId} NOT NULL AND ${fieldId} <> '' ORDER BY ${fieldId} COLLATE NOCASE;`;
@@ -484,7 +493,8 @@ function prepareAutoComplete(fieldId) {
   }
 
   return {
-    id: fieldId,
+    id: ruleId,
+    field: fieldId,
     label: humanNameForColumnName(fieldId),
     type: 'string',
     plugin: 'autoComplete',
@@ -503,8 +513,7 @@ function prepareAutoComplete(fieldId) {
       attachToParent: true,
     },
     size: 70,
-    operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
-      "ends_with", "not_ends_with", "is_empty", 'is_not_empty'],
+    operators: operators,
   }
 }
 
@@ -604,6 +613,8 @@ function onDbLoaded(e) {
   /////////////////////////////////////
   // Initialzie QueryBuilder
   //////////////////////////////////////
+  var glob_operators = ['equal', 'not_equal', 'begins_with_glob', "not_begins_with_glob", "contains_glob",
+   "not_contains_glob", "ends_with", "not_ends_with", "is_empty", 'is_not_empty'];
   var queryBuilderFilters = [
     {
       id: 'signature_text',
@@ -686,10 +697,10 @@ function onDbLoaded(e) {
     prepareAutoComplete('dating'),
     prepareAutoComplete('carver'),
     prepareAutoComplete('material'),
-    prepareAutoComplete('normalisation_norse'),
-    prepareAutoComplete('normalisation_scandinavian'),
+    prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators}),
+    prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators}),
     prepareAutoComplete('english_translation'),
-    prepareAutoComplete('transliteration'),
+    prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators}),
     prepareAutoComplete('style'),
     prepareAutoComplete('reference'),
     prepareAutoComplete('additional'),
@@ -765,12 +776,20 @@ function onDbLoaded(e) {
     operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat([
       { type: 'alternatives_in',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'cross_form', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'begins_with_glob',      nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'not_begins_with_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'not_contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
     ]),
 
     lang: {
       operators: {
         alternatives_in: ' ',
         cross_form: ' ',
+        begins_with_glob: "begins with",
+        not_begins_with_glob: "doesn't begin with",
+        contains_glob: "contains",
+        not_contains_glob: "doesn't contain",
       }
     },
 
@@ -778,6 +797,11 @@ function onDbLoaded(e) {
     sqlOperators: {
       alternatives_in: { op: 'IN' },
       cross_form: { op: 'IN' },
+      //like_glob: {op: 'GLOB'},
+      begins_with_glob: {op: 'GLOB ?', mod: '{0}*'},
+      not_begins_with_glob: {op: 'NOT GLOB ?', mod: '{0}*'},
+      contains_glob: { op: 'GLOB ?', mod: '*{0}*'},
+      not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'}
     },
     plugins: {
       'bt-tooltip-errors': null,
@@ -825,6 +849,12 @@ function onDbLoaded(e) {
       e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
       + rule.field + ' ' + sqlOperator(sqlValue) + '))';
     }
+    // if (rule.id.indexOf('normalisation') != -1) {
+    //   e.value = `signature_id IN (SELECT signature_id FROM ${rule.id} where ${e.value})`;
+    // }
+    // if (rule.id.indexOf('transliteration') != -1) {
+    //   e.value = `signature_id IN (SELECT signature_id FROM transliterated_text where ${e.value})`;
+    // }
   })
   ;
 
@@ -1009,6 +1039,23 @@ function signatureRenderHelper(renderParams) {
   }
 }
 
+var entityMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
+};
+
+function escapeHtml (string) {
+  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+    return entityMap[s];
+  });
+}
+
 // Depends on global variables: db
 function renderSignature(renderParams) {
   renderIsDone = false;
@@ -1041,6 +1088,8 @@ function renderSignature(renderParams) {
     } else if (paragraph.length > 0 && columnData !== '') {
       paragraph += '<br>';
     }
+
+    columnData = escapeHtml(columnData);
 
     if (userSelectedDisplay[j] == 'images') {
       let directImages = db.exec("SELECT id, link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "' AND direct_url <> '' LIMIT 9");
@@ -1339,6 +1388,18 @@ function humanNames() {
     {
       value: 'runes_personalname',
       text: 'Personal Name'
+    },
+    {
+      value: 'search_transliteration',
+      text: 'Transliterated runic text'
+    },
+    {
+      value: 'normalisation_search_norse',
+      text: 'Normalization to Old West Norse'
+    },
+    {
+      value: 'normalisation_search_scandinavian',
+      text: 'Normalisation to Old Scandinavian'
     },
   ];
   return namesMap;
