@@ -6,7 +6,7 @@ Data in the database
 
 The data in the database can be split into two conceptual categories:
 
-#. meta information about runic inscription. This includes object description on which the inscription is located, where the object had been found, inscription style, e.t.c.
+#. meta information about runic inscription. This includes object description on which the inscription is located: where the object had been found, inscription style, e.t.c.
 #. inscription text. This includes the text of inscription in several forms.
 
 Besides conceptual categories, data is split into individual categories (properties or fields). Each category describes one aspect of inscription. For example, :samp:`Found location` describes the found location of an object on which runic inscription had been carved.
@@ -18,7 +18,7 @@ Rundata-net presents all data to user. It is possible to display it and search t
 Meta information
 ----------------
 
-Meta information is by definition information about. In case of Rundata-net it is information about inscription.
+Meta information is by definition an information about something. In case of Rundata-net it is information about inscription.
 
 First there is a block of geographical data:
 
@@ -48,7 +48,7 @@ Values of these fields have different meaning for different countries. For examp
   A combination of cross group and variable is referred to as *cross form*.
   The way cross descriptions are written in Rundata, there are two additions to the above described system:
 
-    * There can be uncertainty in cross form definition. Uncertainties are clearly marked in teh database.
+    * There can be uncertainty in cross form definition. Uncertainties are clearly marked in the database.
     * Not all crosses are classified according to Lager's classification. Some crosses are described by textual description.
 
 * Dating. Contains :samp:`U` (pre-Viking), :samp:`V` (Viking) or :samp:`M` (Medieval) for the period, if possible with a more exact time designation, for example :samp:`V 800`.
@@ -72,15 +72,12 @@ Values of these fields have different meaning for different countries. For examp
 * Object information. Contains information about type of object, for example flat rock (berghäll), bracteate (brakteat), grave-slab (gravhäll), coin (mynt), stick (pinne), plaster inscription (putsinskrift), "rune bone, rib" ("runben, revben"), runestone (runsten), wood inscription (träinskrift).
 * Other. This field contains a great collection of miscellaneous information, for example on figures, finding number at an archaeological excavation, when inscriptions or parts of inscription were discovered or recovered, information on pairs of stones, whether inscription is in the futhark, information on paint traces, about inscriptions with missing runes (purely ornamental), inscriptions in Latin, nonsense inscriptions, relief carving, etc.
 
-  .. warning::
-
-      Although present in the database, this field is not searchable and not displayed.
-
 * Reference. Contains references about inscription. For example cross-references to where you can find unpublished inscriptions, but primarily all references to sources for inscriptions in this database (enter using code $=), for example :samp:`$=Wessén 1958:24`.
 
 * Is lost? A flag indicating if inscription has been lost.
 * New reading? A flag indicating new reading or new interpretation, i.e. reading or interpretation has been completed from a later source than the source indicated in the signature.
 * Is pure ornamental? A flag indicating whether inscription is pure ornamental or not.
+* Is recent? A flag indicating if inscription is from recent time. As a rule, the reading will be specified under field Other. Genuine post-medieval inscriptions dated to about year 1600 have reading and interpretations in :ref:`inscription texts <inscriptions-texts>`.
 
 .. _figure-styles:
 
@@ -108,7 +105,7 @@ Each inscription has several texts related to it. Texts could have special symbo
 Transliterated runic text
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is the pure runic inscription, transliterated. One example is :samp:`sirkir × resþi × stin × þana × eftᛦ × karna`. Here is the table that lists all transliterations and corresponding period that they occur. Transliterations are strictly consistent within each time period, with a few regional exceptions in Medivial group.
+This is the pure runic inscription, transliterated. One example is :samp:`sirkir × resþi × stin × þana × eftR × karna`. Here is the table that lists all transliterations and corresponding period that they occur. Transliterations are strictly consistent within each time period, with a few regional exceptions in Medieval group.
 
 +----------------+------------+------------+------------------+
 |Transliteration | pre-Viking | Viking Age | Medieval         |
@@ -214,12 +211,6 @@ Special characters:
 
 * ñ = |runangtrans|, i.e. the rune with variants in the 24-character futhark.
 * ô = |omedhake|, i.e. the rune ᚯ in the Maeshowe inscriptions from Orkney. In medieval inscriptions, ᚯ is transliterated as ø but in the Maeshowe inscriptions, the special variant |meashoweoe2| is transliterated as ø.
-
-.. warning::
-
-    Rundata has a special character R, which is used as transliteration of rune ᛦ.
-    Rundata-net uses the rune directly!
-
 * ( ) = damaged rune which can be read with some certainty.
 * [ ] = series of lost runes which can be supplied from another source.
 * { } = Latin majuscule. For the sake of clarity, these are also written in capitals in the transliterated text.
@@ -230,24 +221,22 @@ Special characters:
 * ^ = bind-rune. For example, the bind-rune  is transliterated :samp:`a^f`. A bind-rune can connect the end of one word with the beginning of another. For example,  (ræisa stæin) is transliterated :samp:`risa^ ^stin`.
 * \| = double-duty rune. Because the database works on the basis of word-for-word comparisons, a series of runes such as  (ok Guðs) must be split into two words: auk\| \|kuþs.
 * / = variant readings. If the reading of runes in a word is doubtful, the possible variants are given divided by a slash.
-* §A, §B (etc.) = different sides of the object bearing the inscription;
+* §A, §B (etc.) = different sides of the object bearing the inscription. Sides are displayed as a list, but can can be search for by §A, §B (etc.).
 * §P (etc.) = variant readings involving more than a single word; §P, §Q (etc.) is then included in the normalised text as well.
 * ¶ = new line in the inscription.
 * ¶¶ = One word spans two sides of object. For technical reasons, it is not possible to put a side notation such as §B in the middle of a word. Instead, the side notation is located before or after the word which spans two sides of a stone and the place the word is broken is marked by two line break symbols.
-* ° = inscription does not contain any but ornamental runes.
-* ¬ = inscription is recent.
 
 Search normalization removes most of the special characters. Some examples:
 
-* :samp:`[...(r) : sin : ste(i)... ...]` becomes :samp:`...r : sin : stei... ...`.
+* :samp:`[...(r) : sin : ste(i)... ...]` becomes :samp:`...r sin stei... ...`.
 
-* ::
+* Record like this::
 
     §A + s-a... --(s)- i(a)s · satr · aiftir · si(b)(a) · kuþa · sun · fultars · in hons ·· liþi · sati · at · u · -ausa-þ-... +: fulkin : likr : hins : fulkþu : flaistr (:)· uisi · þat · maistar · taiþir : tulka · þruþar : traukr : i : þaimsi · huki · munat : raiþ:uiþur : raþa : ruk:starkr · i · tanmarku : --ntils : iarmun··kruntar : urkrontari : lonti §B {÷ IN| |NONIN- ¶ + HE... ...}
 
   becomes::
 
-    A + s-a... --s- ias · satr · aiftir · siba · kuþa · sun · fultars · in hons ·· liþi · sati · at · u · -ausa-þ-... +: fulkin : likr : hins : fulkþu : flaistr :· uisi · þat · maistar · taiþir : tulka · þruþar : traukr : i : þaimsi · huki · munat : raiþ:uiþur : raþa : ruk:starkr · i · tanmarku : --ntils : iarmun··kruntar : urkrontari : lonti B ÷ IN NONIN- ¶ + HE... ...
+    §A s-a... --s- ias satr aiftir siba kuþa sun fultars in hons liþi sati at u -ausa-þ-... fulkin likr hins fulkþu flaistr uisi þat maistar taiþir tulka þruþar traukr i þaimsi huki munat raiþuiþur raþa rukstarkr i tanmarku --ntils iarmunkruntar urkrontari lonti §B IN NONIN- HE... ...
 
 Normalised runic text
 ^^^^^^^^^^^^^^^^^^^^^
@@ -270,8 +259,6 @@ Normalised texts also have special characters. Here is the list these characters
 * { } = this part of the inscription was written in Roman majuscule.
 * < > = series of runes cannot be interpreted in an otherwise fully translated inscription; the runes * are transliterated in pointed parentheses as they stand.*
 * / = alternative forms. If a series of runes can be inter* preted in several ways, the alternatives * are separated by a slash. In Gotlandic inscriptions, the slash is also used to indicate the modern form of a place-name.
-* ° = inscription does not contain any but ornamental runes.
-* ¬ = inscription is recent.
 
 .. |skpunkt| image:: /_static/skpunkt.bmp
 .. |skkolon| image:: /_static/skkolon.bmp

@@ -13,7 +13,7 @@ Signature: part 1
 
 The first part indicates the origin of the inscription.
 
-For Swedish inscriptions, the first element is the province designation used in Sveriges runinskrifter. For inscriptions from provinces which have not yet been published in Sveriges runinskrifter, a different designations are used. Here is the complete list of possible designations in alphabetic order:
+For Swedish inscriptions, the first element is the province designation used in Sveriges runinskrifter. For inscriptions from provinces which have not yet been published in Sveriges runinskrifter, a different designation is used. Here is the complete list of possible designations in alphabetic order:
 
 ==========  ===========================
 ID          Meaning
