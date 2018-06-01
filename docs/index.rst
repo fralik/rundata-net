@@ -30,6 +30,14 @@ Database description
     db/signature
     db/data
 
+Searching
+---------
+
+.. toctree::
+    :maxdepth: 2
+
+    searching
+
 Indices and tables
 ------------------
 
