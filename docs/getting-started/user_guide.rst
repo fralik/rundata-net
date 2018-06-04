@@ -153,10 +153,28 @@ A query consists of rules, which can be grouped. Groups and rules are connected
 by gray lines on the left helping user to trace relations. Each group has a set
 of logical operators presented in it's upper left corner: NOT, AND, OR.
 Operators describe how rules inside the group are combined together (AND, OR)
-and if the group condition should be inversed (NOT). Each rule consists of
-a rule's name followed by operator and rule's value. You can see various search
-example in 'How to search section' (**not available yet**). User can create,
-delete and rearrange rules/groups with drag and drop.
+and if the group condition should be inversed (NOT). Here is the table that
+show how logical operators work. For simplicity, it is demonstrated with only
+two variables a and b. Each variable can have a value of TRUE or FALSE
+denoted as T and F respectively.
+
++---+---+---------+--------+---------+---------+
+| a | b | a AND b | a OR b | NOT a   | NOT b   |
++===+===+=========+========+=========+=========+
+| T | T |    T    |   T    | F       | F       |
++---+---+---------+--------+---------+---------+
+| T | F |    F    |   T    | F       | T       |
++---+---+---------+--------+---------+---------+
+| F | T |    F    |   T    | T       | F       |
++---+---+---------+--------+---------+---------+
+| F | F |    F    |   F    | T       | T       |
++---+---+---------+--------+---------+---------+
+
+You can find more details and examples in `Wikipedia <https://en.wikipedia.org/wiki/Truth_table#Binary_operations>`_.
+
+Each rule consists of a rule's name followed by operator and rule's value.
+You can see various search example in :doc:`/searching`.
+User can create, delete and rearrange rules/groups with drag and drop.
 
 The idea behind query builder was to make it user friendly. Search in
 the original Rundata is performed with help of regular expressions. This is
