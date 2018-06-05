@@ -58,6 +58,28 @@ This project won't be possible without the help of:
 * `Jan Owe`_. Jan is the maintainer of the original Rundata program and the database.
 * `Marcus Smith`_. Marcus developed perhaps the first web version of Rundata. I used his website for inspiration and CSS styles.
 
+*********************
+Browser compatibility
+*********************
+
+Here is the list of browsers in which Rundata-net is known to work. A version starting from which Rundata-net is known to work fine is specified for each browser.
+
++-------------------+---------+---------------------------------+
+| Browser           | Version | Notes                           |
++===================+=========+=================================+
+| Microsoft Edge    | 12      |                                 |
++-------------------+---------+---------------------------------+
+| Chrome            | 49      |                                 |
++-------------------+---------+---------------------------------+
+| Firefox           | 44      |                                 |
++-------------------+---------+---------------------------------+
+| Internet Explorer | \-      | Not supported                   |
++-------------------+---------+---------------------------------+
+| Safari            |  11     | Might work in some earlier      |
+|                   |         | versions, but has not been      |
+|                   |         | tested.                         |
++-------------------+---------+---------------------------------+
+
 **********
 References
 **********
