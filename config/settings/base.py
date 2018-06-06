@@ -66,6 +66,7 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'django.contrib.humanize', # Handy template tags
+    'django.contrib.sitemaps',
 ]
 THIRD_PARTY_APPS = [
     #'crispy_forms',
