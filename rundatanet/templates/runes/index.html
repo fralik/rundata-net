@@ -342,8 +342,7 @@ var markers = []; // Leaflet markers group
 var numSelectedSignatures = [];
 var renderIsDone = false;
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
-var gRegExp = null;         // Two variables used in SQLite custom function to perform regex match
-var gRegExpString = null;
+var gRegExpMap = {}; // Object of all regex expressions
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'found_location'];
@@ -612,15 +611,14 @@ function onDbLoaded(e) {
   var uInt8Array = new Uint8Array(this.response);
   db = new SQL.Database(uInt8Array);
 
-  db.create_function('regex', function (fieldData, regexValue) {
-    if (gRegExp == null || gRegExpString != regexValue) {
-        gRegExpString = regexValue;
-        gRegExp = new RegExp(regexValue);
-      }
-    let res = 1;
-    if (gRegExp.exec(fieldData) == null) {
-        res = 0;
+  db.create_function('regexp', function (regexValue, fieldData) {
+    if (!gRegExpMap.hasOwnProperty(regexValue)) {
+      gRegExpMap[regexValue] = new RegExp(regexValue);
     }
+    let res = -1;
+    if (gRegExpMap[regexValue].test(fieldData))
+      res = 1;
+
     return res;
   });
 
@@ -871,7 +869,7 @@ function onDbLoaded(e) {
       not_begins_with_glob: {op: 'NOT GLOB ?', mod: '{0}*'},
       contains_glob: { op: 'GLOB ?', mod: '*{0}*'},
       not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'},
-      my_regex: { op: 'REGEX ?', mod: '{0}'},
+      my_regex: { op: 'REGEXP ?', mod: '{0}'},
     },
     plugins: {
       'bt-tooltip-errors': null,
@@ -919,10 +917,10 @@ function onDbLoaded(e) {
       e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
       + rule.field + ' ' + sqlOperator(sqlValue) + '))';
     }
-    if (sqlOperator().indexOf('REGEX') != -1) {
-      // Let's convert it to a function call. A better approacy might exist,
+    if (sqlOperator().indexOf('REGEXP') != -1) {
+      // Let's convert it to a function call. A better approach might exist,
       // see ruleExpression in query-builder.standalone.js
-      e.value = `regex(${rule.field}, ${sqlValue})`;
+      e.value = `regexp(${sqlValue}, ${rule.field}) == 1`;
     }
   })
   ;
