@@ -104,6 +104,9 @@
       .zero-padding-left {
         padding-left: 0px;
       }
+      .highlighted {
+        color: red;
+      }
     </style>
   </head>
 <body style="">
@@ -303,7 +306,7 @@ if (ieVersion !== false && ieVersion <= 12) {
 <!--<script src="{% static 'query-builder/bootstrap-slider.min.js' %}"></script>-->
 <script src="{% static 'query-builder/selectize.min.js' %}"></script>
 <script src="{% static 'query-builder/bootstrap-select.min.js' %}"></script>
-<script src="{% static 'query-builder/query-builder.standalone.min.js' %}"></script>
+<script src="{% static 'query-builder/query-builder.standalone.js' %}"></script>
 <script src="{% static 'query-builder/interact.min.js' %}"></script>
 <!--<script type="text/javascript" src="{% static 'runes/chosen/chosen.jquery.min.js' %}"></script>-->
 <script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
@@ -343,6 +346,10 @@ var numSelectedSignatures = [];
 var renderIsDone = false;
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
 var gRegExpMap = {}; // Object of all regex expressions
+var gRegExpMapG = {}; // Object of all regex expressions with global flag
+var gWordIndices = {};
+var gMatchedWords = {};
+var gWordSearchRegex = new RegExp("(·|:|×|¤|'|\\+|÷|\\s)+|¶+", 'g');
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'found_location'];
@@ -529,7 +536,7 @@ function prepareAutoComplete(ruleId, opt) {
   let fieldId = opt.fieldId || ruleId;
   let operators = opt.operators || ['equal', 'not_equal', 'begins_with',
         "not_begins_with", "contains", "not_contains", "ends_with",
-        "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
+        "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp"];
 
   let contents = [];
   if (ruleId.indexOf('normalisation') != -1) {
@@ -580,6 +587,10 @@ function applyFilters() {
     return false;
   }
 
+  // reset global variable
+  gWordIndices = {};
+  gMatchedWords = {};
+
   console.log('Got SQL: ' + result.sql);
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data WHERE " + result.sql);
   if (contents.length == 0) {
@@ -587,6 +598,30 @@ function applyFilters() {
     rootsJson = [];
     sumRootChildren = 0;
     return true;
+  }
+
+  let signatureIdIdx = contents[0].columns.indexOf('signature_id');
+
+  if (Object.keys(gWordIndices).length != 0) {
+    contents[0].values = contents[0].values.filter(function checkIds(row) {
+      id = row[signatureIdIdx];
+
+      if (!gWordIndices.hasOwnProperty(id))
+        return true;
+
+      let allKeys = Object.keys(gWordIndices[id]);
+      let intersection = new Set(gWordIndices[id][allKeys[0]]);
+      for (i = 1; i < allKeys.length; i++) {
+        let b = new Set(gWordIndices[id][allKeys[i]]);
+        intersection = new Set([...intersection].filter(x => b.has(x)));
+        if (intersection.size == 0) {
+          return false;
+        }
+      }
+
+      gMatchedWords[id] = intersection;
+      return true;
+    });
   }
 
   // hash map of inscription IDs that have children.
@@ -603,6 +638,108 @@ function applyFilters() {
 }
 
 
+function range(size, startAt = 0) {
+    return [...Array(size).keys()].map(i => i + startAt);
+}
+
+// extract starting indices of words from str
+// Can be applied for string where words are separated by a single whitespace
+function getWordStarts(str, regexStr) {
+  if (regexStr === undefined) {
+    regexStr = '\\s';
+  }
+  let r = new RegExp(regexStr, 'g');
+  var matches = [-1];
+  while ((arr = r.exec(str)) !== null) {
+    matches.push(arr.index);
+  }
+  matches.push(str.length);
+
+  return matches;
+}
+
+// Extracts word boundaries from inscription texts. These texts
+// have multiple separators (whitespaces, punctuation) that often
+// go together, i.e. space,punctuation,space
+function getWordBoundaries(str, reg) {
+  var words = [];
+  var wordBegin = 0;
+  while ((arr = reg.exec(str)) !== null) {
+    if (wordBegin == arr.index) {
+      wordBegin += arr[0].length;
+      continue;
+    }
+    let oneWord = new Array(wordBegin, arr.index);
+    oneWord.push(str.slice(oneWord[0], oneWord[1]));
+    words.push(oneWord);
+    wordBegin = arr.index + arr[0].length;
+  }
+  if (wordBegin == 0) {
+    if (str.length > 0) {
+      let oneWord = new Array(0, str.length, str);
+      words.push(oneWord);
+    }
+  } else {
+    // let's add the final word
+    if (wordBegin != str.length) {
+      let oneWord = new Array(wordBegin, str.length);
+      oneWord.push(str.slice(oneWord[0], oneWord[1]));
+      words.push(oneWord);
+    }
+  }
+  return words;
+}
+
+// function highlightWords(str, reg, wordIndicesSet) {
+//   var words = [];
+//   var wordBegin = 0;
+//   var curWordIdx = 0;
+//   var highlightedStr = '';
+//   var lastWordEnd = 0;
+//   while ((arr = reg.exec(str)) !== null) {
+//     curWordIdx++;
+
+//     let strToAdd = '';
+//     if (wordIndicesSet.has(curWordIdx)) {
+//       strToAdd = '<span class="highlight">' + str.slice(lastWordEnd, arr.index) + '</span>';
+//     } else {
+//       strToAdd = str.slice(lastWordEnd, arr.index);
+//     }
+
+//     let oneWord = new Array(wordBegin, arr.index);
+//     oneWord.push(str.slice(oneWord[0], oneWord[1]));
+//     words.push(oneWord);
+//     wordBegin = arr.index + arr[0].length;
+
+//     highlightedStr += strToAdd;
+//     lastWordEnd = arr.index;
+
+//   }
+//   if (wordBegin != 0) {
+//     // let's add the final word
+//     curWordIdx++;
+//     if (wordIndicesSet.has(curWordIdx)) {
+//       strToAdd = '<span class="highlight">' + str.slice(lastWordEnd, str.length) + '</span>';
+//     } else {
+//       strToAdd = str.slice(lastWordEnd, str.length);
+//     }
+//     highlightedStr += strToAdd;
+//     let oneWord = new Array(wordBegin, str.length);
+//     oneWord.push(str.slice(oneWord[0], oneWord[1]));
+//     words.push(oneWord);
+//   }
+//   return [words, highlightedStr];
+// }
+
+function wordByCharPos(wordStarts, charPos) {
+  for (i = 0; i < wordStarts.length - 1; i++) {
+    if (charPos > wordStarts[i] && charPos < wordStarts[i+1]) {
+      return i + 1;
+    }
+  }
+  return -1;
+}
+
 function onDbLoaded(e) {
   if (!this.response) {
     return;
@@ -614,12 +751,47 @@ function onDbLoaded(e) {
   db.create_function('regexp', function (regexValue, fieldData) {
     if (!gRegExpMap.hasOwnProperty(regexValue)) {
       gRegExpMap[regexValue] = new RegExp(regexValue);
+      gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
     }
     let res = -1;
     if (gRegExpMap[regexValue].test(fieldData))
       res = 1;
 
     return res;
+  });
+
+  db.create_function('wordRegexp', function (regexValue, fieldData, id, fieldName) {
+    if (!gRegExpMap.hasOwnProperty(regexValue)) {
+      gRegExpMap[regexValue] = new RegExp(regexValue);
+      gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
+    }
+
+    // Test method doesn't really work with global regexps
+    if (gRegExpMap[regexValue].test(fieldData) == true) {
+      // Use gRegExpMapG from now on. This is important!
+
+      wordStarts = getWordStarts(fieldData);
+
+      var matchIndices = [];
+      while ((array1 = gRegExpMapG[regexValue].exec(fieldData)) !== null) {
+        //matchIndices.push(range(array1[0].length, array1));
+        minWordIdx = wordByCharPos(wordStarts, array1.index);
+        maxWordIdx = wordByCharPos(wordStarts, array1.index+array1[0].length-1);
+        //console.log('Going to make range for ' + (maxWordIdx-minWordIdx+1) + ' from ' + minWordIdx);
+        let wordIndices = range(maxWordIdx-minWordIdx+1, minWordIdx); // range of word indices
+        if (!gWordIndices.hasOwnProperty(id)) {
+          gWordIndices[id] = {};
+        }
+        if (!gWordIndices[id].hasOwnProperty(fieldName)) {
+          gWordIndices[id][fieldName] = [];
+        }
+        gWordIndices[id][fieldName].push(...wordIndices);
+      }
+      return 1;
+    }
+
+    //console.log(`${regexValue}; ${fieldData}; ${id};`);
+    return -1;
   });
 
   // get all root signatures (that are not aliases)
@@ -679,7 +851,7 @@ function onDbLoaded(e) {
   // Initialzie QueryBuilder
   //////////////////////////////////////
   var glob_operators = ['equal', 'not_equal', 'begins_with_glob', "not_begins_with_glob", "contains_glob",
-   "not_contains_glob", "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
+   "not_contains_glob", "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp"];
   var queryBuilderFilters = [
     {
       id: 'signature_text',
@@ -709,7 +881,7 @@ function onDbLoaded(e) {
       },
       size: 40,
       operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
-        "ends_with", "not_ends_with", "my_regex"],
+        "ends_with", "not_ends_with", "my_regex", "word_regexp"],
     },
     {
       id: 'signature_country',
@@ -846,6 +1018,7 @@ function onDbLoaded(e) {
       { type: 'contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'not_contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'my_regex', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'word_regexp', nb_inputs: 1, multiple: false, apply_to: ['string'] },
     ]),
 
     lang: {
@@ -857,6 +1030,7 @@ function onDbLoaded(e) {
         contains_glob: "contains",
         not_contains_glob: "doesn't contain",
         my_regex: 'matches expression',
+        word_regexp: 'word regexp',
       }
     },
 
@@ -870,6 +1044,7 @@ function onDbLoaded(e) {
       contains_glob: { op: 'GLOB ?', mod: '*{0}*'},
       not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'},
       my_regex: { op: 'REGEXP ?', mod: '{0}'},
+      word_regexp: { op: 'wordRegexp(?)', mod: '{0}'},
     },
     plugins: {
       'bt-tooltip-errors': null,
@@ -921,6 +1096,9 @@ function onDbLoaded(e) {
       // Let's convert it to a function call. A better approach might exist,
       // see ruleExpression in query-builder.standalone.js
       e.value = `regexp(${sqlValue}, ${rule.field}) == 1`;
+    }
+    if (sqlOperator().indexOf('wordRegexp') != -1) {
+      e.value = `wordRegexp(${sqlValue}, ${rule.field}, id, '${rule.field}') == 1`;
     }
   })
   ;
@@ -1135,7 +1313,9 @@ function renderSignature(renderParams) {
   let aliasByParent = renderParams.aliasByParent;
   let signatureName = curRow[renderParams.signNameIdx];
 
-  let customColumns = ['transliteration', 'english_translation', 'normalisation_scandinavian', 'normalisation_norse'];
+  let highlightColumns = ['transliteration', 'normalisation_scandinavian', 'normalisation_norse'];
+  let customColumns = new Array(...highlightColumns);
+  customColumns.push('english_translation');
   const paragraphSymbol = '§';
   const sidesMarker = '§A';
   const readingMarker = '§P';
@@ -1208,6 +1388,33 @@ function renderSignature(renderParams) {
         cssStyle = '';
       }
 
+      if (userSelectedDisplay[j].indexOf('english_translation') == -1
+        && gMatchedWords.hasOwnProperty(signatureId)) {
+        // this is one of columns that should have highlighted data
+        // from set with word indices to array
+        columnData = columnData.trim();
+        let matchedWords = [...gMatchedWords[signatureId]];
+        // sort in descending order
+        matchedWords = matchedWords.sort(function (a, b) { return b - a; } );
+        let words = getWordBoundaries(columnData, gWordSearchRegex);
+        var highlightedStr = columnData;
+        for (let k = 0; k < matchedWords.length; k++) {
+          let idx = matchedWords[k]-1;
+          let wordStart = words[idx][0];
+          let wordEnd = words[idx][1];
+          if (words[idx][2][0] == '§') {
+            // this is a paragraph, do nothing
+            continue;
+          }
+          highlightedStr = columnData.slice(0, wordStart)
+            + '<span class="highlighted">'
+            + words[idx][2]
+            + '</span>'
+            + highlightedStr.slice(wordEnd);
+        }
+        columnData = highlightedStr;
+      }
+
       if (~columnData.indexOf(paragraphSymbol)) {
         let parts = columnData.split(paragraphSymbol);
         let listHeader = '';
@@ -1219,6 +1426,11 @@ function renderSignature(renderParams) {
 
         paragraph += listHeader;
         paragraph += '<ol type="A">';
+        let liOffset = 0;
+        if (parts[0].length > 0)
+          liOffset = parts[0][0].charCodeAt();
+        else
+          liOffset = parts[1][0].charCodeAt();
         for (let k = 0; k < parts.length; k++) {
           let part = parts[k];
           let partData = '';
@@ -1229,7 +1441,8 @@ function renderSignature(renderParams) {
           if (part.length > 2)
             partData = part.substr(2);
 
-          paragraph += '<li><span class="' + cssStyle + '">' + partData + '</span></li>';
+          let liValue = part[0].charCodeAt() - liOffset + 1;
+          paragraph += '<li value="' + liValue + '"><span class="' + cssStyle + '">' + partData + '</span></li>';
         }
         paragraph += '</ol>';
       } else {
