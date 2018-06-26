@@ -324,6 +324,23 @@ if (ieVersion !== false && ieVersion <= 12) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
 
 <script type="text/javascript">
+var entityMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
+};
+
+function escapeHtml (string) {
+  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+    return entityMap[s];
+  });
+}
+
 // Globals:
 // connection to the DB
 var db = null;
@@ -347,12 +364,24 @@ var renderIsDone = false;
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
 var gRegExpMap = {}; // Object of all regex expressions
 var gRegExpMapG = {}; // Object of all regex expressions with global flag
-var gWordIndices = {};
-var gMatchedWords = {};
-var gWordSearchRegex = new RegExp("(·|:|×|¤|'|\\+|÷|\\s)+|¶+", 'g');
+var gWordIndices = {}; // Object that contains matched word indices across inscription text.
+    // Words in this case are based on values prepared for search.
+    // Each entry is an object itself where keys are column names and values
+    // are arrays of matched words. Example entry of gWordIndices:
+    // {search_transliteration: [1, 3, 5]; normalisation_search_norse: [3];}
+var gMatchedWordIndices = {}; // A processed version of gWordIndices. It is a map that provides
+    // information which words are matched for particular signature id. Key is signature id,
+    // values set of matched word indices.
+var gFoundPersonalNames = 0;
+// regex that is used to separate words in displayed inscription texts.
+//var gWordSearchRegex = new RegExp("((·|:|×|¤|'|\\+|÷|\\s)+|¶+)+", 'g');
+var gWordSearchRegex = new RegExp("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)", 'g');
+var gWordSearchRegexEsc = new RegExp(escapeHtml("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)"), 'g');
+var gWordPunctuationRegex = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+");
+var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+"));
 
 // defaults. TODO: should be replaced with reading from local storage memory
-userSelectedDisplay = ['signature_text', 'found_location'];
+userSelectedDisplay = ['signature_text', 'transliteration', 'normalisation_norse'];
 
 // An extension of Leaflet marker that provides information about inscription
 MarkerWithData = L.Marker.extend({
@@ -368,7 +397,16 @@ function applyPagination() {
   if (total == 0) {
     $('#lblNumAvailable').html('Sorry, no inscriptions has been found.');
   } else {
-    $('#lblNumAvailable').html(`${rootsJson.length} signatures.`);
+    let numWords = 0;
+    for (signId in gMatchedWordIndices) {
+      numWords += gMatchedWordIndices[signId].size;
+    }
+    let infoStr = `${rootsJson.length} signatures`;
+    if (numWords > 0) {
+      infoStr += `, ${numWords} words, ${gFoundPersonalNames} personal names`;
+    }
+    infoStr += '.';
+    $('#lblNumAvailable').html(infoStr);
   }
 
   $('#mainDisplay').empty();
@@ -589,10 +627,11 @@ function applyFilters() {
 
   // reset global variable
   gWordIndices = {};
-  gMatchedWords = {};
+  gMatchedWordIndices = {};
+  gFoundPersonalNames = 0;
 
   console.log('Got SQL: ' + result.sql);
-  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data WHERE " + result.sql);
+  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + result.sql);
   if (contents.length == 0) {
     // no results
     rootsJson = [];
@@ -601,10 +640,12 @@ function applyFilters() {
   }
 
   let signatureIdIdx = contents[0].columns.indexOf('signature_id');
+  let normalisationScandinavianIdx = contents[0].columns.indexOf('normalisation_scandinavian');
 
   if (Object.keys(gWordIndices).length != 0) {
     contents[0].values = contents[0].values.filter(function checkIds(row) {
       id = row[signatureIdIdx];
+      normalizedText = row[normalisationScandinavianIdx];
 
       if (!gWordIndices.hasOwnProperty(id))
         return true;
@@ -618,8 +659,14 @@ function applyFilters() {
           return false;
         }
       }
+      let words = getWordBoundaries(normalizedText, gWordSearchRegex, gWordPunctuationRegex);
+      intersection.forEach(function (val) {
+        gFoundPersonalNames += words[val-1].isPersonal;
+      });
+      // for (i = 0; i < words.length; i++)
+      //   gFoundPersonalNames += words[i].isPersonal;
 
-      gMatchedWords[id] = intersection;
+      gMatchedWordIndices[id] = intersection;
       return true;
     });
   }
@@ -661,30 +708,60 @@ function getWordStarts(str, regexStr) {
 // Extracts word boundaries from inscription texts. These texts
 // have multiple separators (whitespaces, punctuation) that often
 // go together, i.e. space,punctuation,space
-function getWordBoundaries(str, reg) {
+// returns array of objects. Each object:
+// {start: num, end: num, text: string, isPersonal: 0 or 1}
+// str - search string
+// reg - regex used to detect word boundaries
+// purePunctuation - regex used to check if detected word is pure punctuational
+function getWordBoundaries(str, reg, purePunctuation) {
   var words = [];
   var wordBegin = 0;
+  //var purePunctuation = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\))+");
+
   while ((arr = reg.exec(str)) !== null) {
     if (wordBegin == arr.index) {
       wordBegin += arr[0].length;
       continue;
     }
-    let oneWord = new Array(wordBegin, arr.index);
-    oneWord.push(str.slice(oneWord[0], oneWord[1]));
+    let oneWord = {start: wordBegin, end: arr.index, isPersonal: 0};
+    let wordText = str.slice(oneWord.start, oneWord.end);
+    oneWord.text = wordText;
+    // skip double sides character
+    if (arr[0] == '¶¶')
+      continue;
+    punctuationCheck = purePunctuation.exec(oneWord.text);
+    if (punctuationCheck !== null && punctuationCheck[0].length == oneWord.text.length)
+    {
+      wordBegin = arr.index + arr[0].length;
+      continue;
+    }
+
+    if (wordText.startsWith('"') || wordText.startsWith("&quot;"))
+      oneWord.isPersonal = 1;
+
     words.push(oneWord);
     wordBegin = arr.index + arr[0].length;
   }
   if (wordBegin == 0) {
     if (str.length > 0) {
-      let oneWord = new Array(0, str.length, str);
-      words.push(oneWord);
+      let oneWord = {start: 0, end: str.length, text: str, isPersonal: 0};
+      if (oneWord.text.startsWith('"') || oneWord.text.startsWith("&quot;"))
+        oneWord.isPersonal = 1;
+      punctuationCheck = purePunctuation.exec(oneWord.text);
+      if (punctuationCheck === null || punctuationCheck[0].length != oneWord.text.length)
+        words.push(oneWord);
     }
   } else {
     // let's add the final word
     if (wordBegin != str.length) {
-      let oneWord = new Array(wordBegin, str.length);
-      oneWord.push(str.slice(oneWord[0], oneWord[1]));
-      words.push(oneWord);
+      let oneWord = {start: wordBegin, end: str.length, isPersonal: 0};
+      oneWord.text = str.slice(oneWord.start, oneWord.end);
+      if (oneWord.text.startsWith('"') || oneWord.text.startsWith("&quot;"))
+        oneWord.isPersonal = 1;
+
+      punctuationCheck = purePunctuation.exec(oneWord.text);
+      if (punctuationCheck === null || punctuationCheck[0].length != oneWord.text.length)
+        words.push(oneWord);
     }
   }
   return words;
@@ -1284,23 +1361,6 @@ function signatureRenderHelper(renderParams) {
   }
 }
 
-var entityMap = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-  '/': '&#x2F;',
-  '`': '&#x60;',
-  '=': '&#x3D;'
-};
-
-function escapeHtml (string) {
-  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-    return entityMap[s];
-  });
-}
-
 // Depends on global variables: db
 function renderSignature(renderParams) {
   renderIsDone = false;
@@ -1389,26 +1449,26 @@ function renderSignature(renderParams) {
       }
 
       if (userSelectedDisplay[j].indexOf('english_translation') == -1
-        && gMatchedWords.hasOwnProperty(signatureId)) {
+        && gMatchedWordIndices.hasOwnProperty(signatureId)) {
         // this is one of columns that should have highlighted data
         // from set with word indices to array
         columnData = columnData.trim();
-        let matchedWords = [...gMatchedWords[signatureId]];
+        let matchedWords = [...gMatchedWordIndices[signatureId]];
         // sort in descending order
         matchedWords = matchedWords.sort(function (a, b) { return b - a; } );
-        let words = getWordBoundaries(columnData, gWordSearchRegex);
+        let words = getWordBoundaries(columnData, gWordSearchRegexEsc, gWordPunctuationRegexEsc);
         var highlightedStr = columnData;
         for (let k = 0; k < matchedWords.length; k++) {
           let idx = matchedWords[k]-1;
-          let wordStart = words[idx][0];
-          let wordEnd = words[idx][1];
-          if (words[idx][2][0] == '§') {
+          let wordStart = words[idx].start;
+          let wordEnd = words[idx].end;
+          if (words[idx].text[0] == '§') {
             // this is a paragraph, do nothing
             continue;
           }
           highlightedStr = columnData.slice(0, wordStart)
             + '<span class="highlighted">'
-            + words[idx][2]
+            + words[idx].text
             + '</span>'
             + highlightedStr.slice(wordEnd);
         }
