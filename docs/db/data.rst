@@ -102,6 +102,21 @@ Inscription texts
 
 Each inscription has several texts related to it. Texts could have special symbols that clarify text meaning. Special symbols markup is inherited from Rundata database.
 
+.. important::
+
+    Transliterated and normalized texts have a very special structure. They contain the same number
+    of words and the position of words is kept in order. This means that word 2 in one inscription
+    is the same in transliteration and normalization. Let's have a look at Öl 10. It's transliterated
+    text begins with `[: eimunr : auk : kuna- ... þeiR · -uku`. Normalization to Old West Norse is
+    `"Eimundr ok "Gunna[rr] ... þeir [k]uml(?)` and normalization to Old Scandinavian is
+    `"Æimundr ok "Gunna[rr] ... þæiR [k]umbl(?)`. Word 2 is `auk`, and `ok` in transliteration and
+    normalizations correspondingly. Word 3 is `kuna-` and `Gunna[rr]`. And so on.
+
+The property of word correspondence is very important. In fact, Rundata supports searches across
+inscription texts by individual words only. Rundata-net on the other hand supports two modes. One
+being exactly as Rundata, the other one is *the whole inscription based*. The difference of these
+methods is clarified by examples in :doc:`/searching`.
+
 Transliterated runic text
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
