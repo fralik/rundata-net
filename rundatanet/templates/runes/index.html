@@ -574,7 +574,7 @@ function prepareAutoComplete(ruleId, opt) {
   let fieldId = opt.fieldId || ruleId;
   let operators = opt.operators || ['equal', 'not_equal', 'begins_with',
         "not_begins_with", "contains", "not_contains", "ends_with",
-        "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp"];
+        "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
 
   let contents = [];
   if (ruleId.indexOf('normalisation') != -1) {
@@ -616,6 +616,12 @@ function prepareAutoComplete(ruleId, opt) {
   }
 }
 
+function resetSearchStats() {
+  gWordIndices = {};
+  gMatchedWordIndices = {};
+  gFoundPersonalNames = 0;
+}
+
 // Applies user-defined filters in order to obtain valid IDs
 // Returns true on success, false on any failure.
 //
@@ -625,10 +631,7 @@ function applyFilters() {
     return false;
   }
 
-  // reset global variable
-  gWordIndices = {};
-  gMatchedWordIndices = {};
-  gFoundPersonalNames = 0;
+  resetSearchStats();
 
   console.log('Got SQL: ' + result.sql);
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + result.sql);
@@ -659,12 +662,11 @@ function applyFilters() {
           return false;
         }
       }
+
       let words = getWordBoundaries(normalizedText, gWordSearchRegex, gWordPunctuationRegex);
       intersection.forEach(function (val) {
-        gFoundPersonalNames += words[val-1].isPersonal;
+        gFoundPersonalNames += words[val].isPersonal;
       });
-      // for (i = 0; i < words.length; i++)
-      //   gFoundPersonalNames += words[i].isPersonal;
 
       gMatchedWordIndices[id] = intersection;
       return true;
@@ -808,10 +810,18 @@ function getWordBoundaries(str, reg, purePunctuation) {
 //   return [words, highlightedStr];
 // }
 
+// return words by index. Words are separated by a single space
+function wordsByIndex(str, indices) {
+  let allWords = str.split(' ');
+  let words = [];
+  indices.forEach(item => words.push(allWords[item]));
+  return words;
+}
+
 function wordByCharPos(wordStarts, charPos) {
   for (i = 0; i < wordStarts.length - 1; i++) {
     if (charPos > wordStarts[i] && charPos < wordStarts[i+1]) {
-      return i + 1;
+      return i;
     }
   }
   return -1;
@@ -843,7 +853,7 @@ function onDbLoaded(e) {
       gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
     }
 
-    // Test method doesn't really work with global regexps
+     // Test method doesn't really work with global regexps
     if (gRegExpMap[regexValue].test(fieldData) == true) {
       // Use gRegExpMapG from now on. This is important!
 
@@ -851,10 +861,9 @@ function onDbLoaded(e) {
 
       var matchIndices = [];
       while ((array1 = gRegExpMapG[regexValue].exec(fieldData)) !== null) {
-        //matchIndices.push(range(array1[0].length, array1));
         minWordIdx = wordByCharPos(wordStarts, array1.index);
         maxWordIdx = wordByCharPos(wordStarts, array1.index+array1[0].length-1);
-        //console.log('Going to make range for ' + (maxWordIdx-minWordIdx+1) + ' from ' + minWordIdx);
+
         let wordIndices = range(maxWordIdx-minWordIdx+1, minWordIdx); // range of word indices
         if (!gWordIndices.hasOwnProperty(id)) {
           gWordIndices[id] = {};
@@ -958,7 +967,7 @@ function onDbLoaded(e) {
       },
       size: 40,
       operators: ['equal', 'not_equal', 'begins_with', "not_begins_with", "contains", "not_contains",
-        "ends_with", "not_ends_with", "my_regex", "word_regexp"],
+        "ends_with", "not_ends_with", "my_regex"],
     },
     {
       id: 'signature_country',
@@ -974,24 +983,21 @@ function onDbLoaded(e) {
         valueSetter: function (rule, value) {
           rule.$el.find('.rule-value-container input')[0].selectize.setValue(value);
         },
-        // valueGetter: function (rule, value) {
-        //   rule.$el.find('.rule-value-container select')
-        // },
         options: [{text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
-          {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppand', v: 'U '},
-          {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland', v: 'Vr '},
-          {text: 'Gästrikland', v: 'Gs '}, {text: 'Hälsingland', v: 'Hs '}, {text: 'Medelpad', v: 'M '},
-          {text: 'Ångermanland', v: 'Ån '}, {text: 'Dalarna', v: 'D '}, {text: 'Härjedalen', v: 'Hr '},
-          {text: 'Jämtland', v: 'J '}, {text: 'Lappland', v: 'Lp '}, {text: 'Dalsland', v: 'Ds '},
-          {text: 'Bohuslän', v: 'Bo '}, {text: 'Gotland', v: 'G '}, {text: 'Sweden other', v: 'SE '},
-          {text: 'Denmark', v: 'DR '}, {text: 'Norway', v: 'N '}, {text: 'Faroe Islands', v: 'FR '},
-          {text: 'Greenland', v: 'GR '}, {text: 'Iceland', v: 'IS '}, {text: 'Finland', v: 'FI '},
-          {text: 'Shetland', v: 'Sh '}, {text: 'Orkney', v: 'Or '}, {text: 'Scotland', v: 'Sc '},
-          {text: 'England', v: 'E '}, {text: 'Isle of Man', v: 'IM '}, {text: 'Ireland', v: 'IR '},
-          {text: 'France', v: 'F '}, {text: 'Netherlands', v: 'NL '}, {text: 'Germany', v: 'DE '},
-          {text: 'Poland', v: 'PL '}, {text: 'Latvia', v: 'LV '}, {text: 'Russia', v: 'RU '},
-          {text: 'Ukraine', v: 'UA '}, {text: 'Byzantium', v: 'By '}, {text: 'Italy', v: 'IT '},
-          {text: 'Other areas', v: 'X '}],
+          {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppand (U)', v: 'U '},
+          {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland (Vr)', v: 'Vr '},
+          {text: 'Gästrikland (Gs)', v: 'Gs '}, {text: 'Hälsingland (Hs)', v: 'Hs '}, {text: 'Medelpad (M)', v: 'M '},
+          {text: 'Ångermanland (Ån)', v: 'Ån '}, {text: 'Dalarna (D)', v: 'D '}, {text: 'Härjedalen (Hr)', v: 'Hr '},
+          {text: 'Jämtland (J)', v: 'J '}, {text: 'Lappland (Lp)', v: 'Lp '}, {text: 'Dalsland (Ds)', v: 'Ds '},
+          {text: 'Bohuslän (Bo)', v: 'Bo '}, {text: 'Gotland (G)', v: 'G '}, {text: 'Sweden other (SE)', v: 'SE '},
+          {text: 'Denmark (DR)', v: 'DR '}, {text: 'Norway (N)', v: 'N '}, {text: 'Faroe Islands (FR)', v: 'FR '},
+          {text: 'Greenland (GR)', v: 'GR '}, {text: 'Iceland (IS)', v: 'IS '}, {text: 'Finland (FI)', v: 'FI '},
+          {text: 'Shetland (Sh)', v: 'Sh '}, {text: 'Orkney (Or)', v: 'Or '}, {text: 'Scotland (Sc)', v: 'Sc '},
+          {text: 'England (E)', v: 'E '}, {text: 'Isle of Man (IM)', v: 'IM '}, {text: 'Ireland (IR)', v: 'IR '},
+          {text: 'France (F)', v: 'F '}, {text: 'Netherlands (NL)', v: 'NL '}, {text: 'Germany (DE)', v: 'DE '},
+          {text: 'Poland (PL)', v: 'PL '}, {text: 'Latvia (LV)', v: 'LV '}, {text: 'Russia (RU)', v: 'RU '},
+          {text: 'Ukraine (UA)', v: 'UA '}, {text: 'Byzantium (By)', v: 'By '}, {text: 'Italy (IT)', v: 'IT '},
+          {text: 'Other areas (X)', v: 'X '}],
         valueField: 'v',
         labelField: 'text',
         searchField: 'text',
@@ -1107,7 +1113,7 @@ function onDbLoaded(e) {
         contains_glob: "contains",
         not_contains_glob: "doesn't contain",
         my_regex: 'matches expression',
-        word_regexp: 'word regexp',
+        word_regexp: 'matches across words',
       }
     },
 
@@ -1213,6 +1219,7 @@ function onDbLoaded(e) {
     } else {
       rootsJson = originalData;
       sumRootChildren = origianlSumRootChildren;
+      resetSearchStats();
       applyPagination();
     }
   });
@@ -1386,8 +1393,9 @@ function renderSignature(renderParams) {
   let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
 
   for (let j = 0; j < userSelectedDisplay.length; j++) {
-    let humanName = humanNameForColumnName(userSelectedDisplay[j]);
-    let columnIdx = columns.indexOf(userSelectedDisplay[j]);
+    let columnName = userSelectedDisplay[j];
+    let humanName = humanNameForColumnName(columnName);
+    let columnIdx = columns.indexOf(columnName);
     let columnData = curRow[columnIdx];
 
     if (showHeaders) {
@@ -1456,16 +1464,23 @@ function renderSignature(renderParams) {
         let matchedWords = [...gMatchedWordIndices[signatureId]];
         // sort in descending order
         matchedWords = matchedWords.sort(function (a, b) { return b - a; } );
+        if (columnName.indexOf('transliteration') != -1) {
+          // double space have special meaning => it's designates a word that is not
+          // present in transliterated text, but is present in other texts. Very important!
+          columnData = columnData.replace(/\s{2}/g, ' &nbsp; ');
+        }
         let words = getWordBoundaries(columnData, gWordSearchRegexEsc, gWordPunctuationRegexEsc);
         var highlightedStr = columnData;
         for (let k = 0; k < matchedWords.length; k++) {
-          let idx = matchedWords[k]-1;
+          let idx = matchedWords[k];
           let wordStart = words[idx].start;
           let wordEnd = words[idx].end;
+
           if (words[idx].text[0] == '§') {
             // this is a paragraph, do nothing
             continue;
           }
+
           highlightedStr = columnData.slice(0, wordStart)
             + '<span class="highlighted">'
             + words[idx].text
@@ -1474,6 +1489,9 @@ function renderSignature(renderParams) {
         }
         columnData = highlightedStr;
       }
+      // Smiley is a special symbol: word substitute when word is not present
+      // We do not need to show it.
+      columnData = columnData.replace(/ ☺ /g, ' ');
 
       if (~columnData.indexOf(paragraphSymbol)) {
         let parts = columnData.split(paragraphSymbol);
@@ -1789,7 +1807,7 @@ function setTooltip(btn, message) {
 var clipboard = [];
 $(function() {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}", true);
+  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.2", true);
   xhr.responseType = 'arraybuffer';
   xhr.addEventListener("load", onDbLoaded);
   xhr.send();
