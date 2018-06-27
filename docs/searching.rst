@@ -28,6 +28,7 @@ Here is an example of query builder interface.
 
 .. figure:: /_static/query_builder.png
     :alt: An example of query builder interface
+    :width: 100%
 
 Note the top left corner. It contains buttons :guilabel:`NOT`, :guilabel:`AND`,
 :guilabel:`OR`. These are logical operations that can be applied to rules and group(s):
@@ -126,6 +127,7 @@ AND:
 
 .. figure:: /_static/search_norway_u.png
     :alt: Search example
+    :width: 100%
 
     Find all inscriptions from Norway which are dated with 'U'.
 
@@ -144,6 +146,7 @@ existing rules. We can add two rules to that group:
 
 .. figure:: /_static/search_add_group.png
     :alt: Search example with an additional group
+    :width: 100%
 
     Filters with a group
 
@@ -172,6 +175,7 @@ logical operation is :guilabel:`OR`, whereas others have value :guilabel:`AND`.
 
 .. figure:: /_static/search_two_groups.png
     :alt: Usage of two groups
+    :width: 100%
 
 We now get 309 inscriptions only.
 
@@ -230,7 +234,7 @@ A what appears to be a similar search in Rundata-net is show in figure below:
 
 The result is 3 inscriptions. Öl 13 contains reisti as word 2 in transliterated
 text and fôður as word 7 in Old West Norse text. I hope you see the point. Rundata-net
-searched through the whole texts and returned results regardless of words.
+searched through the whole texts and returned results regardless of word positions.
 
 Let's fix the search in Rundata and observe the results. Consider search for all
 inscriptions from Gästrikland with word search parameter `RUN:\a & FVN:\ei`. Rundata
@@ -282,6 +286,7 @@ contain `þenna` in normalization to Old Scandinavian and are from Öland:
 
 .. figure:: /_static/words_with_oland.png
     :alt: An example of complex word search in Rundata-net.
+    :width: 100%
 
 The search results in 20 signatures, 43 words of which 12 are personal names.
 You can figure out that this new search contributed 12 signatures, 13 words
