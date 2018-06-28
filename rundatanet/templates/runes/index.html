@@ -373,6 +373,7 @@ var gMatchedWordIndices = {}; // A processed version of gWordIndices. It is a ma
     // information which words are matched for particular signature id. Key is signature id,
     // values set of matched word indices.
 var gFoundPersonalNames = 0;
+var gWordVariants = 0;
 // regex that is used to separate words in displayed inscription texts.
 //var gWordSearchRegex = new RegExp("((·|:|×|¤|'|\\+|÷|\\s)+|¶+)+", 'g');
 var gWordSearchRegex = new RegExp("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)", 'g');
@@ -401,7 +402,8 @@ function applyPagination() {
     for (signId in gMatchedWordIndices) {
       numWords += gMatchedWordIndices[signId].size;
     }
-    let infoStr = `${rootsJson.length} signatures`;
+    let infoStr = `${rootsJson.length} inscriptions`;
+    numWords -= gWordVariants;
     if (numWords > 0) {
       infoStr += `, ${numWords} words, ${gFoundPersonalNames} personal names`;
     }
@@ -620,6 +622,7 @@ function resetSearchStats() {
   gWordIndices = {};
   gMatchedWordIndices = {};
   gFoundPersonalNames = 0;
+  gWordVariants = 0;
 }
 
 // Applies user-defined filters in order to obtain valid IDs
@@ -656,6 +659,9 @@ function applyFilters() {
       let allKeys = Object.keys(gWordIndices[id]);
       let intersection = new Set(gWordIndices[id][allKeys[0]]);
       for (i = 1; i < allKeys.length; i++) {
+        if (allKeys[i].indexOf('_par') != -1) {
+          continue;
+        }
         let b = new Set(gWordIndices[id][allKeys[i]]);
         intersection = new Set([...intersection].filter(x => b.has(x)));
         if (intersection.size == 0) {
@@ -664,9 +670,36 @@ function applyFilters() {
       }
 
       let words = getWordBoundaries(normalizedText, gWordSearchRegex, gWordPunctuationRegex);
+      let wordVariants = [];
+      var counts = {};
+      var countsPersonal = {};
       intersection.forEach(function (val) {
+        // We do not need to count words that have isVariant > 0.
+        // Do not count corresponding personal names
         gFoundPersonalNames += words[val].isPersonal;
+        if (words[val].isVariant > 0) {
+          let key = words[val].isVariant;
+          counts[key] = (counts[key] || 0) + 1;
+          if (words[val].isPersonal) {
+            countsPersonal[key] = (countsPersonal[key] || 0) + 1;
+          } else {
+            countsPersonal[key] = (countsPersonal[key] || 0);
+          }
+        }
       });
+
+      let countValues = [...Object.values(counts)];
+      var personalBias = 0;
+      if (countValues.length > 0) {
+        let minCounts = Math.min(...countValues);
+        let minIndex = countValues.indexOf(minCounts) + 1;
+
+        if (!isNaN(minCounts))
+          gWordVariants += minCounts * (countValues.length-1);
+        if (!isNaN(countsPersonal[minIndex]))
+          personalBias += countsPersonal[minIndex] * (countValues.length-1);
+      }
+      gFoundPersonalNames -= personalBias;
 
       gMatchedWordIndices[id] = intersection;
       return true;
@@ -711,7 +744,10 @@ function getWordStarts(str, regexStr) {
 // have multiple separators (whitespaces, punctuation) that often
 // go together, i.e. space,punctuation,space
 // returns array of objects. Each object:
-// {start: num, end: num, text: string, isPersonal: 0 or 1}
+// {start: num, end: num, text: string, isPersonal: 0 or 1, isVariant: [0...N] }
+// isVariant - if word is located within a paragrapgh (i.e. §P) isVariant
+// contains a numerical difference between paragraph character and 'P'. For §P
+// isVariant is 1, for §Q isVariant is 1.
 // str - search string
 // reg - regex used to detect word boundaries
 // purePunctuation - regex used to check if detected word is pure punctuational
@@ -719,18 +755,21 @@ function getWordBoundaries(str, reg, purePunctuation) {
   var words = [];
   var wordBegin = 0;
   //var purePunctuation = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\))+");
+  var strReversed = str.split("").reverse().join("");
+  let pCode = 'P'.charCodeAt();
 
   while ((arr = reg.exec(str)) !== null) {
     if (wordBegin == arr.index) {
       wordBegin += arr[0].length;
       continue;
     }
-    let oneWord = {start: wordBegin, end: arr.index, isPersonal: 0};
+    let oneWord = {start: wordBegin, end: arr.index, isPersonal: 0, isVariant: 0};
     let wordText = str.slice(oneWord.start, oneWord.end);
     oneWord.text = wordText;
     // skip double sides character
     if (arr[0] == '¶¶')
       continue;
+
     punctuationCheck = purePunctuation.exec(oneWord.text);
     if (punctuationCheck !== null && punctuationCheck[0].length == oneWord.text.length)
     {
@@ -740,15 +779,29 @@ function getWordBoundaries(str, reg, purePunctuation) {
 
     if (wordText.startsWith('"') || wordText.startsWith("&quot;"))
       oneWord.isPersonal = 1;
+    let reverseStart = str.length-1 - wordBegin;
+    if ((parPos = strReversed.indexOf('§', reverseStart)) != -1) {
+      if (strReversed[parPos-1].charCodeAt() - pCode >= 0) {
+        oneWord.isVariant = strReversed[parPos-1].charCodeAt() - pCode + 1;
+      }
+    }
 
     words.push(oneWord);
     wordBegin = arr.index + arr[0].length;
   }
   if (wordBegin == 0) {
     if (str.length > 0) {
-      let oneWord = {start: 0, end: str.length, text: str, isPersonal: 0};
+      let oneWord = {start: 0, end: str.length, text: str, isPersonal: 0, isVariant: 0};
       if (oneWord.text.startsWith('"') || oneWord.text.startsWith("&quot;"))
         oneWord.isPersonal = 1;
+
+      let reverseStart = str.length-1;
+      if ((parPos = strReversed.indexOf('§', reverseStart)) != -1) {
+        if (strReversed[parPos-1].charCodeAt() - pCode >= 0) {
+          oneWord.isVariant = strReversed[parPos-1].charCodeAt() - pCode + 1;
+        }
+      }
+
       punctuationCheck = purePunctuation.exec(oneWord.text);
       if (punctuationCheck === null || punctuationCheck[0].length != oneWord.text.length)
         words.push(oneWord);
@@ -756,10 +809,17 @@ function getWordBoundaries(str, reg, purePunctuation) {
   } else {
     // let's add the final word
     if (wordBegin != str.length) {
-      let oneWord = {start: wordBegin, end: str.length, isPersonal: 0};
+      let oneWord = {start: wordBegin, end: str.length, isPersonal: 0, isVariant: 0};
       oneWord.text = str.slice(oneWord.start, oneWord.end);
       if (oneWord.text.startsWith('"') || oneWord.text.startsWith("&quot;"))
         oneWord.isPersonal = 1;
+
+      let reverseStart = str.length-1 - wordBegin;
+      if ((parPos = strReversed.indexOf('§', reverseStart)) != -1) {
+        if (strReversed[parPos-1].charCodeAt() - pCode >= 0) {
+          oneWord.isVariant = strReversed[parPos-1].charCodeAt() - pCode + 1;
+        }
+      }
 
       punctuationCheck = purePunctuation.exec(oneWord.text);
       if (punctuationCheck === null || punctuationCheck[0].length != oneWord.text.length)
@@ -768,47 +828,6 @@ function getWordBoundaries(str, reg, purePunctuation) {
   }
   return words;
 }
-
-// function highlightWords(str, reg, wordIndicesSet) {
-//   var words = [];
-//   var wordBegin = 0;
-//   var curWordIdx = 0;
-//   var highlightedStr = '';
-//   var lastWordEnd = 0;
-//   while ((arr = reg.exec(str)) !== null) {
-//     curWordIdx++;
-
-//     let strToAdd = '';
-//     if (wordIndicesSet.has(curWordIdx)) {
-//       strToAdd = '<span class="highlight">' + str.slice(lastWordEnd, arr.index) + '</span>';
-//     } else {
-//       strToAdd = str.slice(lastWordEnd, arr.index);
-//     }
-
-//     let oneWord = new Array(wordBegin, arr.index);
-//     oneWord.push(str.slice(oneWord[0], oneWord[1]));
-//     words.push(oneWord);
-//     wordBegin = arr.index + arr[0].length;
-
-//     highlightedStr += strToAdd;
-//     lastWordEnd = arr.index;
-
-//   }
-//   if (wordBegin != 0) {
-//     // let's add the final word
-//     curWordIdx++;
-//     if (wordIndicesSet.has(curWordIdx)) {
-//       strToAdd = '<span class="highlight">' + str.slice(lastWordEnd, str.length) + '</span>';
-//     } else {
-//       strToAdd = str.slice(lastWordEnd, str.length);
-//     }
-//     highlightedStr += strToAdd;
-//     let oneWord = new Array(wordBegin, str.length);
-//     oneWord.push(str.slice(oneWord[0], oneWord[1]));
-//     words.push(oneWord);
-//   }
-//   return [words, highlightedStr];
-// }
 
 // return words by index. Words are separated by a single space
 function wordsByIndex(str, indices) {
@@ -853,7 +872,9 @@ function onDbLoaded(e) {
       gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
     }
 
-     // Test method doesn't really work with global regexps
+    // Test method doesn't really work with global regexps. At least
+    // when regex is stored in a global variable, i.e. preserves state
+    // between function calls
     if (gRegExpMap[regexValue].test(fieldData) == true) {
       // Use gRegExpMapG from now on. This is important!
 
@@ -1496,33 +1517,20 @@ function renderSignature(renderParams) {
       if (~columnData.indexOf(paragraphSymbol)) {
         let parts = columnData.split(paragraphSymbol);
         let listHeader = '';
-        if (~columnData.indexOf(sidesMarker)) {
-          listHeader = 'Sides:';
-        } else if (~columnData.indexOf(readingMarker)) {
-          listHeader = 'Reading variants:';
-        }
+        listHeader = "Sides or/and reading variants:"
 
         paragraph += listHeader;
-        paragraph += '<ol type="A">';
-        let liOffset = 0;
-        if (parts[0].length > 0)
-          liOffset = parts[0][0].charCodeAt();
-        else
-          liOffset = parts[1][0].charCodeAt();
+        paragraph += '<ul>';
         for (let k = 0; k < parts.length; k++) {
           let part = parts[k];
-          let partData = '';
 
           if (!part.trim())
             continue;
 
-          if (part.length > 2)
-            partData = part.substr(2);
-
-          let liValue = part[0].charCodeAt() - liOffset + 1;
-          paragraph += '<li value="' + liValue + '"><span class="' + cssStyle + '">' + partData + '</span></li>';
+          part = paragraphSymbol + part;
+          paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
         }
-        paragraph += '</ol>';
+        paragraph += '</ul>';
       } else {
         // no parts in the columnData
         paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
@@ -1807,7 +1815,7 @@ function setTooltip(btn, message) {
 var clipboard = [];
 $(function() {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.2", true);
+  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.3", true);
   xhr.responseType = 'arraybuffer';
   xhr.addEventListener("load", onDbLoaded);
   xhr.send();
