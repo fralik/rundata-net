@@ -382,7 +382,8 @@ var gWordPunctuationRegex = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])
 var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+"));
 
 // defaults. TODO: should be replaced with reading from local storage memory
-userSelectedDisplay = ['signature_text', 'transliteration', 'normalisation_norse'];
+userSelectedDisplay = ['signature_text', 'transliteration', 'english_translation', 'found_location',
+    'parish', 'municipality', 'district', 'current_location', 'images'];
 
 // An extension of Leaflet marker that provides information about inscription
 MarkerWithData = L.Marker.extend({
@@ -1412,6 +1413,7 @@ function renderSignature(renderParams) {
   let signatureId = curRow[signIdIdx];
 
   let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
+  console.log('Got userSelectedDisplay: ' + userSelectedDisplay);
 
   for (let j = 0; j < userSelectedDisplay.length; j++) {
     let columnName = userSelectedDisplay[j];
@@ -1647,101 +1649,113 @@ function displayFields() {
   let displayOptions = [
     {
       value: 'signature_text',
-      text: 'Signature'
+      text: 'Signature',
     },
     {
       value: 'found_location',
-      text: 'Found location'
+      text: 'Found location',
     },
     {
       value: 'parish',
-      text: 'Parish'
+      text: 'Parish',
     },
     {
       value: 'district',
-      text: 'District'
+      text: 'District',
     },
     {
       value: 'municipality',
-      text: 'Municipality'
+      text: 'Municipality',
     },
     {
       value: 'current_location',
-      text: 'Current location'
+      text: 'Current location',
     },
     {
       value: 'original_site',
-      text: 'Original site'
+      text: 'Original site',
     },
     {
       value: 'parish_code',
-      text: 'Parish code'
+      text: 'Parish code',
     },
     {
       value: 'rune_type',
-      text: 'Rune type'
+      text: 'Rune type',
     },
     {
       value: 'dating',
-      text: 'Dating'
+      text: 'Dating',
     },
     {
       value: 'style',
-      text: 'Style'
+      text: 'Style',
     },
     {
       value: 'carver',
-      text: 'Carver'
+      text: 'Carver',
     },
     {
       value: 'material',
-      text: 'Material'
+      text: 'Material',
     },
     {
       value: 'material_type',
-      text: 'Material type'
+      text: 'Material type',
     },
     {
       value: 'objectInfo',
-      text: 'Object information'
+      text: 'Object information',
     },
     {
       value: 'reference',
-      text: 'References'
+      text: 'References',
     },
     {
       value: 'additional',
-      text: 'Other information'
+      text: 'Other information',
     },
     {
       value: 'normalisation_norse',
-      text: 'Normalization to Old West Norse'
+      text: 'Normalization to Old West Norse',
     },
     {
       value: 'normalisation_scandinavian',
-      text: 'Normalisation to Old Scandinavian'
+      text: 'Normalisation to Old Scandinavian',
     },
     {
       value: 'english_translation',
-      text: 'Translation to English'
+      text: 'Translation to English',
     },
     {
       value: 'transliteration',
-      text: 'Transliterated runic text'
+      text: 'Transliterated runic text',
     },
     {
       value: 'num_crosses',
-      text: 'Number of crosses'
+      text: 'Number of crosses',
     },
     {
       value: 'crosses',
-      text: 'Cross form'
+      text: 'Cross form',
     },
     {
       value: 'images',
-      text: 'Images'
+      text: 'Images',
     },
   ];
+  let sortOrder = ['signature_text', 'transliteration', 'normalisation_scandinavian', 'normalisation_norse',
+    'english_translation', 'found_location', 'parish', 'municipality', 'district', 'current_location',
+    'original_site', 'images', 'rune_type', 'carver', 'num_crosses', 'crosses', 'dating', 'style',
+    'material_type', 'material', 'objectInfo', 'reference', 'additional'];
+  let sortValue = 1;
+  sortOrder.forEach(function (val) {
+    let idx = displayOptions.findIndex(o => o.value === val);
+    if (idx != -1) {
+      displayOptions[idx].sortValue = sortValue;
+      sortValue += 1;
+    }
+  });
   return displayOptions;
 }
 
@@ -1787,18 +1801,35 @@ function initMultiselect() {
       if (jQuery.inArray(item.value, userSelectedDisplay) != -1) {
         $('#multiselect_to').append($('<option>', {
             value: item.value,
-            text : item.text
+            text : item.text,
+            sortValue: item.sortValue,
         }));
         return;
       }
       $('#multiselect').append($('<option>', {
           value: item.value,
-          text : item.text
+          text : item.text,
+          sortValue: item.sortValue,
       }));
   });
 
   $('#multiselect').multiselect({
-    keepRenderingSort: true,
+    keepRenderingSortRight: true,
+    skipInitSortRight: false,
+    sort: {
+      left: function (a, b) {
+        aValue = parseInt($(a).attr('sortValue'));
+        bValue = parseInt($(b).attr('sortValue'));
+
+        return aValue > bValue ? 1 : -1;
+      },
+      right: function (a, b) {
+        aValue = parseInt($(a).attr('sortValue'));
+        bValue = parseInt($(b).attr('sortValue'));
+
+        return aValue > bValue ? 1 : -1;
+      }
+    }
   });
   formatDialog = $('#divFormatDiaglog');
 }
