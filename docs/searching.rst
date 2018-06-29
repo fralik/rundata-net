@@ -271,10 +271,25 @@ The same search in Rundata-net is given by:
 
 Note that when a search across words is performed, then additional information about
 number of matched words and personal names is provided alongside the information
-about number of found inscriptions. For that search there are 30 words of which 12
-are personal names. Therefore, there are 30-12 = 28 non personal name words.
-Rundata outputs a different number of words. As far as I know it doesn't count
-repeated words per inscription.
+about number of found inscriptions. For that search there are 20 words of which 7
+are personal names. Therefore, there are 20-7 = 13 non personal name words.
+Found words are also highlighted in red, when inscription is selected for display.
+
+If you now select all inscriptions and glance through the text you might see that
+there are more than 20 words highlighted. Word counting does not count words in reading
+alternatives. This means that if inscription runic text is::
+
+    §P þiuþkiR uk| |kuþlaifr : uk| |karl þaR bruþr aliR : litu rita stain þino × abtiR þiuþmunt ' faur sin ' kuþ hialbi hons| |salu| |uk| |kuþs muþiR in osmuntr ' kara sun ' markaþi × runoR ritaR þa sat aimunt
+    §Q þiuþkiR uk| |kuþlaifr : uk| |karl þaR bruþr aliR : litu rita stain þino × þa sata| |aimuntr| |runoR ritaR abtiR þiuþmunt ' faur sin ' kuþ hialbi hons| |salu| |uk| |kuþs muþiR in osmuntr ' kara sun ' markaþi ×
+
+and your search results contain word `þaR`, then this word is counted only once
+despite being present in both §P and §Q variants.
+
+.. warning::
+
+    Rundata counts words in a similar manner, but if variant §P contains 3 words
+    and variant §Q contains 4 words, then Rundata will report just 3 words for that
+    signature. Rundata-net on the other hand would report 4 words.
 
 Extending word search in Rundata-net
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -288,8 +303,8 @@ contain `þenna` in normalization to Old Scandinavian and are from Öland:
     :alt: An example of complex word search in Rundata-net.
     :width: 100%
 
-The search results in 20 signatures, 43 words of which 12 are personal names.
-You can figure out that this new search contributed 12 signatures, 13 words
+The search results in 20 signatures, 32 words of which 7 are personal names.
+You can figure out that this new search contributed 12 signatures, 12 words
 and 0 personal names.
 
 .. _searching-multiple-words:

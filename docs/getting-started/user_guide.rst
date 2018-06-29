@@ -16,7 +16,7 @@ The main page is divided into several areas which I refer to as panels. They are
 
 From left to right and from top to bottom:
 
-#. List of inscriptions with information about amount of inscriptions.
+#. List of inscriptions with numerical information about search results.
 
 #. Main display.
 
