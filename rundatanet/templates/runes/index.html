@@ -44,13 +44,13 @@
       }
       .jstree-scrollable {
         overflow-y: scroll;
-        max-height: 95%;
-        height: 95%;
+        max-height: 100%;
+        height: 100%;
       }
       .border-1 {
         border: 1px solid #ccc;
       }
-      .group-full-heigth {
+      .group-full-height {
         max-height: 100%;
         min-height: 100%;
         height: 100%;
@@ -99,7 +99,6 @@
       }
       .search-status {
         padding-left: 10px;
-        padding-top: 5px;
       }
       .zero-padding-left {
         padding-left: 0px;
@@ -129,14 +128,19 @@
     </div>
 
     <div class="row">
-      <div id="leftPanel" class="col-md-3 col-sm-3 my-fixed-height table-bordered" style="padding: 0;">
-        <div class="list-group group-full-heigth" style="padding-right: 0px; position: relative;">
-          <div id="jstree" class="jstree-scrollable border-bottom"></div>
-          <div id="lblNumAvailable" class="search-status"></div>
+      <div id="leftPanel" class="col-md-2 col-sm-2 my-fixed-height table-bordered" style="padding: 0;">
+        <div class="list-group group-full-height" style="padding-right: 0px; position: relative;">
+          <div id="jstree" class="jstree-scrollable"></div>
         </div>
       </div>
-      <div id="mainDisplay" contentEditable="true" class="col-md-5 col-sm-7 table-bordered my-fixed-height pre-scrollable"></div>
+      <div id="mainDisplay" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false" class="col-md-6 col-sm-8 table-bordered my-fixed-height pre-scrollable"></div>
       <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
+    </div>
+    <div class="row">
+      <div class="col search-status" id="lblNumAvailable"></div>
+    </div>
+    <div class="row">
+      <div class="col">&nbsp;</div>
     </div>
 
     <form class="row" role="group">
@@ -1864,7 +1868,7 @@ function setTooltip(btn, message) {
 var clipboard = [];
 $(function() {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.3", true);
+  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.4", true);
   xhr.responseType = 'arraybuffer';
   xhr.addEventListener("load", onDbLoaded);
   xhr.send();
