@@ -151,6 +151,7 @@
       <div class="col-md-10 btn-group" role="group" aria-label="">
         <button type="button" class="btn btn-default" id="btnDisplayFormat">Show display format dialog</button>
         <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
+        <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
       </div>
     </form>
 
@@ -210,6 +211,23 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div id="containerRuleIo" class="row container-fluid">
+      <div class="row">
+        <div class="col-md-6" style="margin-left: 2%">Use the tool below to preserve your search rules between sessions. Clicking Export will give you
+        search rules in text format. You can copy text and save it elsewhere. Next time you load work
+        with Rundata-net you can import that text.</div>
+      </div>
+      <div class="row">
+        <div class="col-md-10 btn-group" role="group" aria-label="" style="margin-left: 2%">
+          <button type="button" class="btn btn-default" id="btnRulesExport">Export</button>
+          <button type="button" class="btn btn-default" id="btnRulesImport">Import</button>
+        </div>
+      </div>
+      <form class="row" style="margin-left: 2%">
+        <textarea id="ruleIo" class="col-md-6 col-xs-10" rows="15"></textarea>
+      </form>
     </div>
 
     <div class="row">
@@ -530,12 +548,12 @@ function onShowMapClicked() {
   $('#mapDisplay').toggle();
   if ($('#mapDisplay').is(':visible')) {
     $('#btnShowMap').html('Hide map');
-    $('#mainDisplay').removeClass('col-md-9');
-    $('#mainDisplay').addClass('col-md-5');
+    $('#mainDisplay').removeClass('col-md-10');
+    $('#mainDisplay').addClass('col-md-6');
   } else {
     $('#btnShowMap').html('Show map');
-    $('#mainDisplay').removeClass('col-md-5');
-    $('#mainDisplay').addClass('col-md-9');
+    $('#mainDisplay').removeClass('col-md-6');
+    $('#mainDisplay').addClass('col-md-10');
   }
 }
 
@@ -582,7 +600,7 @@ function prepareBooleanRule(opt) {
   return {
     id: opt.r,
     label: opt.l,
-    type: 'boolean',
+    type: 'integer',
     field: fieldId,
     input: 'radio',
     values: [
@@ -1021,12 +1039,12 @@ function onDbLoaded(e) {
       input: 'select',
       multiple: true,
       operators: ['in'],
+      valueSetter: function (rule, value) {
+        rule.$el.find('.rule-value-container select')[0].selectize.setValue(value);
+      },
       plugin: 'selectize',
       plugin_config: {
         plugins: ['remove_button'],
-        valueSetter: function (rule, value) {
-          rule.$el.find('.rule-value-container input')[0].selectize.setValue(value);
-        },
         options: [{text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
           {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppand (U)', v: 'U '},
           {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland (Vr)', v: 'Vr '},
@@ -1122,7 +1140,18 @@ function onDbLoaded(e) {
         let val1 = rule.$el.find('.rule-value-container [name$=_1]').val();
         let val2 = rule.$el.find('.rule-value-container [name$=_2]:checked').val();
         return {form: val1, is_certain: val2};
-      }
+      },
+      valueSetter: function (rule, value) {
+        $(rule.$el.find('.rule-value-container [name$=_1]')[0]).val(value.form);
+        var certainControls = rule.$el.find('.rule-value-container [name$=_2]');
+        if (value.is_certain == '1') {
+          $(certainControls[0]).prop('checked', false);
+          $(certainControls[1]).prop('checked', true);
+        } else {
+          $(certainControls[0]).prop('checked', true);
+          $(certainControls[1]).prop('checked', false);
+        }
+      },
     },
     materialTypeFilter,
     prepareBooleanRule({'r':'ornamental', 'l':'Is pure ornamental?', 'v': 1}),
@@ -1876,6 +1905,7 @@ $(function() {
   initMultiselect();
   formatDialog.hide();
   $('#alertObj').hide();
+  $('#containerRuleIo').hide();
 
   $('.clip').each(function (i) {
     // prepare buttons for clipboard library
@@ -1937,6 +1967,29 @@ $(function() {
           'data': fetchTreeData,
       }
   });
+
+  $('#btnRuleExporter').on('click', function() {
+    $('#containerRuleIo').toggle();
+    if ($('#containerRuleIo').is(':visible')) {
+      $('#btnRuleExporter').html('Hide rule manager');
+    } else {
+      $('#btnRuleExporter').html('Show rule manager');
+    }
+  });
+
+  $('#btnRulesExport').on('click', function() {
+    var result = $('#builder').queryBuilder('getRules');
+
+    if (!$.isEmptyObject(result)) {
+      $('#ruleIo').val(JSON.stringify(result, null, 2));
+    }
+  });
+
+  $('#btnRulesImport').on('click', function() {
+    var rules = JSON.parse($('#ruleIo').val());
+    $('#builder').queryBuilder('setRules', rules, true);
+  });
+
 });
 
 // 45 sec timeout
