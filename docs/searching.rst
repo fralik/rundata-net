@@ -351,5 +351,7 @@ Rundata has some special symbols that can be used during word search:
 **This is not supported in Rundata-net!** In fact, it is not possible to search for
 punctuation in inscription texts.
 
-
+Another type of search that is not available in Rundata-net is the
+:guilabel:`Full text search in information file`. This is the full text search
+across inscription meta data.
 

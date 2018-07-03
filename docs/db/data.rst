@@ -112,10 +112,17 @@ Each inscription has several texts related to it. Texts could have special symbo
     `"Æimundr ok "Gunna[rr] ... þæiR [k]umbl(?)`. Word 2 is `auk`, and `ok` in transliteration and
     normalizations correspondingly. Word 3 is `kuna-` and `Gunna[rr]`. And so on.
 
-The property of word correspondence is very important. In fact, Rundata supports searches across
-inscription texts by individual words only. Rundata-net on the other hand supports two modes. One
-being exactly as Rundata, the other one is *the whole inscription based*. The difference of these
-methods is clarified by examples in :doc:`/searching`.
+The property of word correspondence is very important. Rundata-net supports two search modes:
+
+* Search across words when word boundaries and correspondence are taken into account. This is the mode available
+  under :guilabel:`Sök i text` (:guilabel:`Search in text` in the English version) in Rundata.
+  In Rundata-net, such search is used when user searches with :guilabel:`matches across words`
+  operator (see, :ref:`searching-word-search`).
+* Search in the inscription texts as a whole without taking word boundaries and correspondence into
+  account. This can be seen as default search mode and it is availble with all other search operators
+  in Rundata-net. In original Rundata, the similar searches are availble through menu
+  :menuselection:`Selection --> New inscription parameter --> (Runic) text`, where (Runic) can be replaced
+  with the type of runic text you are interested in.
 
 Transliterated runic text
 ^^^^^^^^^^^^^^^^^^^^^^^^^
