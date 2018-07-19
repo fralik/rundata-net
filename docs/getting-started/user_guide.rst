@@ -4,53 +4,49 @@ Quick user guide
 
 .. module:: rundata.userguide
 
-This section gives a quick introduction to Rundata-net interface.
+This section gives a quick introduction to the Rundata-net interface.
 
-Rundata-net is essentially an interface to a database. Since the database doesn't change very often, I adopted a rather radical approach in accessing it. Most of the site functions are executed inside user's browser, including the database. When user opens the main page, it takes some time to load the site. This is the point where the database is transfered to user's computer. Once it is transfered, the rest of functionality should be rather quick.
+Rundata-net is essentially an interface to a database. Since the database doesn't change very often, I have adopted a rather radical approach to accessing it. Most of the site functions are executed inside the user's browser, which includes the database. When the user opens the main page, it will take some time to load the site. This is the point where the database is transferred to the user's computer. Once it is transferred, all functions should work smoothly.
 
-The main page is divided into several areas which I refer to as panels. They are shown with numbers in the image below.
+The main page is divided into several areas, which I refer to as panels. These are shown with numbers in the image below.
 
 .. image:: /_static/panels.jpg
   :width: 100 %
   :alt: Rundata-net main screen
 
-From left to right and from top to bottom:
-
-#. List of inscriptions with numerical information about search results.
+#. List of inscriptions retrieved and their total number.
 
 #. Main display.
 
 #. Map display.
 
-#. Several horizontal panels of control elements and buttons.
+#. Panels of control elements and buttons.
 
 #. Query builder.
 
-Below is the description of each of these labels.
 
 .. _guide-list-of-inscriptions:
 
 List of inscriptions
 ====================
 
-​It's a list where each node corresponds to an individual inscription.
-inscriptions are referenced by a unique name/ID called signature, see
-:doc:`/db/signature`. Some inscriptions changed their name/ID
-throughout years. One example is isncription :samp:`Öl 2`, which had
-names :samp:`B 1076` and :samp:`L 1324`. The list of inscriptions
-contains the most recent names only, i.e. no :samp:`B 1076` nor
-:samp:`L 1324`. The former names (if any) are presented on the
-:ref:`main display<main-display-info>` when inscription is selected.
+​In this list each node corresponds to an individual inscription.
+The inscriptions are referenced by a unique name/ID called a signature, see
+:doc:`/db/signature`. The name/ID of some inscriptions have changed iver time. One example is the inscription :samp:`Öl 2`, which has
+been known as :samp:`B 1076` and :samp:`L 1324`. The list of inscriptions
+contains only the most recent names, i.e. neither :samp:`B 1076`, nor
+:samp:`L 1324`. Such former names (if any) are given on the
+:ref:`main display<main-display-info>` when an inscription is selected.
 
-When user selects inscriptions in the list, the information about them is
+When a user selects an inscription from the list, information about it is
 displayed on the :ref:`main display<main-display-info>` panel. It is possible
-to select a single inscription or multiple. General selection principles
-applies for selecting multiple inscriptions: use :kbd:`Control` to add
-individual inscription to selection, use :kbd:`Shift` to add a selection.
+to select single inscriptions as well as multiple ones. General selection principles
+apply for the selection of multiple inscriptions: use :kbd:`Control` to add
+individual inscriptions to a selection, use :kbd:`Shift` to add a selection.
 
-Below the list of inscriptions you will see a status text saying how many
-inscription is available for selection. This can be useful when you perform
-a search. Status text will give you the number of results.
+Below the list of inscriptions a status text indicates the number of
+inscriptions available for selection. This can be useful when performing
+a search. The status text will then give the number of results.
 
 .. _main-display-info:
 
@@ -61,66 +57,65 @@ Main display
   :width: 100 %
   :alt: Example of information presented on the main display
 
-This is a text area that shows information about selected
-inscriptions. It is possible to adjust what kind of information is displayed.
-Use 'show display format dialog' button for this.
+Here, information on the selected
+inscriptions is given.
+Use the 'Search parameters' button for adjusting the kind of information to be displayed.
 
-The main display imitates editable behaviour. This means that if you click on it,
-you are able to type in or delete text. This is done in order to support
-keyboard navigation and shortcuts for text: select all, copy, paste. This
-addresses a scenario where one would like to take all the information provided
-by Rundata-net and bring it to another program/app. Simply click on the main
-display, select all text, open another application and paste the text there.
+The main display can be edited for the user's need. Thus clicking on the display
+enables you to type in or delete text. This is done in order to support
+keyboard navigation and the shortcuts select all, copy, paste. The user may thus, e.g.
+take all the information provided
+by Rundata-net and enter it into another program/app. Simply click on the main
+display, select all the text, open another application and paste the text into it.
 
 .. _map-info:
 
 Map display
 ===========
 
-Map shows place marks for selected inscriptions if coordinates
-are available. It shows the found location of inscription and not
-the current location. It is known that some coordinates are wrong.
-Since Rundata-net is simply a different view program for SMDB,
-it inherits SMDB's flaws.
+The map shows place marks for the selected inscriptions if coordinates
+are available. It shows the location where the inscription was found and not
+its current location. Some such coordinates are known to be wrong.
+However, since Rundata-net is in this regard simply a different view program for SMDB,
+it will inevitably inherit such flaws in the SMDB.
 
-When a placemark is clicked, the main display is scrolled so that the inscription
-referenced by that placemark is visible.
+When a placemark is clicked on, the main display is scrolled in order to render the inscription
+referenced by that particular placemark visible.
 
 Control panels
 ==============
 
-There are several horizontal panels of control elements and buttons.
+There are several horizontally aligned panels of control elements and buttons.
 
 Filter control
 --------------
 
-:guilabel:`Apply filter(s)`. A check box that control whether filters are applied
-or not. Filters are built with :ref:`query builder<query-builder-info>`. Checking
-:guilabel:`Apply filter(s)` performs a search in the database if there are any
-filters. When :guilabel:`Apply filter(s)` is unchecked, then all the inscriptions
-from the database are visible in the list.
+:guilabel:`Apply filter(s)`. This check box controls whether filters are to be applied
+or not. Filters are built with the :ref:`query builder<query-builder-info>`. Checking 
+:guilabel:`Apply filter(s)` executes a search in the database if 
+filters have been applied. If :guilabel:`Apply filter(s)` is unchecked all the inscriptions
+in the database are presented in the list.
 
-Format dialog
+Search parameters
 -------------
 
 .. image:: /_static/format-dialog-example.jpg
   :width: 100 %
   :alt: Example of format dialog
 
-:guilabel:`Show display format dialog` button toggles the display format
-dialog. Using this dialog window user can select what information will be shown on
+The :guilabel:`Show display format dialog` button opens the search parameter dialogue window. In this window, the user can select the information to be shown on
 the main display for each individual inscription.
 
-List on the left contains fields available for selection. List on the right
-contains fields selected for display. It is possible to rearrange the order
-of selected fields by using two buttons located under the right list.
+The list to the left contains the fields available for selection. The list to the right
+contains the fields selected for display. The order
+of the selected fields may be rearranged by using the two buttons located under the right-hand list.
 
-Changes in selected fields are applied when dialog is closed by clicking
+Changes in the selected fields are applied when the dialogue window is closed by clicking
 on :guilabel:`Hide display format dialog`.
 
-:guilabel:`Display headers` checkbox is used to control whether field headers
-are presented on the main display or not. Compare these two images. Left version
-has headers turned on. Right version has headers turned off.
+The :guilabel:`Display headers` checkbox is used to control whether any field headers
+should be presented on the main display or not. Compare these two images. The version to the left
+has the headers turned on. The version to the right has the headers turned off.
 
 .. image:: /_static/headers-on.jpg
   :width: 49 %
@@ -133,14 +128,14 @@ has headers turned on. Right version has headers turned off.
 Map visibility control
 ----------------------
 
-:guilabel:`Hide map`/:guilabel:`Show map` button. Does what it says.
+The :guilabel:`Hide map`/:guilabel:`Show map` button is self-explanatory.
 
 Special symbols
 ---------------
 
-This horizontal panel contains a button list with special symbols. It contains
-symbols that might be not readily available on user's keyboard layout. Click on
-each symbol's button copies that symbol in clipboard. This panel can be useful
+This horizontal panel contains a list of buttons with special symbols. It contains
+symbols that might not be readily available on the user's keyboard layout. Clicking on
+a symbol's button produces a copy of that symbol in the clipboard. This panel can be useful
 when entering text in filters.
 
 .. _query-builder-info:
@@ -148,14 +143,14 @@ when entering text in filters.
 Query builder
 =============
 
-This is the area where user builds queries/searches/filters for the database.
+In this area the user builds queries/searches/filters for the database.
 A query consists of rules, which can be grouped. Groups and rules are connected
-by gray lines on the left helping user to trace relations. Each group has a set
-of logical operators presented in it's upper left corner: NOT, AND, OR.
-Operators describe how rules inside the group are combined together (AND, OR)
-and if the group condition should be inversed (NOT). Here is the table that
-show how logical operators work. For simplicity, it is demonstrated with only
-two variables a and b. Each variable can have a value of TRUE or FALSE
+by gray lines to the left, which help the user to trace relations. Each group has a set
+of logical operators presented in its upper left corner: NOT, AND, OR.
+Operators describe how rules inside the group are to be combined (AND, OR)
+and if the group condition should be inversed (NOT). The table below 
+shows how logical operators work. For the sake of simplicity, it is demonstrated with only
+two variables a and b. Each variable can have a value of TRUE or FALSE,
 denoted as T and F respectively.
 
 +---+---+---------+--------+---------+---------+
@@ -170,16 +165,16 @@ denoted as T and F respectively.
 | F | F |    F    |   F    | T       | T       |
 +---+---+---------+--------+---------+---------+
 
-You can find more details and examples in `Wikipedia <https://en.wikipedia.org/wiki/Truth_table#Binary_operations>`_.
+More details and examples may be found in `Wikipedia <https://en.wikipedia.org/wiki/Truth_table#Binary_operations>`_.
 
-Each rule consists of a rule's name followed by operator and rule's value.
-You can see various search example in :doc:`/searching`.
-User can create, delete and rearrange rules/groups with drag and drop.
+Each rule consists of a rule name followed by an operator and a rule value.
+You can find various search examples in :doc:`/searching`.
+The user can create, delete and rearrange rules/groups with drag and drop.
 
-The idea behind query builder was to make it user friendly. Search in
-the original Rundata is performed with help of regular expressions. This is
-a powerful tool when you master it. It allows one to search by writing such
-beauties as ``{b/t}{a/o}``. You might need more clicks and a bit more typing
-with a query builder, but the representation of rules in query builder is
-more user friendly.
+The guiding idea behind the query builder has been to make it user-friendly. Searches in
+the original Rundata are performed by way of regular expressions. This is
+a powerful tool, when mastered. It allows one to search by way of 
+beauties such as ``{b/t}{a/o}``. You may need more clicks and a bit more typing
+with a query builder, but the representation of rules in it is no doubt
+more user-friendly.
 
