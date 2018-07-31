@@ -10,7 +10,7 @@ or server, which is not needed for ordinary users. Rundata-net has different ins
 * development
 * production
 
-Dependencies differ somewhat between these environments. All the dependencies are listed [??APM] in the corresponding files in the ``requirements`` directory.
+Dependencies differ somewhat between these environments. All the dependencies are listed in the corresponding files in the ``requirements`` directory.
 
 .. _dependencies:
 
