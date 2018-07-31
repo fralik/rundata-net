@@ -32,7 +32,7 @@ List of inscriptions
 
 ​In this list each node corresponds to an individual inscription.
 The inscriptions are referenced by a unique name/ID called a signature, see
-:doc:`/db/signature`. The name/ID of some inscriptions have changed iver time. One example is the inscription :samp:`Öl 2`, which has
+:doc:`/db/signature`. The name/ID of some inscriptions have changed over time. One example is the inscription :samp:`Öl 2`, which has
 been known as :samp:`B 1076` and :samp:`L 1324`. The list of inscriptions
 contains only the most recent names, i.e. neither :samp:`B 1076`, nor
 :samp:`L 1324`. Such former names (if any) are given on the
