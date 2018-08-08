@@ -10,7 +10,8 @@ to define rules, each of which contains one searchable parameter. At times I
 will use the term 'filtering' instead of 'searching'. The terms are interchangeable
 for this particular application.
 
-Each rule consists of a property, which is used for searching, the operation which should be performed, and a search value. The search value may in fact consist
+Each rule consists of a property, which is used for searching, the operation which should
+be performed, and a search value. The search value may in fact consist
 of multiple values. Let's have a look at the example :samp:`Signature begins
 with Öl`. Here, :samp:`Signature` is the property we will be searching for
 :samp:`begins with` denotes the operation, and :samp:`Öl` is the value. The result
@@ -74,16 +75,19 @@ Operators are differentiated on the basis of the search value type of the respec
 should be clear from their name. A possible exception to this are the *matches*
 operators for textual information. These operators allow one to specify a `regular
 expression pattern <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Writing_a_regular_expression_pattern>`_. This is very similar
-to how a search is made in the original Rundata. Several examples of such searches
+to how a search in text is made in the original Rundata. Several examples of such searches
 will be given later.
 
-.. warning::
+.. attention::
 
-    A search within inscription texts may differ from the corresponding search in Rundata. Rundata implements searches
-    word for word, meaning that in a search with multiple search patterns, all patterns must be present in a single word (counting all its different text forms). [DID I GET THIS RIGHT? APM] We may illustrate this with the :ref:`example below
-    <searching-word-search>`.
-    It is crucial to grasp this difference since Rundata-net may produce quite different
-    search results from Rundata using what might seem to be identical search patterns.
+    Both Rundata-net and Rundata support two types of searches:
+
+    * Direct search by value. In this case, user selects a property that is going to be searched for
+      some value. For example, a search for inscriptions from Sweden. This search uses value 'Sweden'
+      to search in property 'location'.
+    * Word search or a search across different text forms. In this case, user provides multiple search
+      patterns in different inscription texts. All patterns must be present in a single word. We may
+      illustrate such search with the :ref:`example below <searching-word-search>`.
 
 Case sensitivity in searches and normalization
 ----------------------------------------------
@@ -105,12 +109,11 @@ For example, a search for *R* in transliterated runic text only yields results w
 Rundata normalizes all inscription texts, so that a search for *Ol* matches
 *Öl*. Rundata-net does not perform such normalization.
 
-Another type of normalization concerns punctuation and special symbols. Almost all
-punctuation and special symbols must be [CORRECTLY UNDERSTOOD? APM] removed for the purpose of searching (cf. :ref:`searching-multiple-words`). It is not possible to search for punctuation marks
-in the inscription texts. A search for `skarf` in transliterated text thus yields `s:karf`
-as one of its results. Refer to :doc:`/db/data` for a list of characters that
-are used as punctuation marks. A symbol which should **not** be removed is `-`. This means
-that if you want to find `f-ita` you have to search for `f-ita`.
+Another type of normalization concerns punctuation and special symbols in normalized texts. Almost all
+punctuation and special symbols must be removed for the purpose of searching (cf. :ref:`searching-multiple-words`). It is not possible to search for punctuation marks in the inscription texts. A search for `skarf`
+in transliterated text thus yields `s:karf` as one of its results. Refer to :doc:`/db/data` for
+a list of characters that are used as punctuation marks. A symbol which should **not** be removed
+is `-`. This means that if you want to find `f-ita` you have to search for `f-ita`.
 
 Search example
 --------------
@@ -150,7 +153,7 @@ Such a search will come up with no results. This is due to the way groups are
 combined (processed) by logical operators.
 
 If we now change the logical operation of the very top row from :guilabel:`AND` to
-:guilabel:`OR` the search will yield 1906 inscriptions. The difference is that
+:guilabel:`OR` the search will yield 2108 inscriptions. The difference is that
 with :guilabel:`AND` we are searching for inscriptions which are from Norway
 AND from Denmark AND have dating equal to U AND M. Obviously, there are no such inscriptions.
 With :guilabel:`OR`, on the other hand, we are searching for inscriptions
@@ -175,21 +178,30 @@ logical operation is :guilabel:`OR`, whereas others have the value :guilabel:`AN
 
 We now get a mere 309 inscriptions.
 
-Example 2. Using regular expressions.
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example 2. Searching by regular expression.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now let's have a look at how regular expressions work with an example from the Rundata help file: [CORRECTLY FORMATED? BOLD FACE /APM]
+Most searching operators use search values as is. For example, a search operator :samp:`equal` takes
+provided value and searches for it directly. Search operators that support regular expressions treat
+provided value as an expression, which means the value is interpreted during usage. In order to work,
+expressions must be written in a form understandable by the app. Both Rundata and Rundata-net support
+searching by regular expressions. Rundata uses it's own custom syntax for regular expressions.
+Rundata-net uses a common `JavaScript syntax <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Writing_a_regular_expression_pattern>`_.
+
+Let's compare two syntaxes by looking at an example from the Rundata help file taken from section
+`Search Pattern (Sökmönster)`:
+
     a{s/r/}n finds asn, arn, an, áRn, A(s)n, ...
 
-In the Rundata help file this is not specified, but I shall assume that the search pattern is used to make a search
-in transliterated runic text. In regular expression terms this pattern is
-written as `a(s|r)n`. However, due to the absence of a diacritic removal in Rundata-net,
-such a pattern only finds `asn`, `arn`, `a(s)n`, and `a(r)n`.
+Here :samp:`a{s/r/}n` is an expression. In the Rundata help file this is not specified, but I shall
+assume that the search pattern is used to make a search in transliterated runic text. In JavaScript
+syntax, this pattern is written as :samp:`a(s|r)n`. However, due to the absence of a diacritic removal
+in Rundata-net, such a pattern only finds `asn`, `arn`, `a(s)n`, and `a(r)n`.
 
-Regular expressions may include logical operators in the expressions themselves. (CORRECTLY UNDERSTOOD?/APM) Thus, a search
-for `Ö(l|g) 11` in 'signature' (CORRECTLY UNDERSTOOD?) finds signatures such as `Öl 11`, `Öl 112`, `Ög 115`.
-If you exclusively want to find signatures with `11` the regular expression
-should be `(Ö(l|g) 11)$`. There are numerous online sources treating regular expressions.
+Regular expressions may include logical operators in the expressions themselves. Thus, a search
+for :samp:`Ö(l|g) 11` in :samp:`signature` finds inscriptions with signatures such as `Öl 11`, `Öl 112`,
+`Ög 115`. If you exclusively want to find signatures with `11` the regular expression
+should be :samp:`(Ö(l|g) 11)$`. There are numerous online sources treating regular expressions.
 One useful resource is the `regex101.com <https://regex101.com/>`_ website. There you may
 test regular expressions and see a textual explanation of them. Be sure to
 select `javascript` as regex flavour on the left-hand panel.
@@ -209,16 +221,31 @@ The expression `(Ö(l|g) 11)$` is described like this by regex101::
 
 .. _searching-word-search:
 
-Word searches in inscription texts
---------------------------------
+Search across different text forms in inscription texts
+-------------------------------------------------------
 
-Consider the following search in Rundata: `RUN:reisti & FVN:fôður` word search parameter. (ILI KUDA OTNOSITSIA WORD SEARCH PARAMETER? /APM)
+A second search type supported by Rundata-net is a search across different text forms in inscription
+texts. I will sometimes refer to such search type as *word search*. It is called word search because
+it yields the results where inscription contains all search patterns in a single word. Refer to the
+:ref:`structure <data-text-structure-label>` of inscription texts. It is valid to say that each word
+is given in multiple forms, i.e. transliterated and normalized. Search patterns are evaluated per
+word in a word search. This can be useful if one wants to find how word spelling changed over time.
 
-* The transliteration contains 'reisti' (I'VE INSERTED ' IN THE FOLLOWING PARAGRAPHS; YOU MAY PREFER THE ITALICS USED IN E.G. "WORD 3 IS REISA" BELOW /APM)
-* The normalization to Old West Norse contains 'fôður'.
+One example will be to find out when rune :samp:`a` is normalized (Old West Norse) as :samp:`ei`.
+Runic word :samp:`stain` can be normalized as :samp:`stein` or :samp:`staina`. So in order to find all
+inscriptions that have word :samp:`stain` normalized as :samp:`stein`, a word search must be used.
+A similar example is that normalization :samp:`stein` can be transliterated as :samp:`stin` or
+:samp:`stan`.
+
+In Rundata, different search types are available through different menu items. :guilabel:`Search in texts`
+is used for word search and :guilabel:`Selection` for property-based search. Consider a word
+search in Rundata with the following :guilabel:`word parameter code`: :samp:`RUN:reisti & FVN:fôður`:
+
+* The transliteration contains `reisti`.
+* The normalization to Old West Norse contains `fôður`.
 
 This search produces 0 results in Rundata. The reason for this is that Rundata
-tries to find one single word that contains both 'reisti' in transliteration and 'fôður'
+tries to find one single word that contains both `reisti` in transliteration and `fôður`
 in Old West Norse. Evidently, there are no such words.
 
 What appears to be a similar search in Rundata-net is shown in the figure below:
@@ -228,13 +255,13 @@ What appears to be a similar search in Rundata-net is shown in the figure below:
 .. figure:: /_static/pseudo_similar.png
     :alt: An example of search that looks similar to Rundata RUN:reisti & FVN:fôður
 
-This results in three inscriptions. Öl 13 contains 'reisti' as word 2 in the transliterated
-text and 'fôður' as word 7 in the Old West Norse text. The point should be evident. Rundata-net
+This results in three inscriptions. Öl 13 contains `reisti` as word 2 in the transliterated
+text and `fôður` as word 7 in the Old West Norse text. The point should be evident. Rundata-net
 has searched through texts in their entirety and returned results regardless of word positions.
 
 Let's fix this search in Rundata and observe the results. Consider a search for all
-inscriptions from Gästrikland with the word search parameter `RUN:\a & FVN:\ei`. Rundata
-finds eight inscriptions. The first one, Gs 1, has its matched words highlighted in bold:
+inscriptions from Gästrikland with the :guilabel:`word parameter code` :samp:`RUN:\a & FVN:\ei`.
+Rundata finds eight inscriptions. The first one, Gs 1, has its matched words highlighted in bold:
 
 | Gs 1
 | Snjólaug lét **reisa stein** eptir Véleif, bónda sinn, en Eynjótr.
@@ -251,8 +278,8 @@ The logic behind this is:
 
 .. attention::
 
-    In order to perform a
-    word-based search of this kind in Rundata-netOne, you have to select the **matches across words** operator.
+    In order to perform a word-based search of this kind in Rundata-net, one have to select
+    the **matches across words** operator.
 
 The same search in Rundata-net is rendered as:
 
@@ -266,14 +293,15 @@ The same search in Rundata-net is rendered as:
     :alt: Word search in Rundata-net.
 
 Note that when a search is performed across words additional information about
-the number of matched words and personal names is provided together with 
+the number of matched words and personal names is provided together with
 the number of inscriptions retrieved. For this search there are 20 words of which 7
 are personal names. Thus, there are 20-7 = 13 words other than personal names.
 The retrieved words are highlighted in red when the inscription is selected for display.
 
 Now, if you select all the inscriptions and glance through their texts you might notice that,
-all in all, more than 20 words have been highlighted. The word counting function does not take into account words repeated in alternative readings.
-This means that if a runic inscription text is
+all in all, more than 20 words have been highlighted. The word counting function does not take into
+account words repeated in alternative readings.
+This means that if a runic inscription text is::
 
     §P þiuþkiR uk| |kuþlaifr : uk| |karl þaR bruþr aliR : litu rita stain þino × abtiR þiuþmunt ' faur sin ' kuþ hialbi hons| |salu| |uk| |kuþs muþiR in osmuntr ' kara sun ' markaþi × runoR ritaR þa sat aimunt
     §Q þiuþkiR uk| |kuþlaifr : uk| |karl þaR bruþr aliR : litu rita stain þino × þa sata| |aimuntr| |runoR ritaR abtiR þiuþmunt ' faur sin ' kuþ hialbi hons| |salu| |uk| |kuþs muþiR in osmuntr ' kara sun ' markaþi ×
@@ -299,38 +327,46 @@ which contain `þenna` in normalization to Old Scandinavian:
     :alt: An example of complex word search in Rundata-net.
     :width: 100%
 
-This search results in 20 signatures and 32 words, of which 7 are personal names.
-It then contributed an added 12 signatures and 12 words,
+This search results in 20 inscriptions and 32 words, of which 7 are personal names.
+It then contributed an added 12 inscriptions and 12 words,
 but 0 personal names.
 
 .. _searching-multiple-words:
 
-Word search in multiple words (WHY 'IN' AND NOT 'FOR'? (APM))
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Spanning word search across multiple words
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Searching in multiple words is not a problem and is handled naturally in Rundata-net.
-One thing to note, however, is that all words in a search should be (CORRECTLY UNDERSTOOD? APM) separated by a single space.
-Thus if you want to find an inscription with the transliterated text `auk × nifR`
-you should search for `auk nifR`. Another example might be `Öl SAS1989;43`, which
-contains `hir| |risti| |ik þiR birk ¶ bufi` in the transliterated text. In order to find the first
-two words you can search for `ir risti`. You cannot give any (CORRECTLY UNDERSTOOD /APM?) arbitrary characters
-from the two words but have to enter the characters as they appear sequentially. The same applies
-if you wish to find words 5 and 6, which may be done, e.g., by searching for `rk bu`.
+The above example with :samp:`a` and :samp:`ei` considered searching for these patterns in a single
+word. What if you are now concerned not only about the word *stone*, but also about word *raised*?
+Normalized word :samp:`reisti` can be transliterated as :samp:`risti` or :samp:`rasti` or
+:samp:`risþi`, e.t.c. If one would like to find all :samp:`risti`, but not :samp:`rasti` followed by
+:samp:`st`, then the search can be :samp:`Transliterated runic text matches across words ri.*st`.
+This search results in 1016 inscriptions, 6651 words, 1272 personal names. If one wants to additionally
+filter by normalization it is possible to add such a rule :samp:`Normalization to Old West Norse
+matches across words reisti stein`. This extended search yields 170 inscriptions, 339 words,
+0 personal names.
+
+It is possible to type in multiple words in any kind of search pattern. All words in a search pattern
+must be separated by a single space. For example if you want to find an inscription with the
+transliterated text :samp:`auk × nifR`, then you should search for :samp:`auk nifR`. Another example
+might be inscription with signature :samp:`Öl SAS1989;43`, which
+contains :samp:`hir| |risti| |ik þiR birk ¶ bufi` in the transliterated text. In order to find the first
+two words you can search for :samp:`ir risti`. You cannot give any arbitrary characters
+from the two words but have to enter the characters as they appear sequentially, i.e. you can not
+search by :samp:`h ti`. The same applies if you wish to find words 5 and 6, which may be done, e.g.,
+by searching for :samp:`rk bu`.
 
 Notes about searching across words
 ----------------------------------
 
-Several things should be kept in mind when performing searches
-across words:
+Several things should be kept in mind when performing searches across words:
 
 * The search pattern is a regular expression.
-* The logical NOT operator should not be used when searching across words.
-  Although the inscription results may be correct, the highlight mechanism will not work.
+* The logical NOT operator should not be used. Although the number of found inscription may be
+  correct, the highlight mechanism will not work.
 
-You've been warned!  (YA BY UBRAL (APM))
-
-Search capabilities not present in Rundata-net
------------------------------------------
+Search capabilities not present in Rundata-net (compared with Rundata)
+----------------------------------------------------------------------
 
 Rundata has some special symbols that may be used in word searches:
 
@@ -344,10 +380,9 @@ Rundata has some special symbols that may be used in word searches:
 * :samp:`@` placed between two characters to indicate that there should be no punctuation mark
   between them.
 
-**These symbols are (CORRECTLY UNDERSTOOD? (APM)) not supported in Rundata-net!** Furthermore, it is not possible to search for
+**These symbols are not supported in Rundata-net!** Furthermore, it is not possible to search for
 punctuation in inscription texts.
 
 Another type of search that is not available in Rundata-net is the
-:guilabel:`Full text search in information file`, i.e. full-text search
-across inscription meta data.
+:guilabel:`Full text search in information file`, i.e. full-text search across inscription meta data.
 

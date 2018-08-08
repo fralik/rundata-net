@@ -102,6 +102,8 @@ Inscription texts
 
 Each inscription has several texts related to it. Texts could have special symbols that clarify text meaning. Special symbols markup is inherited from Rundata database.
 
+.. _data-text-structure-label:
+
 .. important::
 
     Transliterated and normalized texts have a very special structure. They contain the same number
