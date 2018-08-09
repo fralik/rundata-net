@@ -149,7 +149,7 @@
         <label for="chkApplyFilters">Apply filter(s)</label>
       </div>
       <div class="col-md-10 btn-group" role="group" aria-label="">
-        <button type="button" class="btn btn-default" id="btnDisplayFormat">Show display format dialog</button>
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Configure main display</button>
         <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
         <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
       </div>
@@ -180,34 +180,59 @@
     </section>
     <section role="group" class="row"><div class="col">&nbsp;</div></section>
 
-    <div id="divFormatDiaglog" class="row border-1">
-      <div class="col-sm-5">
-        <select name="from[]" id="multiselect" class="form-control" size="8" multiple="multiple"></select>
-        <div class="row">
-          <form role="form" class="col-sm-6">
-            <div class="checkbox">
-              <input type="checkbox" id="chkDisplayHeaders" checked>
-              <label for="chkDisplayHeaders">Display headers</label>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div class="col-sm-2">
-        <button type="button" id="multiselect_rightAll" class="btn btn-block"><i class="glyphicon glyphicon-forward"></i></button>
-        <button type="button" id="multiselect_rightSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
-        <button type="button" id="multiselect_leftSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
-        <button type="button" id="multiselect_leftAll" class="btn btn-block"><i class="glyphicon glyphicon-backward"></i></button>
-      </div>
-
-      <div class="col-sm-5">
-        <select name="to[]" id="multiselect_to" class="form-control" size="8" multiple="multiple"></select>
-        <div class="row">
-          <div class="col-sm-6">
-            <button type="button" id="multiselect_move_up" class="btn btn-block"><i class="glyphicon glyphicon-arrow-up"></i></button>
+    <div id="divFormatDialog" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="divFormatDialogLabel">Configure inscription display</h4>
           </div>
-          <div class="col-sm-6">
-            <button type="button" id="multiselect_move_down" class="btn btn-block"><i class="glyphicon glyphicon-arrow-down"></i></button>
+          <div class="model-body" style="padding-top: 1em; padding-left: 1em; padding-right: 1em;">
+            <div class="row" style="padding-left: 1em; padding-right: 1em;">
+              <p class="col alert alert-danger hidden" role="alert" id="formatDialogAlertObj"></p>
+            </div>
+            <div class="row" style="padding-left: 1em; padding-right: 1em;">
+              <div class="col"><p>Here you can select which properties are shown on the main display when an inscription is selected. List on the left contains properties available for selection.
+              List on the right contains properties selected for display.</p>
+              <p>Check <em>Display headers</em> checkbox if you want to see property name as long as it's value. If unchecked, only the value is displayed.</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-5">
+                <select name="from[]" id="multiselect" class="form-control" size="8" multiple="multiple"></select>
+                <div class="row">
+                  <form role="form" class="col-sm-6">
+                    <div class="checkbox">
+                      <input type="checkbox" id="chkDisplayHeaders" checked>
+                      <label for="chkDisplayHeaders">Display headers</label>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="col-sm-2">
+                <button type="button" id="multiselect_rightAll" class="btn btn-block"><i class="glyphicon glyphicon-forward"></i></button>
+                <button type="button" id="multiselect_rightSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
+                <button type="button" id="multiselect_leftSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
+                <button type="button" id="multiselect_leftAll" class="btn btn-block"><i class="glyphicon glyphicon-backward"></i></button>
+              </div>
+
+              <div class="col-sm-5">
+                <select name="to[]" id="multiselect_to" class="form-control" size="8" multiple="multiple"></select>
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" id="multiselect_move_up" class="btn btn-block"><i class="glyphicon glyphicon-arrow-up"></i></button>
+                  </div>
+                  <div class="col-sm-6">
+                    <button type="button" id="multiselect_move_down" class="btn btn-block"><i class="glyphicon glyphicon-arrow-down"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="btnApplyDisplayFormat">Apply changes</button>
           </div>
         </div>
       </div>
@@ -510,31 +535,25 @@ function arraysEqual(a, b) {
   return true;
 }
 
-function onDisplayFormatClicked() {
-  formatDialog.toggle();
-  if (formatDialog.is(':visible')) {
-    $('#btnDisplayFormat').html('Hide display format dialog');
-  } else {
-    $('#btnDisplayFormat').html('Show display format dialog');
-  }
+function onDisplayFormatClicked(e) {
+  e.preventDefault();
 
   var selectedValues = [];
-  if (!formatDialog.is(':visible')) {
-    $('#multiselect_to option').each(function() { selectedValues.push($(this).val()); });
-    if (selectedValues === null || selectedValues.length == 0) {
-      $('#alertObj').html('Nothing is selected on format dialog! Please select at least one field.');
-      $('#alertObj').removeClass('hidden');
-      $('#alertObj').addClass('show');
-      return;
-    }
+  var alertObj = $('#formatDialogAlertObj');
+  $('#multiselect_to option').each(function() { selectedValues.push($(this).val()); });
+  if (selectedValues === null || selectedValues.length == 0) {
+    alertObj.html('Nothing is selected for display! Please select at least one property.');
+    alertObj.removeClass('hidden');
+    alertObj.addClass('show');
+    return;
   }
 
-  if ($('#alertObj').hasClass('show')) {
-    $('#alertObj').removeClass('show');
-    $('#alertObj').addClass('hidden');
+  if (alertObj.hasClass('show')) {
+    alertObj.removeClass('show');
+    alertObj.addClass('hidden');
   }
 
-  if (selectedValues.length > 0 && !(formatDialog.is(':visible'))) {
+  if (selectedValues.length > 0) {
     const newShowHeaders = $('#chkDisplayHeaders').is(":checked");
     if (!arraysEqual(userSelectedDisplay, selectedValues) || newShowHeaders != lastShowHeaders) {
       userSelectedDisplay = selectedValues;
@@ -542,6 +561,7 @@ function onDisplayFormatClicked() {
       lastShowHeaders = newShowHeaders;
     }
   }
+  $(this).prev().click();
 }
 
 function onShowMapClicked() {
@@ -1282,7 +1302,7 @@ function onDbLoaded(e) {
   // }
 
   // button handlers
-  $('#btnDisplayFormat').on('click', onDisplayFormatClicked);
+  $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
   $('#btnShowMap').on('click', onShowMapClicked);
 
   $('#chkApplyFilters').on('change', function() {
@@ -1882,7 +1902,7 @@ function initMultiselect() {
       }
     }
   });
-  formatDialog = $('#divFormatDiaglog');
+  formatDialog = $('#divFormatDialog');
 }
 
 function setTooltip(btn, message) {

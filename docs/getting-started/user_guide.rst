@@ -57,16 +57,14 @@ Main display
   :width: 100 %
   :alt: Example of information presented on the main display
 
-Here, information on the selected
-inscriptions is given.
-Use the 'Search parameters' button for adjusting the kind of information to be displayed.
+Here, information on the selected inscriptions is given. Use the :guilabel:`Configure inscription
+display` button for adjusting the kind of information to be displayed.
 
 The main display can be edited for the user's need. Thus clicking on the display
 enables you to type in or delete text. This is done in order to support
 keyboard navigation and the shortcuts select all, copy, paste. The user may thus, e.g.
-take all the information provided
-by Rundata-net and enter it into another program/app. Simply click on the main
-display, select all the text, open another application and paste the text into it.
+take all the information provided by Rundata-net and enter it into another program/app. Simply click
+on the main display, select all the text, open another application and paste the text into it.
 
 .. _map-info:
 
@@ -91,27 +89,28 @@ Filter control
 --------------
 
 :guilabel:`Apply filter(s)`. This check box controls whether filters are to be applied
-or not. Filters are built with the :ref:`query builder<query-builder-info>`. Checking 
-:guilabel:`Apply filter(s)` executes a search in the database if 
+or not. Filters are built with the :ref:`query builder<query-builder-info>`. Checking
+:guilabel:`Apply filter(s)` executes a search in the database if
 filters have been applied. If :guilabel:`Apply filter(s)` is unchecked all the inscriptions
 in the database are presented in the list.
 
-Search parameters
--------------
+Main display configuration
+--------------------------
 
 .. image:: /_static/format-dialog-example.jpg
   :width: 100 %
   :alt: Example of format dialog
 
-The :guilabel:`Show display format dialog` button opens the search parameter dialogue window. In this window, the user can select the information to be shown on
-the main display for each individual inscription.
+The :guilabel:`Configure main display` button opens the main dispay configuration window. In this
+window, the user can select the information to be shown on the main display for each individual
+inscription.
 
 The list to the left contains the fields available for selection. The list to the right
-contains the fields selected for display. The order
-of the selected fields may be rearranged by using the two buttons located under the right-hand list.
+contains the fields selected for display. The order of the selected fields may be rearranged by using
+the two buttons located under the right-hand list.
 
 Changes in the selected fields are applied when the dialogue window is closed by clicking
-on :guilabel:`Hide display format dialog`.
+on :guilabel:`Apply changes`.
 
 The :guilabel:`Display headers` checkbox is used to control whether any field headers
 should be presented on the main display or not. Compare these two images. The version to the left
@@ -148,7 +147,7 @@ A query consists of rules, which can be grouped. Groups and rules are connected
 by gray lines to the left, which help the user to trace relations. Each group has a set
 of logical operators presented in its upper left corner: NOT, AND, OR.
 Operators describe how rules inside the group are to be combined (AND, OR)
-and if the group condition should be inversed (NOT). The table below 
+and if the group condition should be inversed (NOT). The table below
 shows how logical operators work. For the sake of simplicity, it is demonstrated with only
 two variables a and b. Each variable can have a value of TRUE or FALSE,
 denoted as T and F respectively.
@@ -173,7 +172,7 @@ The user can create, delete and rearrange rules/groups with drag and drop.
 
 The guiding idea behind the query builder has been to make it user-friendly. Searches in
 the original Rundata are performed by way of regular expressions. This is
-a powerful tool, when mastered. It allows one to search by way of 
+a powerful tool, when mastered. It allows one to search by way of
 beauties such as ``{b/t}{a/o}``. You may need more clicks and a bit more typing
 with a query builder, but the representation of rules in it is no doubt
 more user-friendly.
