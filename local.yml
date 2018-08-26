@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: rundatanet_local_django
+    volumes:
+      - .:/rundatanet
+    env_file:
+      - ./.envs/.local/.django
+    ports:
+      - "8000:8000"
+    command: /start
