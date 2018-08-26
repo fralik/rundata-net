@@ -160,10 +160,6 @@ typings/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-
-
-
-
 ### Windows template
 # Windows thumbnail cache files
 Thumbs.db
@@ -187,7 +183,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-
 
 ### macOS template
 # General
@@ -216,7 +211,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
 
 ### SublimeText template
 # Cache files for Sublime Text
@@ -250,7 +244,6 @@ bh_unicode_properties.cache
 # https://packagecontrol.io/packages/sublime-github
 GitHub.sublime-settings
 
-
 ### Vim template
 # Swap
 [._]*.s[a-v][a-z]
@@ -279,9 +272,6 @@ tags
 [Ss]cripts
 pyvenv.cfg
 pip-selfcheck.json
-
-
-
 
 rundatanet/media/
 

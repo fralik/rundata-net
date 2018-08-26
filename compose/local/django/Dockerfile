@@ -20,13 +20,13 @@ RUN apk update \
 COPY ./requirements /requirements
 RUN pip install -r /requirements/local.txt
 
-COPY ./compose/production/django/entrypoint /entrypoint
-RUN sed -i 's/\r//' /entrypoint
-RUN chmod +x /entrypoint
+#COPY ./compose/production/django/entrypoint /entrypoint
+#RUN sed -i 's/\r//' /entrypoint
+#RUN chmod +x /entrypoint
 
 COPY ./compose/local/django/start /start
 RUN sed -i 's/\r//' /start
 RUN chmod +x /start
 WORKDIR /rundatanet
 
-ENTRYPOINT ["/entrypoint"]
+ENTRYPOINT ["/start"]
