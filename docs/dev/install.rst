@@ -5,7 +5,8 @@ Installation
 .. module:: rundata
 
 This section describes how to install Rundata-net on your own computer
-or server, which is not needed for ordinary users. Rundata-net has different installation environments:
+or server from scratch. Note that this may not not be needed for ordinary users.
+Rundata-net has different installation environments:
 
 * development
 * production
@@ -15,7 +16,7 @@ Dependencies differ somewhat between these environments. All the dependencies ar
 .. _dependencies:
 
 Setting up the development version in Ubuntu 16.04 (64-bit)
-=======================================================
+===========================================================
 
 .. highlight:: console
 

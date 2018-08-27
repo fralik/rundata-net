@@ -2,7 +2,6 @@ FROM python:3.6-alpine
 
 ENV PYTHONUNBUFFERED 1
 
-#RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean
 RUN apk update \
   # psycopg2 dependencies
   && apk add --virtual build-deps gcc python3-dev musl-dev \
