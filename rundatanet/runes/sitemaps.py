@@ -21,7 +21,7 @@ class MainPageSitemap(sitemaps.Sitemap):
     def location(self, item):
         return reverse(item)
 
-class AoutPageSitemap(sitemaps.Sitemap):
+class AboutPageSitemap(sitemaps.Sitemap):
     priority = 1.0
     changefreq = 'monthly'
 
