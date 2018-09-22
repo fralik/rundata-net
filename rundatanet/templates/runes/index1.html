@@ -2720,9 +2720,9 @@ $(function() {
       scrollToInscription(eventObj.node.original.signature, inscriptionId);
       if (inscriptionId in mapMarkers) {
         marker = mapMarkers[inscriptionId];
-        marker.fire('click');
+        //marker.fire('click');
 
-        //myMap.setView(marker.getLatLng(), 13);
+        myMap.setView(marker.getLatLng(), 13);
 
         // gCurrentZoom = 6;
         // gZoomInterval = setInterval(function (coords) {
