@@ -8,17 +8,13 @@ Welcome to Rundata-net's documentation!
 
 Welcome to the version |version| of the documentation.
 
-.. toctree::
-
-   Presentation <getting-started/overview>
-
 Getting started
 ---------------
 
 .. toctree::
    :maxdepth: 2
 
-   getting-started/install
+   Presentation <getting-started/overview>
    getting-started/user_guide
 
 Database description
@@ -37,6 +33,15 @@ Searching
     :maxdepth: 2
 
     searching
+
+Development and technical information
+-------------------------------------
+
+.. toctree::
+    :maxdepth: 2
+
+    dev/docker
+    dev/install
 
 Indices and tables
 ------------------

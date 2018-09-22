@@ -1,0 +1,6 @@
+# Example environment configuration for docker
+# ------------------------------------------------------------------------------
+USE_DOCKER=yes
+DJANGO_DEBUG=True
+# Replace 'rundatanet' with a different path if not using Docker
+DATABASE_URL=sqlite:////rundatanet/django.sqlite3
