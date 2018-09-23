@@ -5,6 +5,8 @@ from .base import env
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
+USE_DOCKER = env.str('USE_DOCKER', default='no')
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='FFfiu8yUWpECxkZOahD7iCh9t99p1jsN0Jmq8nghaXVu5fLaH9TH7OaxDjtXVFpY')
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
@@ -57,10 +59,10 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG  # noqa F405
 # }
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#internal-ips
 INTERNAL_IPS = ['127.0.0.1', '10.0.2.2']
-if env('USE_DOCKER') == 'yes':
+if USE_DOCKER == 'yes':
     import socket
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-INTERNAL_IPS += [ip[:-1] + '1' for ip in ips]
+    INTERNAL_IPS += [ip[:-1] + '1' for ip in ips]
 
 # django-extensions
 # ------------------------------------------------------------------------------
