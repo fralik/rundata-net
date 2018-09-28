@@ -113,6 +113,42 @@
       .top-margin {
         margin-top: 5px;
       }
+      /**********************************
+       * drop area styles
+       **********************************/
+      #drop-area {
+        border: 2px dashed #dcc896;
+        border-radius: 20px;
+        /*margin: auto;*/
+        margin-bottom: 20px;
+        padding: 20px;
+      }
+      #drop-area.highlight {
+        border-color: green;
+      }
+      .my-form {
+        margin-bottom: 10px;
+      }
+      .my-form p {
+        margin-top: 0;
+      }
+      .my-form .button {
+        display: inline-block;
+        padding: 10px;
+        background: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .my-form .button:hover {
+        background: #ddd;
+      }
+      #fileElem {
+        display: none;
+      }
+      /********************************
+       * drop area styles end
+       */
     </style>
   </head>
 <body style="">
@@ -173,11 +209,19 @@
       <div class="col-md-2 zero-padding-left">
         Control buttons:
       </div>
-      <div class="col-md-10 btn-group" role="group" aria-label="">
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Configure main display</button>
-        <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
-        <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
-        <button type="button" class="btn btn-default" id="btnExport">Export results</button>
+      <div class="col-md-10" aria-label="">
+        <div class="btn-group" role="group" aria-label="">
+          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Configure main display</button>
+          <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
+        </div>
+        <div class="btn-group" role="group" aria-label="">
+          <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
+          <button type="button" class="btn btn-default" id="btnClearRules">Clear all rules</button>
+        </div>
+        <div class="btn-group" role="group" aria-label="">
+          <button type="button" class="btn btn-default" id="btnImportResults">Show import tool</button>
+          <button type="button" class="btn btn-default" id="btnExportResults">Export results</button>
+        </div>
       </div>
     </form>
 
@@ -205,6 +249,18 @@
       </div>
     </section>
     <section role="group" class="row"><div class="col">&nbsp;</div></section>
+
+    <section role="dialog" class="row" id="containerImportSignatures">
+      <div id="drop-area" class="col-md-8 col-md-offset-1">
+        <form class="my-form">
+          <div class="form-group">
+            <p>Import file with signatures by dragging and dropping or selecting it. Read more about the possible file formats in the documentation.</p>
+            <label for="fileElem" class="button">Select a file</label>
+            <input type="file" id="fileElem">
+          </div>
+        </form>
+      </div>
+    </section>
 
     <div id="divFormatDialog" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
       <div class="modal-dialog modal-lg" role="document">
@@ -414,6 +470,7 @@ if (ieVersion !== false && ieVersion <= 12) {
 <!-- <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script> -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
+<script src="{% static 'runes/papaparse.min.js' %}"></script>
 
 <script type="text/javascript">
 var entityMap = {
@@ -1030,11 +1087,8 @@ function onDbLoaded(e) {
   gRootIds = new Map(contents[0].values.map((v, i) => [v[0], 1]));
   gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
 
-  gOriginalData = gRootsJson;
-  gDbAsMap = convertDbToKeyMap();
-
-  ///////////////////////////////////////
-  // fill in gAliasByParent
+  ////////////////////////////////////////////////////////////////////
+  // fill in gAliasByParent. Must be done before convertDbToKeyMap!
   let aliasContents = db.exec('SELECT id, signature_text, parent_id FROM signatures WHERE parent_id NOT NULL');
   if (aliasContents && aliasContents.length > 0) {
     aliasContents[0].values.map(function (row, i) {
@@ -1050,7 +1104,10 @@ function onDbLoaded(e) {
       gAliasByParent[parent_id] = curValue;
     });
   }
-  ///////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+
+  gOriginalData = gRootsJson;
+  gDbAsMap = convertDbToKeyMap();
 
   contents = db.exec("SELECT signature_text FROM signatures");
   signatureNames = contents[0].values.map((v, i) => v[0]);
@@ -1373,6 +1430,9 @@ function onDbLoaded(e) {
   // button handlers
   $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
   $('#btnShowMap').on('click', onShowMapClicked);
+
+  // seems that the data has been loaded. Do not need this timer any more.
+  clearTimeout(gLoadingTimer);
 }
 
 function scrollToSelectedSignature() {
@@ -1452,6 +1512,9 @@ function convertDbToKeyMap() {
       if (columnName === 'signature_text') {
         if (signatureId in gAliasByParent) {
           columnData += ' (' + gAliasByParent[signatureId].join('|') + ')';
+          rowObj['aliases'] = gAliasByParent[signatureId].join(';');
+        } else {
+          rowObj['aliases'] = '';
         }
       }
 
@@ -1480,6 +1543,12 @@ function convertDbToKeyMap() {
       indirectImagesValue = indirectImagesQuery[0].values;
     }
 
+    let allImagesQuery = db.exec("SELECT link_url FROM runes_imagelink WHERE meta_id = " + row[metaColumn]);
+    let allImages = [];
+    if (allImagesQuery.length > 0) {
+      allImages = allImagesQuery[0].values;
+    }
+
     rowObj['directImages'] = directImagesValue;
     rowObj['indirectImages'] = indirectImagesValue;
     let indirectImages = 'No images.';
@@ -1491,6 +1560,7 @@ function convertDbToKeyMap() {
       indirectImages += '</ul>';
     }
     rowObj['indirectImageshtml'] = indirectImages;
+    rowObj['images'] = allImages;
 
     // make image gallery of direct image links
     let directImages = '';
@@ -1553,11 +1623,10 @@ function makeMarkers() {
       let lat = parseFloat(inscriptionData.latitude);
       let lon = parseFloat(inscriptionData.longitude);
       if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
-        // marker = new MarkerWithData([lat, lon], {
-        //   signature: signatureName,
-        //   id: gRootsJson[i].id,
-        // });
-        marker = L.marker([lat, lon], {title: signatureName});
+        marker = new MarkerWithData([lat, lon], {
+          signature: signatureName,
+          id: gRootsJson[i].id,
+        });
         let popupText = "<b>" + signatureName + "</b>";
         //marker.bindPopup(popupText);
         marker.bindTooltip(signatureName, {permanent: true});
@@ -1572,7 +1641,6 @@ function makeMarkers() {
       // markersLatLon.push(marker.getLatLng());
     //}
   }
-  myMap.addLayer(markers);
 
   if (markersLatLon.length > 0) {
     let markersBounds = L.latLngBounds(markersLatLon);
@@ -1585,8 +1653,11 @@ function makeMarkers() {
  * signature is a textual signature, i.e. 'IR 3'
  * inscriptionId is a corresponding DB row ID. For example, 5.
  */
-function scrollToInscription(signature, inscriptionId) {
+function scrollToInscription(signature, inscriptionId, updateTree) {
   var section = document.getElementById(signature);
+  if (updateTree === undefined) {
+    updateTree = true;
+  }
 
   if (section) {
     gMainScrollArea.scrollTop = section.offsetTop;
@@ -1603,6 +1674,15 @@ function scrollToInscription(signature, inscriptionId) {
       maxTries: 100000,
       signatureId: signature,
     });
+  }
+  if (updateTree) {
+    var el = document.getElementById(inscriptionId + '_anchor');
+    console.log('Searched for ' + inscriptionId + '_anchor');
+    if (el) {
+      $('#jstree').scrollTop(el.offsetTop);
+      $('#jstree').jstree(true).deselect_all(true);
+      $('#jstree').jstree(true).select_node(inscriptionId, true);
+    }
   }
 }
 
@@ -2631,8 +2711,95 @@ function setTooltip(btn, message) {
   }, 500);
 }
 
-var gCurrentZoom = 6;
-var gZoomTimer = [];
+// Import list of signatures provided from a file
+// Function argument fileContent is the actual file content.
+function importSignaturesHandler(fileContent) {
+  if (fileContent === null) {
+    return;
+  }
+  if (/[\x00-\x08\x0E-\x1F]/.test(fileContent)) {
+    alert("Seems like the file you've selected is not textual. Please select a different file.");
+    $('#loading').hide();
+    return;
+  }
+
+  var csvData = Papa.parse(fileContent);
+  var numLines = csvData.data.length;
+  let firstDataRow = 0;
+  let signatureColumn = 0;
+  let rules = [];
+  let multiline = false;
+  let numEntries = 0;
+  let maxEntries = 200;
+
+  if (numLines > 1) {
+    let signatureCandidate = csvData.data[0].findIndex(item => 'signature' === item.toLowerCase());
+    if (signatureCandidate != -1) {
+      firstDataRow = 1;
+      signatureColumn = signatureCandidate;
+    }
+
+    numEntries = csvData.data.length;
+    if (numEntries > maxEntries) {
+      numEntries = maxEntries;
+      alert('You are trying to import more than ' + maxEntries + ' signatures. This is currently \
+        not supported and your import will be limited to the first ' + maxEntries + ' signatures.');
+    }
+    for (var i = firstDataRow; i < numEntries; i++) {
+      // iterate over rows
+      var rule = {
+        id: "signature_text",
+        field: "signature_text",
+        type: "string",
+        input: "text",
+        operator: "equal",
+      };
+
+      rule.value = csvData.data[i][signatureColumn].trim();
+
+      rules.push(rule);
+    }
+  } else {
+    // single line, treat every value as a signature
+    numEntries = csvData.data[0].length;
+    if (numEntries > maxEntries) {
+      numEntries = maxEntries;
+      alert('You are trying to import more than ' + maxEntries + ' signatures. This is currently \
+        not supported and your import will be limited to the first ' + maxEntries + ' signatures.');
+    }
+    for (var i = 0; i < numEntries; i++) {
+      // iterate over columns
+      var rule = {
+        id: "signature_text",
+        field: "signature_text",
+        type: "string",
+        input: "text",
+        operator: "equal",
+      };
+
+      rule.value = csvData.data[0][i].trim();
+
+      rules.push(rule);
+    }
+  }
+
+  var allRules = {
+    condition: 'OR',
+    rules: rules,
+    not: false,
+  };
+
+  $('#builder').queryBuilder('setRules', allRules, true);
+  $('#loading').hide();
+}
+
+function showLoading() {
+  $('#loading').show();
+}
+
+function hideLoading() {
+  $('#loading').hide();
+}
 
 var clipboard = [];
 $(function() {
@@ -2646,6 +2813,7 @@ $(function() {
   formatDialog.hide();
   $('#alertObj').hide();
   $('#containerRuleIo').hide();
+  $('#containerImportSignatures').hide();
 
   $('.clip').each(function (i) {
     // prepare buttons for clipboard library
@@ -2666,11 +2834,6 @@ $(function() {
     setTooltip(e.trigger, 'Failed!');
   });
 
-  // customMarker = L.Marker.extend({
-  //    options: {
-  //       myId: -1,
-  //    }
-  // });
   myMap = L.map('mapDisplay').setView([56.607512, 16.439838], 8);
   let osmAttrib = '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -2681,13 +2844,12 @@ $(function() {
   ).addTo(myMap);
   markers = L.markerClusterGroup({
     showCoverageOnHover: false,
-    removeOutsideVisibleBounds: false,
     chunkedLoading: true,
   });
   markers.on('click', function (a) {
     scrollToInscription(a.layer.options.signature, a.layer.options.id);
   });
-  //markers.addTo(myMap);
+  markers.addTo(myMap);
 
   // Next phase, jstree creation/initialization
   $('#jstree')
@@ -2717,30 +2879,11 @@ $(function() {
       if (eventObj.selected.length == 0)
         return;
       let inscriptionId = parseInt(eventObj.node.id, 10);
-      scrollToInscription(eventObj.node.original.signature, inscriptionId);
+      scrollToInscription(eventObj.node.original.signature, inscriptionId, false);
       if (inscriptionId in mapMarkers) {
         marker = mapMarkers[inscriptionId];
-        //marker.fire('click');
 
-        myMap.setView(marker.getLatLng(), 13);
-
-        // gCurrentZoom = 6;
-        // gZoomInterval = setInterval(function (coords) {
-        //   if (gCurrentZoom < 14) {
-        //     myMap.setView(coords, gCurrentZoom);
-        //     gCurrentZoom += 1;
-        //   } else {
-        //     clearInterval(gZoomTimer);
-        //   }
-        // }, 200, marker.getLatLng());
-
-        //let opt = {animate: true, duration: 3};
-        //myMap.flyTo(marker.getLatLng(), 13, opt);
-
-        //let markersLatLon = [];
-        //markersLatLon.push(marker.getLatLng());
-        //let markersBounds = L.latLngBounds(markersLatLon);
-        //myMap.fitBounds(markersBounds);
+        myMap.setView(marker.getLatLng(), 18);
       }
     }
   })
@@ -2758,6 +2901,9 @@ $(function() {
     } else {
       $('#btnRuleExporter').html('Show rule manager');
     }
+  });
+  $('#btnClearRules').on('click', function() {
+    $('#builder').queryBuilder('reset');
   });
 
   $('#btnRulesExport').on('click', function() {
@@ -2795,62 +2941,118 @@ $(function() {
     setTimeout(scrollToSelectedSignature, 600);
   });
 
-  $('#btnExport').on('click', function() {
-    var currentSelection = $('#jstree').jstree(true).get_selected();
-    $('#jstree').jstree(true).select_all(true);
-
-    var allSignatures = $('#jstree').jstree(true).get_selected();
-    if (allSignatures.length == 0)
-      return;
-
-    let indicesStr = allSignatures.join(',');
-    //let columns = userSelectedDisplay.join(',');
-    let contents = db.exec("SELECT * FROM all_data where signature_id IN (" + indicesStr + ")");
-    if (!contents || contents.length == 0)
-      return;
-
-    var csv = '';
-    var allRows = contents[0].values;
-
-
-    for (var i = 0; i < allRows.length; i++) {
-      csv = csv + allRows[i].join(',') + '\n';
+  function onCsvWorkerMessage(e) {
+    var csvBody = e.data.csv;
+    var columns = e.data.columns;
+    var csv = '\ufeff'; // add unicode BOM
+    for (var i = 0; i < columns.length; i++) {
+      csv += humanNameForColumnName(columns[i]) + ',';
+      if (columns[i] === 'signature_text') {
+        csv += 'Alternative signatures' + ',';
+      }
     }
-    csv = contents[0].columns.join(',') + '\n' + csv;
+    csv = csv.slice(0, -1) + '\r\n';
+    csv += csvBody;
 
     var exportedFilename = 'rundata_results.csv';
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     if (navigator.msSaveBlob) { // IE 10+
         navigator.msSaveBlob(blob, exportedFilename);
     } else {
-        var link = document.createElement("a");
-        if (link.download !== undefined) { // feature detection
-            // Browsers that support HTML5 download attribute
-            var url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", exportedFilename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+      var link = document.createElement("a");
+      if (link.download !== undefined) { // feature detection
+          // Browsers that support HTML5 download attribute
+          var url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", exportedFilename);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
     }
+  }
 
-    $('#jstree').jstree(true).deselect_all(true);
-    $('#jstree').jstree(true).select_node(currentSelection, true);
+  $('#btnImportResults').on('click', function() {
+    var obj = $('#containerImportSignatures');
+    obj.toggle();
+    if (obj.is(':visible')) {
+      $('#btnImportResults').html('Hide import tool');
+    } else {
+      $('#btnImportResults').html('Show import tool');
+    }
+  });
+  $('#btnExportResults').on('click', function() {
+    var myWorker = new Worker("{% static 'runes/csv.worker.js' %}");
+    myWorker.onmessage = onCsvWorkerMessage;
+    myWorker.postMessage({
+      inscriptions: gDbAsMap,
+      rows: gRootsJson,
+      columns: userSelectedDisplay
+    });
   });
 
+  let dropArea = document.getElementById('drop-area');
+  ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false)
+  })
+  ;['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false)
+  })
 
+  ;['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false)
+  })
+  dropArea.addEventListener('drop', handleDrop, false)
+  document.getElementById('fileElem').addEventListener('change', handleImportWrapper, false);
+
+  function handleDrop(e) {
+    let dt = e.dataTransfer;
+    let files = dt.files;
+
+    handleFiles(files);
+  }
+  // Event handler that stops event propagation. Used for drag and drop support
+  function preventDefaults (e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  function highlight(e) {
+    dropArea.classList.add('highlight')
+  }
+
+  function unhighlight(e) {
+    dropArea.classList.remove('highlight')
+  }
+  function handleImportWrapper(evt) {
+    handleFiles(evt.target.files);
+  }
+  function handleFiles(files) {
+    //([...files]).forEach(uploadFile)
+    if (files.length == 0) {
+      return;
+    }
+    var fileReader = new FileReader();
+    var file = files[0]; // be sure to take just a single file
+    fileReader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) {
+        $('#loading-sub-text').html('This dialog will disappear once data is ready');
+        showLoading();
+        setTimeout(importSignaturesHandler, 10, evt.target.result);
+      }
+    }
+    fileReader.readAsText(file);
+  }
 });
 
 // 45 sec timeout
-setTimeout(function() {
+var gLoadingTimer = setTimeout(function() {
   if ($('#loading').is(':visible')) {
     $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
     alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
   }
 }, 45000);
-//$('#loading').hide();
+// $('#loading').hide();
 </script>
 
 </body>
