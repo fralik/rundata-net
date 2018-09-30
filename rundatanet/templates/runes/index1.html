@@ -554,6 +554,13 @@ var gDbAsMap = {};
 // Clusterize.js object for main isncription display
 var gMainClusterize = null;
 
+/*
+  approxItemScrollTop: ,
+  direction: 'up' or 'down',
+  iteration: integer
+  maxTries: integer,
+  signatureId: ,
+*/
 var gClusterizeParams = {};
 var gMainScrollArea = document.getElementById('mainScrollArea');
 
@@ -684,14 +691,16 @@ function onDisplayFormatClicked(e) {
 
 function onShowMapClicked() {
   $('#mapDisplay').toggle();
+  var mainContainer = $('#mainScrollArea');
+
   if ($('#mapDisplay').is(':visible')) {
     $('#btnShowMap').html('Hide map');
-    $('#mainDisplay').removeClass('col-md-10');
-    $('#mainDisplay').addClass('col-md-6');
+    mainContainer.removeClass('col-md-10');
+    mainContainer.addClass('col-md-6');
   } else {
     $('#btnShowMap').html('Show map');
-    $('#mainDisplay').removeClass('col-md-6');
-    $('#mainDisplay').addClass('col-md-10');
+    mainContainer.removeClass('col-md-6');
+    mainContainer.addClass('col-md-10');
   }
 }
 
@@ -1662,17 +1671,51 @@ function scrollToInscription(signature, inscriptionId, updateTree) {
   if (section) {
     gMainScrollArea.scrollTop = section.offsetTop;
   } else {
+    if (!Object.keys(gClusterizeParams) || Object.keys(gClusterizeParams).length == 0) {
+      gClusterizeParams.iteration = 0;
+    }
+
+    // figure out where shall we scroll up or down
+    var inscriptionNode = document.getElementById(inscriptionId);
+    var rowClicked = $('.jstree-node').index(inscriptionNode);
+    var visibleNodes = $('#mainDisplay > .inscription-section');
+    var firstVisibleId = document.getElementById($(visibleNodes[0]).attr('dbId'));
+    var rowVisible = $('.jstree-node').index(firstVisibleId);
+    gClusterizeParams = {
+      direction: 'up',
+      seekFactor: 10,
+    };
+
+    if (rowVisible > rowClicked)
+      gClusterizeParams.direction = 'down';
+    if (gMainClusterize.getRowsAmount() > 3000) {
+      gClusterizeParams.seekFactor = 60;
+    }
+
+    scrollUntilSignature(signature);
+    return;
+
     // isncription had not been loaded into DOM
     var approxItemHeight = gMainClusterize.options.item_height;
-    var rowId = inscriptionId;
+    var inscriptionNode = document.getElementById(inscriptionId);
+    var rowId = $('.jstree-node').index(inscriptionNode);
+    if (rowId == -1)
+      alert('something is wrong');
+
+    //var rowId = inscriptionId;
     var approxItemScrollTop = rowId * approxItemHeight;
+    if (gMainClusterize.getRowsAmount() <= 1500) {
+      approxItemScrollTop = gMainClusterize.options.cluster_height;
+    }
+    console.log('Will start searching for row ' + rowId + ', appr offset ' + approxItemScrollTop);
 
     scrollForRow({
       approxItemScrollTop: approxItemScrollTop,
       direction: 'up',
       iteration: 0,
-      maxTries: 100000,
-      signatureId: signature,
+      maxTries: 450,
+      signature: signature,
+      inscriptionId: inscriptionId,
     });
   }
   if (updateTree) {
@@ -1686,10 +1729,33 @@ function scrollToInscription(signature, inscriptionId, updateTree) {
   }
 }
 
+function scrollUntilSignature(signature) {
+  var section = document.getElementById(signature);
+  if (!section) {
+    var shift = gMainClusterize.options.item_height * gClusterizeParams.seekFactor;
+
+    if (gClusterizeParams.direction === 'down')
+      shift = shift * -1;
+
+    var newTop = gMainScrollArea.scrollTop + shift;
+    if (newTop <= 0)
+      return;
+
+    gMainScrollArea.scrollTop = newTop;
+
+    setTimeout(scrollUntilSignature, 2, signature);
+  } else {
+    gMainScrollArea.scrollTop = section.offsetTop;
+    gClusterizeParams = {};
+  }
+}
+
 // Scroll main display
 // _params is an object with one used value: approxItemScrollTop.
 // approxItemScrollTop - value to which main display will be scrolled.
 function scrollForRow(_params) {
+  console.log('scrollForRow');
+  console.log(_params);
   gMainScrollArea.scrollTop = _params.approxItemScrollTop;
   gClusterizeParams = _params;
 }
@@ -1704,22 +1770,30 @@ function onMainClusterChanged() {
   if (!gMainClusterize)
     return;
 
+  console.log('onMainClusterChanged');
+
   var section = document.getElementById(gClusterizeParams.signatureId);
   if (section !== null) {
     // Seems like we found the section. We can not scroll directly to it,
     // because offsetTop can still change soon due to image loading. So,
     // let's make an async call.
-    setTimeout(scrollToInscription, 30, gClusterizeParams.signatureId);
+    setTimeout(scrollToInscription, 30, gClusterizeParams.signature, gClusterizeParams.inscriptionId);
     gClusterizeParams = {};
   } else {
     // Our row is not in a cluster, let's check neighbouring clusters.
     // Let's imagine we are in cluster number 5. Go check at 4th, then 6th,
     // then 3rd, then 7th...
     // Until we find our row or until we reach the limit from params.maxTries
+    var clusterHeight = gMainClusterize.options.cluster_height * 0.5;
+    var shift = ++gClusterizeParams.iteration * clusterHeight;
+    var shiftDirection = (gClusterizeParams.direction == 'up' ? -1 : 1);
 
-    var shift = ++gClusterizeParams.iteration * (gMainClusterize.options.cluster_height );
-    gClusterizeParams.approxItemScrollTop += shift * (gClusterizeParams.direction == 'up' ? -1 : 1);
-    gClusterizeParams.direction = gClusterizeParams.direction == 'up' ? 'down' : 'up';
+    if (gMainClusterize.getRowsAmount() <= 1500) {
+      shiftDirection = 1;
+    } else {
+      gClusterizeParams.direction = gClusterizeParams.direction == 'up' ? 'down' : 'up';
+    }
+    gClusterizeParams.approxItemScrollTop += shift * shiftDirection;
     if (gClusterizeParams.iteration < gClusterizeParams.maxTries)
       scrollForRow(gClusterizeParams);
   }
@@ -1745,7 +1819,7 @@ function inscriptions2markup() {
     let inscriptionData = gDbAsMap[signatureId];
     let signatureName = inscriptionData['signature_text_raw'];
 
-    let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
+    let paragraph = `<article signature="${signatureName}" id="${signatureName}" dbId="${signatureId}" class="inscription-section">`;
 
     for (let j = 0; j < userSelectedDisplay.length; j++) {
       let columnName = userSelectedDisplay[j];
@@ -2861,7 +2935,7 @@ $(function() {
           contentId: 'mainDisplay',
           callbacks: {
             clusterChanged: function () {
-              onMainClusterChanged(gClusterizeParams);
+              //onMainClusterChanged(gClusterizeParams);
             }
           },
         });
@@ -2880,7 +2954,7 @@ $(function() {
         return;
       let inscriptionId = parseInt(eventObj.node.id, 10);
       scrollToInscription(eventObj.node.original.signature, inscriptionId, false);
-      if (inscriptionId in mapMarkers) {
+      if (inscriptionId in mapMarkers && $('#mapDisplay').is(':visible')) {
         marker = mapMarkers[inscriptionId];
 
         myMap.setView(marker.getLatLng(), 18);
@@ -3051,7 +3125,7 @@ var gLoadingTimer = setTimeout(function() {
     $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
     alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
   }
-}, 45000);
+}, 95000);
 // $('#loading').hide();
 </script>
 
