@@ -817,6 +817,15 @@ function applyFilters() {
 
   resetSearchStats();
 
+  result.sql = result.sql.replace("signature_text LIKE ('all_sweden%')", "signature_text LIKE ('Öl %') OR \
+    signature_text LIKE ('Ög %') OR signature_text LIKE ('Sö %') OR signature_text LIKE ('Sm %') OR \
+    signature_text LIKE ('Vg %') OR signature_text LIKE ('U %') OR signature_text LIKE ('Vs %') OR \
+    signature_text LIKE ('Nä %') OR signature_text LIKE ('Vr %') OR signature_text LIKE ('Gs %') OR \
+    signature_text LIKE ('Hs %') OR signature_text LIKE ('M %') OR signature_text LIKE ('Ån %') OR \
+    signature_text LIKE ('D %') OR signature_text LIKE ('Hr %') OR signature_text LIKE ('J %') OR \
+    signature_text LIKE ('Lp %') OR signature_text LIKE ('Ds %') OR signature_text LIKE ('Bo %') OR \
+    signature_text LIKE ('G %') OR signature_text LIKE ('SE %')");
+
   console.log('Got SQL: ' + result.sql);
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + result.sql);
   if (contents.length == 0) {
@@ -1199,7 +1208,9 @@ function onDbLoaded(e) {
       plugin: 'selectize',
       plugin_config: {
         plugins: ['remove_button'],
-        options: [{text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
+        options: [
+          {text: 'Whole Sweden', v: 'all_sweden'},
+          {text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
           {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppand (U)', v: 'U '},
           {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland (Vr)', v: 'Vr '},
           {text: 'Gästrikland (Gs)', v: 'Gs '}, {text: 'Hälsingland (Hs)', v: 'Hs '}, {text: 'Medelpad (M)', v: 'M '},
@@ -1592,11 +1603,6 @@ function convertDbToKeyMap() {
 }
 
 function clearMarkers() {
-  for (let key in mapMarkers) {
-    if (mapMarkers.hasOwnProperty(key)) {
-      mapMarkers[key].remove();
-    }
-  }
   markers.clearLayers();
 }
 
@@ -1623,15 +1629,13 @@ function makeMarkers() {
         //marker.bindPopup(popupText);
         marker.bindTooltip(signatureName, {permanent: true});
         mapMarkers[row] = marker;
-
-        markers.addLayer(marker);
-        markersLatLon.push(marker.getLatLng());
       }
     }
-    //if (marker instanceof Object) {
-      // markers.addLayers(marker);
-      // markersLatLon.push(marker.getLatLng());
-    //}
+
+    if (marker instanceof Object) {
+      markers.addLayers(marker);
+      markersLatLon.push(marker.getLatLng());
+    }
   }
 
   if (markersLatLon.length > 0) {
@@ -2283,7 +2287,7 @@ $(function() {
     }
   ).addTo(myMap);
   markers = L.markerClusterGroup({
-    showCoverageOnHover: false,
+    showCoverageOnHover: true,
     chunkedLoading: true,
   });
   markers.on('click', function (a) {
