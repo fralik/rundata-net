@@ -1197,7 +1197,7 @@ function onDbLoaded(e) {
     {
       id: 'signature_country',
       field: 'signature_text',
-      label: 'Country',
+      label: 'Country or Swedish province',
       type: 'string',
       input: 'select',
       multiple: true,
@@ -1209,14 +1209,14 @@ function onDbLoaded(e) {
       plugin_config: {
         plugins: ['remove_button'],
         options: [
-          {text: 'Whole Sweden', v: 'all_sweden'},
+          {text: 'Sweden, whole', v: 'all_sweden'},
           {text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
           {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppand (U)', v: 'U '},
           {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland (Vr)', v: 'Vr '},
           {text: 'Gästrikland (Gs)', v: 'Gs '}, {text: 'Hälsingland (Hs)', v: 'Hs '}, {text: 'Medelpad (M)', v: 'M '},
           {text: 'Ångermanland (Ån)', v: 'Ån '}, {text: 'Dalarna (D)', v: 'D '}, {text: 'Härjedalen (Hr)', v: 'Hr '},
           {text: 'Jämtland (J)', v: 'J '}, {text: 'Lappland (Lp)', v: 'Lp '}, {text: 'Dalsland (Ds)', v: 'Ds '},
-          {text: 'Bohuslän (Bo)', v: 'Bo '}, {text: 'Gotland (G)', v: 'G '}, {text: 'Sweden other (SE)', v: 'SE '},
+          {text: 'Bohuslän (Bo)', v: 'Bo '}, {text: 'Gotland (G)', v: 'G '}, {text: 'Sweden, other (SE)', v: 'SE '},
           {text: 'Denmark (DR)', v: 'DR '}, {text: 'Norway (N)', v: 'N '}, {text: 'Faroe Islands (FR)', v: 'FR '},
           {text: 'Greenland (GR)', v: 'GR '}, {text: 'Iceland (IS)', v: 'IS '}, {text: 'Finland (FI)', v: 'FI '},
           {text: 'Shetland (Sh)', v: 'Sh '}, {text: 'Orkney (Or)', v: 'Or '}, {text: 'Scotland (Sc)', v: 'Sc '},
@@ -1671,6 +1671,7 @@ function scrollToInscription(signature, inscriptionId, updateTree) {
   if (section) {
     gMainScrollArea.scrollTop = section.offsetTop;
     gClusterizeParams = {};
+    $('#loading').hide();
   } else {
     // desired signature is not in the current cluster. We will have to search for it.
 
@@ -1684,6 +1685,7 @@ function scrollToInscription(signature, inscriptionId, updateTree) {
     }
     if (gClusterizeParams.iteration >= gClusterizeParams.maxTries) {
       gClusterizeParams = {};
+      $('#loading').hide();
       return;
     }
 
@@ -2102,8 +2104,7 @@ function humanNameForColumnName(columnName) {
   if (a) {
     return a.text;
   }
-  return "Undefined";
-  //return displayFields().find(x => x.value === columnName).text;
+  return columnName;
 }
 
 function initMultiselect() {
@@ -2373,6 +2374,7 @@ $(function() {
     }
   });
   $('#btnResetSearch').on('click', function() {
+    $('#loading').show();
     gRootsJson = gOriginalData;
     gMainClusterize.update(inscriptions2markup());
     resetSearchStats();
@@ -2381,7 +2383,7 @@ $(function() {
     makeMarkers();
 
     displayStatistics();
-    setTimeout(scrollToSelectedSignature, 600);
+    setTimeout(scrollToSelectedSignature, 1500);
   });
 
   function onCsvWorkerMessage(e) {
@@ -2397,7 +2399,7 @@ $(function() {
     csv = csv.slice(0, -1) + '\r\n';
     csv += csvBody;
 
-    var exportedFilename = 'rundata_results.csv';
+    var exportedFilename = 'rundata-net_results.csv';
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     if (navigator.msSaveBlob) { // IE 10+
         navigator.msSaveBlob(blob, exportedFilename);
@@ -2431,7 +2433,7 @@ $(function() {
     myWorker.postMessage({
       inscriptions: gDbAsMap,
       rows: gRootsJson,
-      columns: userSelectedDisplay
+      columns: userSelectedDisplay.concat(['latitude', 'longitude']),
     });
   });
 
