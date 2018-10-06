@@ -89,8 +89,8 @@ will be given later.
       patterns in different inscription texts. All patterns must be present in a single word. We may
       illustrate such search with the :ref:`example below <searching-word-search>`.
 
-Case sensitivity in searches and normalization
-----------------------------------------------
+Case sensitivity in searches and search normalization
+-----------------------------------------------------
 
 Most of the textual-based searches are insensitive as regards capital letters.
 For example, *Öl* is matched to both *Öl* and *öl*. On the other hand,

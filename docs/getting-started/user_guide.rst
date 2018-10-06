@@ -6,9 +6,12 @@ Quick user guide
 
 This section gives a quick introduction to the Rundata-net interface.
 
-Rundata-net is essentially an interface to a database. Since the database doesn't change very often, I have adopted a rather radical approach to accessing it. Most of the site functions are executed inside the user's browser, which includes the database. When the user opens the main page, it will take some time to load the site. This is the point where the database is transferred to the user's computer. Once it is transferred, all functions should work smoothly.
+Rundata-net is essentially an interface to a database. Since the database doesn't change very often, I have adopted a rather radical approach to accessing it. Most of the site functions are executed inside the user's browser, which includes the database. When the user opens the main page, it will take some time to load the site. This is the point where the database is transferred to the user's computer. Once it is transferred, all functions should work smoothly. Moreover, once the site is loaded
+you may work without the internet connection. Map display won't work without the
+internet connection.
 
-The main page is divided into several areas, which I refer to as panels. These are shown with numbers in the image below.
+The main page is divided into several areas, which I refer to as panels. These
+are shown with numbers in the image below.
 
 .. image:: /_static/panels.jpg
   :width: 100 %
@@ -16,13 +19,13 @@ The main page is divided into several areas, which I refer to as panels. These a
 
 #. List of inscriptions retrieved and their total number.
 
-#. Main display.
+#. Main display on which information about particular inscription is given.
 
-#. Map display.
+#. Map display. Shows inscription found location.
 
 #. Panels of control elements and buttons.
 
-#. Query builder.
+#. Query builder, which is used to define search queries.
 
 
 .. _guide-list-of-inscriptions:
@@ -32,17 +35,16 @@ List of inscriptions
 
 ​In this list each node corresponds to an individual inscription.
 The inscriptions are referenced by a unique name/ID called a signature, see
-:doc:`/db/signature`. The name/ID of some inscriptions have changed over time. One example is the inscription :samp:`Öl 2`, which has
+:doc:`/db/signature`. The name/ID of some inscriptions have changed over time.
+One example is the inscription :samp:`Öl 2`, which has
 been known as :samp:`B 1076` and :samp:`L 1324`. The list of inscriptions
 contains only the most recent names, i.e. neither :samp:`B 1076`, nor
 :samp:`L 1324`. Such former names (if any) are given on the
-:ref:`main display<main-display-info>` when an inscription is selected.
+:ref:`main display<main-display-info>`.
 
 When a user selects an inscription from the list, information about it is
-displayed on the :ref:`main display<main-display-info>` panel. It is possible
-to select single inscriptions as well as multiple ones. General selection principles
-apply for the selection of multiple inscriptions: use :kbd:`Control` to add
-individual inscriptions to a selection, use :kbd:`Shift` to add a selection.
+displayed on the :ref:`main display<main-display-info>` panel. It is only possible
+to select a single inscription at a time.
 
 Below the list of inscriptions a status text indicates the number of
 inscriptions available for selection. This can be useful when performing
@@ -57,42 +59,52 @@ Main display
   :width: 100 %
   :alt: Example of information presented on the main display
 
-Here, information on the selected inscriptions is given. Use the :guilabel:`Configure inscription
+Here, information on inscriptions is given. Use the :guilabel:`Configure inscription
 display` button for adjusting the kind of information to be displayed.
 
 The main display can be edited for the user's need. Thus clicking on the display
 enables you to type in or delete text. This is done in order to support
-keyboard navigation and the shortcuts select all, copy, paste. The user may thus, e.g.
-take all the information provided by Rundata-net and enter it into another program/app. Simply click
-on the main display, select all the text, open another application and paste the text into it.
+keyboard navigation and shortcuts like select, copy, paste.
+
+.. important::
+
+    It may appear that main display contains all the data, but in fact it may
+    contain just a fraction of data. If Rundata-net needs to display information
+    about many inscriptions (for example, 6751 for the case when no search had been
+    performed), then it is not practical to display information about all 6751.
+    Such display will take very long time to produce and will make your browser
+    extremely slow. Whenever there is a need to display large amount of
+    inscriptions, Rundata-net will pretend that they are on the screen, but will
+    actually load them into the screen according to user's scroll position. This
+    is important to keep in mind if you would like to copy text from the main
+    display to another application by selecting all text in the main display.
+    If you need to export all search results, you may use export functionality.
 
 .. _map-info:
 
 Map display
 ===========
 
-The map shows place marks for the selected inscriptions if coordinates
+The map shows placemarks for the inscriptions if coordinates
 are available. It shows the location where the inscription was found and not
 its current location. Some such coordinates are known to be wrong.
 However, since Rundata-net is in this regard simply a different view program for SMDB,
 it will inevitably inherit such flaws in the SMDB.
 
-When a placemark is clicked on, the main display is scrolled in order to render the inscription
-referenced by that particular placemark visible.
+When a placemark is clicked on, the main display is scrolled in order to display
+the inscription referenced by that particular placemark.
 
 Control panels
 ==============
 
 There are several horizontally aligned panels of control elements and buttons.
 
-Filter control
+Search buttons
 --------------
 
-:guilabel:`Apply filter(s)`. This check box controls whether filters are to be applied
-or not. Filters are built with the :ref:`query builder<query-builder-info>`. Checking
-:guilabel:`Apply filter(s)` executes a search in the database if
-filters have been applied. If :guilabel:`Apply filter(s)` is unchecked all the inscriptions
-in the database are presented in the list.
+:guilabel:`Search` button is used to initiate searching. Search query is created
+with the :ref:`query builder<query-builder-info>`. :guilabel:`Reset search`
+button is used to show all the inscriptions in the database.
 
 Main display configuration
 --------------------------
@@ -101,20 +113,21 @@ Main display configuration
   :width: 100 %
   :alt: Example of format dialog
 
-The :guilabel:`Configure main display` button opens the main dispay configuration window. In this
-window, the user can select the information to be shown on the main display for each individual
-inscription.
+The :guilabel:`Configure main display` button opens a dialog box used to configure
+the main display. On this dialog box, the user may select the information to be
+shown on the main display for each individual inscription.
 
-The list to the left contains the fields available for selection. The list to the right
-contains the fields selected for display. The order of the selected fields may be rearranged by using
-the two buttons located under the right-hand list.
+The list to the left contains fields available for selection. The list to the right
+contains fields selected for display. The order of the selected fields may be
+rearranged by using the two buttons located under the right-hand list.
 
-Changes in the selected fields are applied when the dialogue window is closed by clicking
-on :guilabel:`Apply changes`.
+Changes in the selected fields are applied when the dialogue window is closed by
+clicking on :guilabel:`Apply changes` button.
 
 The :guilabel:`Display headers` checkbox is used to control whether any field headers
-should be presented on the main display or not. Compare these two images. The version to the left
-has the headers turned on. The version to the right has the headers turned off.
+should be presented on the main display or not. Compare these two images.
+The version to the left has the headers turned on. The version to the right has
+the headers turned off.
 
 .. image:: /_static/headers-on.jpg
   :width: 49 %
@@ -128,6 +141,96 @@ Map visibility control
 ----------------------
 
 The :guilabel:`Hide map`/:guilabel:`Show map` button is self-explanatory.
+
+Rule manager
+------------
+
+Click on :guilabel:`Show rule manager` makes visible *rule manager*. Rule manager
+is a tool that can be used to export and import search query. Exported query can
+be e-mailed to a colleague or applied next time user works with Rundata.
+
+Clearing search query
+---------------------
+
+Search query consists of individual rules and group of rules. Each rule/group
+provides a :guilabel:`Delete` button, which allows to delete that particular
+rule or group. However, if you have a lot of rules, which you would like to delete,
+clicking on every individual :guilabel:`Delete` button might be tiresome. Button
+:guilabel:`Clear all rules` may be used in such cases. After clicking on it, all
+searching rules will be removed and search query will consist of a single
+placeholder rule.
+
+Importing and exporting results
+-------------------------------
+
+It is possible to export search results and to import list of inscriptions.
+
+:guilabel:`Export results` button allow to export all search results in a file.
+File is create in a
+`comma-separated values <https://en.wikipedia.org/wiki/Comma-separated_values>`_
+(CSV) format. This format can be viewed as a table where each row corresponds to
+an individual inscription and each column to some information (for example,
+signature text). Many programs can open CSV files. For example, it should be
+possible to open them directly in Excel.
+
+Rundata-net exports data in a file with default name :file:`rundata-net_results.csv`.
+User may select the location where the file will be save to and the name of the
+file. Exported file contains all inscriptions from the list of inscriptions.
+Number of columns will correspond to the number of selected inscription properties,
+i.e. number of columns corresponds to the right-hand list of the main display
+configuration dialog box. First line of the file is a header and it will contain
+column names. Each value is *escaped* by quotes, i.e. :samp:`Öl 2` is written
+as :samp:`"Öl 2"` in the file. If you open the file in Excel, you shall not notice
+that. Some values may contain a list of values. This is true, for example for
+column :guilabel:`Images`. An inscription may have multiple images assigned to it.
+In such a case, values are separated by a semicolon. For example value
+:samp:`DR 411;B 1071;L 1323` consist of three values :samp:`DR 411`, :samp:`B 1071`,
+and :samp:`L 1323`. All coordinates are given in `WGS 84 <https://en.wikipedia.org/wiki/World_Geodetic_System#A_new_World_Geodetic_System:_WGS_84>`_ geodetic system.
+
+It is possible to import list of inscriptions in Rundata-net. A typical user case
+is if a user would like to study more closely a list of inscriptions given in
+a publication.
+
+.. warning::
+
+    The import is limited to 200 inscriptions!
+
+:guilabel:`Show import tool` button shows a panel from which a user can select
+a file or drop a file to that area. Rundata-net supports 3 file formats for import.
+
+*Format #1*. Simple format where all inscriptions are written on one line separated by a comma.
+Example of such a file::
+
+    Öl Köping13,Ög ATA322-4035-2011:14,Sö 175,U 381
+
+Example is available for download as :download:`csv-one-line.csv`.
+
+*Format #2*. File is multiline and each inscription is written on it's own line::
+
+    Öl Köping13
+    Ög ATA322-4035-2011:14
+    Sö 175
+    U 381
+
+Example is available for download as :download:`csv-multiline.txt`.
+
+*Format #3*. A CSV file with or without the header. If file has no header, then
+the first column is considered to contain signatures. If header is present in file,
+then a column named :samp:`signature` (case insensitive) is used. Example of such
+a file with a header::
+
+    Dating,Signature
+    1,Öl Köping13
+    2,Ög ATA322-4035-2011:14
+    3,Sö 175
+    4, U 381
+
+Example is available for download as :download:`csv-header.csv`.
+
+.. note::
+
+    Regardless of the format signatures are always given without any special
+    symbols like † or $.
 
 Special symbols
 ---------------

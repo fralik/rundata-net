@@ -250,7 +250,8 @@ Special characters:
 * ¶ = new line in the inscription.
 * ¶¶ = One word spans two sides of object. For technical reasons, it is not possible to put a side notation such as §B in the middle of a word. Instead, the side notation is located before or after the word which spans two sides of a stone and the place the word is broken is marked by two line break symbols.
 
-Search normalization removes most of the special characters. Some examples:
+Search normalization removes most of the special characters. This means that it
+is not possible to search for removed special symbols. Some examples:
 
 * :samp:`[...(r) : sin : ste(i)... ...]` becomes :samp:`...r sin stei... ...`.
 
