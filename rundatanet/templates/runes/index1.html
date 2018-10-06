@@ -557,6 +557,8 @@ var gMainClusterize = null;
   seekFactor: integer
 */
 var gClusterizeParams = {};
+// Indicates if we are in a state 'after user clicked reset'
+var gAfterReset = false;
 var gMainScrollArea = document.getElementById('mainScrollArea');
 
 // defaults. TODO: should be replaced with reading from local storage memory
@@ -1651,6 +1653,7 @@ function scrollToSelectedSignature() {
   var nodes = $('#jstree').jstree(true).get_selected(true);
   if (nodes === undefined || nodes.length == 0) {
     gMainScrollArea.scrollTop = 0;
+    hideLoading();
     return;
   }
 
@@ -1671,7 +1674,7 @@ function scrollToInscription(signature, inscriptionId, updateTree) {
   if (section) {
     gMainScrollArea.scrollTop = section.offsetTop;
     gClusterizeParams = {};
-    $('#loading').hide();
+    setTimeout(hideLoading, 500);
   } else {
     // desired signature is not in the current cluster. We will have to search for it.
 
@@ -1685,7 +1688,7 @@ function scrollToInscription(signature, inscriptionId, updateTree) {
     }
     if (gClusterizeParams.iteration >= gClusterizeParams.maxTries) {
       gClusterizeParams = {};
-      $('#loading').hide();
+      setTimeout(hideLoading, 500);
       return;
     }
 
@@ -2316,12 +2319,19 @@ $(function() {
       makeMarkers();
       displayStatistics();
 
-      $('#loading').hide();
+      hideLoading();
+  })
+  .on('refresh.jstree', function() {
+    if (gAfterReset) {
+      $('#jstree').scrollTop(0);
+      gAfterReset = false;
+    }
   })
   .on('changed.jstree', function(node, eventObj) {
     if (eventObj.action == 'select_node') {
-      if (eventObj.selected.length == 0)
+      if (eventObj.selected.length == 0 || gAfterReset)
         return;
+
       let inscriptionId = parseInt(eventObj.node.id, 10);
       scrollToInscription(eventObj.node.original.signature, inscriptionId, false);
       if (inscriptionId in mapMarkers && $('#mapDisplay').is(':visible')) {
@@ -2374,16 +2384,16 @@ $(function() {
     }
   });
   $('#btnResetSearch').on('click', function() {
-    $('#loading').show();
     gRootsJson = gOriginalData;
-    gMainClusterize.update(inscriptions2markup());
     resetSearchStats();
-    $('#jstree').jstree(true).refresh();
+    gAfterReset = true;
+    $('#jstree').jstree(true).refresh(false, true);
+    gMainClusterize.update(inscriptions2markup());
     clearMarkers();
     makeMarkers();
 
     displayStatistics();
-    setTimeout(scrollToSelectedSignature, 1500);
+    gMainScrollArea.scrollTop = 0;
   });
 
   function onCsvWorkerMessage(e) {
