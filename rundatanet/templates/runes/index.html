@@ -2377,11 +2377,13 @@ $(function() {
   $('#btnSearch').on('click', function() {
     if (applyFilters()) {
       gMainClusterize.update(inscriptions2markup());
+
       clearMarkers();
       makeMarkers();
 
-      $('#jstree').jstree(true).refresh();
+      $('#jstree').jstree(true).refresh(false, true);
       displayStatistics();
+      gMainScrollArea.scrollTop = 0;
     }
   });
   $('#btnResetSearch').on('click', function() {
