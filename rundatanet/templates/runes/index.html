@@ -21,11 +21,15 @@
     <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'runes/jstree/themes/default/style.min.css' %}" />
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
-     integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+     integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
      crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <!--
     <link rel="stylesheet" href="{% static 'runes/css/MarkerCluster.css' %}" />
     <link rel="stylesheet" href="{% static 'runes/css/MarkerCluster.Default.css' %}" />
+    -->
     <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
@@ -106,6 +110,45 @@
       .highlighted {
         color: red;
       }
+      .top-margin {
+        margin-top: 5px;
+      }
+      /**********************************
+       * drop area styles
+       **********************************/
+      #drop-area {
+        border: 2px dashed #dcc896;
+        border-radius: 20px;
+        /*margin: auto;*/
+        margin-bottom: 20px;
+        padding: 20px;
+      }
+      #drop-area.highlight {
+        border-color: green;
+      }
+      .my-form {
+        margin-bottom: 10px;
+      }
+      .my-form p {
+        margin-top: 0;
+      }
+      .my-form .button {
+        display: inline-block;
+        padding: 10px;
+        background: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .my-form .button:hover {
+        background: #ddd;
+      }
+      #fileElem {
+        display: none;
+      }
+      /********************************
+       * drop area styles end
+       */
     </style>
   </head>
 <body style="">
@@ -133,7 +176,13 @@
           <div id="jstree" class="jstree-scrollable"></div>
         </div>
       </div>
-      <div id="mainDisplay" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false" class="col-md-6 col-sm-8 table-bordered my-fixed-height pre-scrollable"></div>
+
+      <div id="mainScrollArea" class="clusterize-scroll col-md-6 col-sm-8 table-bordered my-fixed-height">
+        <div id="mainDisplay" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false" class="clusterize-content">
+          <div class="clusterize-no-data">Loading data...</div>
+        </div>
+      </div>
+
       <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
     </div>
     <div class="row">
@@ -143,19 +192,40 @@
       <div class="col">&nbsp;</div>
     </div>
 
-    <form class="row" role="group">
-      <div class="checkbox col-md-2">
+    <div class="row" role="group" aria-label="">
+      <div class="col-md-offset-2 col-md-3">
+        <button type="button" class="col-md-12 btn btn-success" id="btnSearch">Search</button>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="col-md-12 btn btn-default" id="btnResetSearch">Reset search</button>
+      </div>
+    </div>
+
+    <form class="row top-margin" role="group">
+      <!--<div class="checkbox col-md-2">
         <input type="checkbox" id="chkApplyFilters">
         <label for="chkApplyFilters">Apply filter(s)</label>
+      </div>-->
+      <div class="col-md-2 zero-padding-left">
+        Control buttons:
       </div>
-      <div class="col-md-10 btn-group" role="group" aria-label="">
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Configure main display</button>
-        <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
-        <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
+      <div class="col-md-10" aria-label="">
+        <div class="btn-group" role="group" aria-label="">
+          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Configure main display</button>
+          <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
+        </div>
+        <div class="btn-group" role="group" aria-label="">
+          <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
+          <button type="button" class="btn btn-default" id="btnClearRules">Clear all rules</button>
+        </div>
+        <div class="btn-group" role="group" aria-label="">
+          <button type="button" class="btn btn-default" id="btnImportResults">Show import tool</button>
+          <button type="button" class="btn btn-default" id="btnExportResults">Export results</button>
+        </div>
       </div>
     </form>
 
-    <section role="group" class="row vertical-align">
+    <section role="group" class="row vertical-align top-margin">
       <div class="col-md-2 zero-padding-left">Copy symbols to clipboard:</div>
       <div class="col-md-10 btn-group" role="group">
         <button type="button" class="btn clip" id="btnOUmlautSmall">ö</button>
@@ -179,6 +249,19 @@
       </div>
     </section>
     <section role="group" class="row"><div class="col">&nbsp;</div></section>
+
+    <section role="dialog" class="row" id="containerImportSignatures">
+      <div id="drop-area" class="col-md-8 col-md-offset-1">
+        <form class="my-form">
+          <div class="form-group">
+            <p>Import file with signatures by dragging and dropping or selecting it. Read more about the possible file formats in the documentation.</p>
+            <p>It is not possible to import more than 200 signatures!</p>
+            <label for="fileElem" class="button">Select a file</label>
+            <input type="file" id="fileElem">
+          </div>
+        </form>
+      </div>
+    </section>
 
     <div id="divFormatDialog" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
       <div class="modal-dialog modal-lg" role="document">
@@ -284,9 +367,9 @@
       <div class="page-header">
         <i class="text-primary fa fa-spin fa-fw pull-left fa-spinner fa-2x" style="text-shadow: 0px 0px 0ex;"></i>
         <hgroup class="" style="text-shadow: 0px 0px 0ex;">
-          <h4 ng-switch-default="" class="white-text">
+          <h4 ng-switch-default="" class="white-text" id="loading-main-text">
             Loading<br>
-            <small class="white-text">It can take up to 45 seconds.</small>
+            <small class="white-text" id="loading-sub-text">It can take up to a minute.</small>
           </h4>
         </hgroup>
       </div>
@@ -377,16 +460,18 @@ if (ieVersion !== false && ieVersion <= 12) {
 <script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
 <!-- end of query builder js -->
 
-<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"
- integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw=="
+<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet-src.js"
+ integrity="sha512-+ZaXMZ7sjFMiCigvm8WjllFy6g3aou3+GZngAtugLzrmPFKFK7yjSri0XnElvCTu/PrifAYQuxZTybAEkA8VOA=="
  crossorigin=""></script>
-<script src="{% static 'runes/leaflet.markercluster.js' %}"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
+<!-- <script src="{% static 'runes/leaflet.markercluster.js' %}"></script> -->
 
 <script src="{% static 'runes/multiselect.min.js' %}"></script>
 <script src="{% static 'runes/pixabay/jquery.auto-complete.min.js' %}"></script>
 <!-- <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script> -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
+<script src="{% static 'runes/papaparse.min.js' %}"></script>
 
 <script type="text/javascript">
 var entityMap = {
@@ -411,11 +496,9 @@ function escapeHtml (string) {
 var db = null;
 // original data when no filter is applied.
 // Used as cache, so we can skip quering the db again
-var originalData = [];
-var rootIds = []; // Map of parent/root inscription IDs
-var rootsJson = []; // JSON representation for rootIds
-var sumRootChildren = 0; // number of all children signatures in current search
-var origianlSumRootChildren = 0; // reference of sumRootChildren, similar to originalData.
+var gOriginalData = [];
+var gRootIds = []; // Map of parent/root inscription IDs
+var gRootsJson = []; // JSON representation for gRootIds
 var signatureNames = []; // names of all signatures in the DB
 var signaturesSelectize = [];
 var formatDialog = [];
@@ -424,8 +507,8 @@ var myMap = null; // Global handle to map object
 var mapMarkers = {}; // Collection of created map markers. This is used in order to create
   // markers only once.
 var markers = []; // Leaflet markers group
-var numSelectedSignatures = [];
-var renderIsDone = false;
+// Number of signatures selected by user
+var gNumSelectedSignatures = [];
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
 var gRegExpMap = {}; // Object of all regex expressions
 var gRegExpMapG = {}; // Object of all regex expressions with global flag
@@ -445,10 +528,53 @@ var gWordSearchRegex = new RegExp("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|
 var gWordSearchRegexEsc = new RegExp(escapeHtml("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)"), 'g');
 var gWordPunctuationRegex = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+");
 var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+"));
+// Whenever we need to render a batch of inscriptions, we identify each batch with gRenderBatchId. This can be
+// used in situation when we need to render a batch when another batch is still in rendering process.
+// I.e. we have batch 1 which is currently rendering. We have batch 2 that shall be rendered. In this case,
+// batch 1 must be cancelled.
+var gRenderBatchId = 0;
+// Global variable that is assigned with timer ID for displaySignatureInfo function call.
+// If it is a valid ID, then we must not execute another call to displaySignatureInfo.
+// Used to accumulate multiple jstree.changed events.
+var gDisplayTimeout = -1;
+
+// Map of aliases. Key is parent ID, value - list of alias names
+// parent ID is SQLite index ID, it is not a signature!
+var gAliasByParent = {};
+
+// This is a key-value representation of all inscriptions in the database.
+// Key is signature (i.e. 'Öl 1'), value is an object where each property is
+// one of the displayFields() and value is it's corresponding value.
+var gDbAsMap = {};
+
+// Clusterize.js object for main isncription display
+var gMainClusterize = null;
+
+/*
+  direction: 'up' or 'down',
+  iteration: integer
+  maxTries: integer,
+  seekFactor: integer
+*/
+var gClusterizeParams = {};
+// Indicates if we are in a state 'after user clicked reset'
+var gAfterReset = false;
+var gMainScrollArea = document.getElementById('mainScrollArea');
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'transliteration', 'english_translation', 'found_location',
     'parish', 'municipality', 'district', 'current_location', 'images'];
+
+/////////////////////////////////////
+// variables used for rendering. Have it here for speed.
+/////////////////////////////////////
+var staticBase = "{% static 'runes/images/cross_forms/' %}";
+let highlightColumns = ['transliteration', 'normalisation_scandinavian', 'normalisation_norse'];
+let customColumns = new Array(...highlightColumns);
+customColumns.push('english_translation');
+const paragraphSymbol = '§';
+const sidesMarker = '§A';
+const readingMarker = '§P';
 
 // An extension of Leaflet marker that provides information about inscription
 MarkerWithData = L.Marker.extend({
@@ -457,10 +583,8 @@ MarkerWithData = L.Marker.extend({
    }
 });
 
-function applyPagination() {
-  $('#jstree').jstree(true).refresh();
-
-  var total = rootsJson.length + sumRootChildren;
+function displayStatistics() {
+  var total = gRootsJson.length;
   if (total == 0) {
     $('#lblNumAvailable').html('Sorry, no inscriptions has been found.');
   } else {
@@ -468,7 +592,7 @@ function applyPagination() {
     for (signId in gMatchedWordIndices) {
       numWords += gMatchedWordIndices[signId].size;
     }
-    let infoStr = `${rootsJson.length} inscriptions`;
+    let infoStr = `${gRootsJson.length} inscriptions`;
     numWords -= gWordVariants;
     if (numWords > 0) {
       infoStr += `, ${numWords} words, ${gFoundPersonalNames} personal names`;
@@ -476,14 +600,6 @@ function applyPagination() {
     infoStr += '.';
     $('#lblNumAvailable').html(infoStr);
   }
-
-  $('#mainDisplay').empty();
-  for (let key in mapMarkers) {
-    if (mapMarkers.hasOwnProperty(key)) {
-      mapMarkers[key].remove();
-    }
-  }
-  markers.clearLayers();
 }
 
 function dbToJson(columnNames, values, rootsWithChildren = null) {
@@ -518,6 +634,7 @@ function dbToJson(columnNames, values, rootsWithChildren = null) {
           icon: false,
           children: hasChildren,
           id_numeric: v[0],
+          signature: v[1],
       }
   });
 
@@ -557,7 +674,10 @@ function onDisplayFormatClicked(e) {
     const newShowHeaders = $('#chkDisplayHeaders').is(":checked");
     if (!arraysEqual(userSelectedDisplay, selectedValues) || newShowHeaders != lastShowHeaders) {
       userSelectedDisplay = selectedValues;
-      displaySignatureInfo(false);
+
+      gMainClusterize.update(inscriptions2markup());
+      scrollToSelectedSignature();
+
       lastShowHeaders = newShowHeaders;
     }
   }
@@ -566,14 +686,16 @@ function onDisplayFormatClicked(e) {
 
 function onShowMapClicked() {
   $('#mapDisplay').toggle();
+  var mainContainer = $('#mainScrollArea');
+
   if ($('#mapDisplay').is(':visible')) {
     $('#btnShowMap').html('Hide map');
-    $('#mainDisplay').removeClass('col-md-10');
-    $('#mainDisplay').addClass('col-md-6');
+    mainContainer.removeClass('col-md-10');
+    mainContainer.addClass('col-md-6');
   } else {
     $('#btnShowMap').html('Show map');
-    $('#mainDisplay').removeClass('col-md-6');
-    $('#mainDisplay').addClass('col-md-10');
+    mainContainer.removeClass('col-md-6');
+    mainContainer.addClass('col-md-10');
   }
 }
 
@@ -697,12 +819,20 @@ function applyFilters() {
 
   resetSearchStats();
 
+  result.sql = result.sql.replace("signature_text LIKE ('all_sweden%')", "signature_text LIKE ('Öl %') OR \
+    signature_text LIKE ('Ög %') OR signature_text LIKE ('Sö %') OR signature_text LIKE ('Sm %') OR \
+    signature_text LIKE ('Vg %') OR signature_text LIKE ('U %') OR signature_text LIKE ('Vs %') OR \
+    signature_text LIKE ('Nä %') OR signature_text LIKE ('Vr %') OR signature_text LIKE ('Gs %') OR \
+    signature_text LIKE ('Hs %') OR signature_text LIKE ('M %') OR signature_text LIKE ('Ån %') OR \
+    signature_text LIKE ('D %') OR signature_text LIKE ('Hr %') OR signature_text LIKE ('J %') OR \
+    signature_text LIKE ('Lp %') OR signature_text LIKE ('Ds %') OR signature_text LIKE ('Bo %') OR \
+    signature_text LIKE ('G %') OR signature_text LIKE ('SE %')");
+
   console.log('Got SQL: ' + result.sql);
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + result.sql);
   if (contents.length == 0) {
     // no results
-    rootsJson = [];
-    sumRootChildren = 0;
+    gRootsJson = [];
     return true;
   }
 
@@ -772,11 +902,8 @@ function applyFilters() {
   // make a hash map for quick read access
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
-  rootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
+  gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
 
-  //contents = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IN (SELECT signatureId FROM all_data WHERE " + result.sql + ")");
-  //sumRootChildren = contents[0].values[0][0];
-  sumRootChildren = 0;
   return true;
 }
 
@@ -915,7 +1042,9 @@ function onDbLoaded(e) {
   var uInt8Array = new Uint8Array(this.response);
   db = new SQL.Database(uInt8Array);
 
+  // add support for regexp searches
   db.create_function('regexp', function (regexValue, fieldData) {
+    // do not recreate expression objects
     if (!gRegExpMap.hasOwnProperty(regexValue)) {
       gRegExpMap[regexValue] = new RegExp(regexValue);
       gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
@@ -927,6 +1056,7 @@ function onDbLoaded(e) {
     return res;
   });
 
+  // Add support for searches across words
   db.create_function('wordRegexp', function (regexValue, fieldData, id, fieldName) {
     if (!gRegExpMap.hasOwnProperty(regexValue)) {
       gRegExpMap[regexValue] = new RegExp(regexValue);
@@ -958,7 +1088,6 @@ function onDbLoaded(e) {
       return 1;
     }
 
-    //console.log(`${regexValue}; ${fieldData}; ${id};`);
     return -1;
   });
 
@@ -968,14 +1097,30 @@ function onDbLoaded(e) {
   // make a hash map for quick read access
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
-  rootIds = new Map(contents[0].values.map((v, i) => [v[0], 1]));
-  rootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
-  //sumRootChildren = db.exec("SELECT COUNT(id) FROM signatures WHERE parent_id IS NOT NULL");
-  //sumRootChildren = sumRootChildren[0].values[0][0];
-  sumRootChildren = 0;
+  gRootIds = new Map(contents[0].values.map((v, i) => [v[0], 1]));
+  gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
 
-  originalData = rootsJson;
-  origianlSumRootChildren = sumRootChildren
+  ////////////////////////////////////////////////////////////////////
+  // fill in gAliasByParent. Must be done before convertDbToKeyMap!
+  let aliasContents = db.exec('SELECT id, signature_text, parent_id FROM signatures WHERE parent_id NOT NULL');
+  if (aliasContents && aliasContents.length > 0) {
+    aliasContents[0].values.map(function (row, i) {
+      let parent_id = row[2];
+      let signature_text = row[1];
+
+      if (!(parent_id in gAliasByParent)) {
+        // we do not have an entry for that parent. initialize it
+        gAliasByParent[parent_id] = [];
+      }
+      curValue = gAliasByParent[parent_id];
+      curValue.push(signature_text);
+      gAliasByParent[parent_id] = curValue;
+    });
+  }
+  ////////////////////////////////////////////////////////////////////
+
+  gOriginalData = gRootsJson;
+  gDbAsMap = convertDbToKeyMap();
 
   contents = db.exec("SELECT signature_text FROM signatures");
   signatureNames = contents[0].values.map((v, i) => v[0]);
@@ -993,7 +1138,7 @@ function onDbLoaded(e) {
 
   contents = db.exec('SELECT DISTINCT id, name from material_types ORDER BY name COLLATE NOCASE');
   var allMaterialTypes = (contents[0].values);
-  let materialTypeFilter = {
+  var materialTypeFilter = {
     id: 'material_type',
     field: 'materialType_id',
     label: 'Material type',
@@ -1054,7 +1199,7 @@ function onDbLoaded(e) {
     {
       id: 'signature_country',
       field: 'signature_text',
-      label: 'Country',
+      label: 'Country or Swedish province',
       type: 'string',
       input: 'select',
       multiple: true,
@@ -1065,13 +1210,15 @@ function onDbLoaded(e) {
       plugin: 'selectize',
       plugin_config: {
         plugins: ['remove_button'],
-        options: [{text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
+        options: [
+          {text: 'Sweden, whole', v: 'all_sweden'},
+          {text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
           {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppand (U)', v: 'U '},
           {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland (Vr)', v: 'Vr '},
           {text: 'Gästrikland (Gs)', v: 'Gs '}, {text: 'Hälsingland (Hs)', v: 'Hs '}, {text: 'Medelpad (M)', v: 'M '},
           {text: 'Ångermanland (Ån)', v: 'Ån '}, {text: 'Dalarna (D)', v: 'D '}, {text: 'Härjedalen (Hr)', v: 'Hr '},
           {text: 'Jämtland (J)', v: 'J '}, {text: 'Lappland (Lp)', v: 'Lp '}, {text: 'Dalsland (Ds)', v: 'Ds '},
-          {text: 'Bohuslän (Bo)', v: 'Bo '}, {text: 'Gotland (G)', v: 'G '}, {text: 'Sweden other (SE)', v: 'SE '},
+          {text: 'Bohuslän (Bo)', v: 'Bo '}, {text: 'Gotland (G)', v: 'G '}, {text: 'Sweden, other (SE)', v: 'SE '},
           {text: 'Denmark (DR)', v: 'DR '}, {text: 'Norway (N)', v: 'N '}, {text: 'Faroe Islands (FR)', v: 'FR '},
           {text: 'Greenland (GR)', v: 'GR '}, {text: 'Iceland (IS)', v: 'IS '}, {text: 'Finland (FI)', v: 'FI '},
           {text: 'Shetland (Sh)', v: 'Sh '}, {text: 'Orkney (Or)', v: 'Or '}, {text: 'Scotland (Sc)', v: 'Sc '},
@@ -1232,12 +1379,6 @@ function onDbLoaded(e) {
     filters: queryBuilderFilters,
     sort_filters: true,
   })
-  .on('rulesChanged.queryBuilder', function () {
-      if ($('#chkApplyFilters').is(":checked")) {
-          if (applyFilters())
-            applyPagination();
-      }
-  })
   // SQL export (second half)
   .on('ruleToSQL.queryBuilder.filter', function (e, rule, sqlValue, sqlOperator) {
     if (rule.operator === 'alternatives_in') {
@@ -1305,20 +1446,11 @@ function onDbLoaded(e) {
   $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
   $('#btnShowMap').on('click', onShowMapClicked);
 
-  $('#chkApplyFilters').on('change', function() {
-    if (this.checked) {
-      if (applyFilters())
-        applyPagination();
-    } else {
-      rootsJson = originalData;
-      sumRootChildren = origianlSumRootChildren;
-      resetSearchStats();
-      applyPagination();
-    }
-  });
+  // seems that the data has been loaded. Do not need this timer any more.
+  clearTimeout(gLoadingTimer);
 }
 
-// Data provided for jsTree.
+// Data provider for jsTree.
 function fetchTreeData(obj, cb) {
   if (obj.id === '#') {
     if (db === null) {
@@ -1326,361 +1458,475 @@ function fetchTreeData(obj, cb) {
         return;
     }
 
-    cb.call(this, rootsJson);
-  }/* else {
-    var contents = db.exec("SELECT * FROM signatures where parent_id = '" + obj.id + "'");
-    var children = dbToJson(contents[0].columns, contents[0].values);
-    cb.call(this, children);
-  }*/
+    cb.call(this, gRootsJson);
+  }
 }
 
-function displaySignatureInfo(makeMarkers) {
-  if (makeMarkers === undefined) {
-    makeMarkers = true;
-  }
+/* Once db is loaded convert all content to key-value object
+*/
+function convertDbToKeyMap() {
+  // Get all displayable column names and convert them to comma-separated string
+  let allDisplayColumns = displayFields();
+  allDisplayColumns.unshift({value: 'latitude', text: 'latitude'});
+  allDisplayColumns.unshift({value: 'longitude', text: 'longitude'});
+  allDisplayColumns.unshift({value: 'signature_id', text: 'some'});
+  allDisplayColumns.unshift({value: 'id', text: 'meta_id'});
 
-  $('#mainDisplay').empty();
-  if (makeMarkers) {
-    for (let key in mapMarkers) {
-      if (mapMarkers.hasOwnProperty(key)) {
-        mapMarkers[key].remove();
-      }
+  allDisplayColumns = allDisplayColumns.reduce(function (result, field) {
+    if (field.value === 'images' || field.value === 'crosses')
+      return result;
+
+    if (field.value !== 'images') {
+      result.push(field.value);
     }
-    markers.clearLayers();
-  }
+    return result;
+  }, []);
 
-  let indices = $('#jstree').jstree(true).get_selected();
-  if (indices.length == 0)
-    return;
+  let contents = db.exec("SELECT " + allDisplayColumns + " FROM all_data");
+  let allRows = contents[0].values;
+  let dbMap = {};
+  let columns = contents[0].columns;
+  let signatureColumn = columns.indexOf('signature_text');
+  let metaColumn = columns.indexOf('id');
+  let numCrossesColumn = columns.indexOf('num_crosses');
+  let latitudeColumn = columns.indexOf('latitude');
+  let longitudeColumn = columns.indexOf('longitude');
+  let signatureIdColumn = columns.indexOf('id'); // it is actually meta ID
 
-  let finalText = '';
   let customColumns = ['transliteration', 'english_translation', 'normalisation_scandinavian', 'normalisation_norse'];
 
-  const paragraphSymbol = '§';
-  const sidesMarker = '§A';
-  const readingMarker = '§P';
-  let staticBase = "{% static 'runes/images/cross_forms/' %}";
-  const showHeaders = $('#chkDisplayHeaders').is(":checked");
+  for (var i = 0; i < allRows.length; i++) {
+    let row = allRows[i];
+    let rowObj = {};
+    let signatureId = row[signatureIdColumn];
 
-  let markersLatLon = [];
+    for (var j = 0; j < allDisplayColumns.length; j++) {
+      let columnName = allDisplayColumns[j];
 
-  let indicesStr = indices.join(',');
-  let contents = db.exec("SELECT * FROM all_data where signature_id IN (" + indicesStr + ")");
-  if (!contents || contents.length == 0)
-    return;
+      // we need to skip some columns
+      if (columnName === 'signature_id'
+          || columnName === 'latitude'
+          || columnName === 'longitude')
+        continue;
 
-  // Map of aliases. Key is parent ID, value - list of alias names
-  let aliasByParent = {};
-  let aliasContents = db.exec('SELECT id, signature_text, parent_id FROM signatures WHERE parent_id IN (' + indicesStr + ')');
-  if (aliasContents && aliasContents.length > 0) {
-    aliasContents[0].values.map(function (v, i) {
-      if (!(v[2] in aliasByParent)) {
-        aliasByParent[v[2]] = [];
-      }
-      curValue = aliasByParent[v[2]];
-      curValue.push(v[1]);
-      aliasByParent[v[2]] = curValue;
-    });
-  }
+      let humanName = humanNameForColumnName(columnName);
+      let columnData = row[j];
 
-  let latIdx = contents[0].columns.indexOf('latitude');
-  let lonIdx = contents[0].columns.indexOf('longitude');
-  let signNameIdx = 0;
-  let metaIdIdx = contents[0].columns.indexOf('id');
-  let mainDisplayDom = document.getElementById('mainDisplay');
+      //columnData = escapeHtml(columnData);
 
-  let renderParams = {
-    latIdx: latIdx,
-    lonIdx: lonIdx,
-    metaIdIdx: metaIdIdx,
-    userSelectedDisplay: userSelectedDisplay,
-    showHeaders: showHeaders,
-    mainDisplay: mainDisplayDom,
-    allRows: contents[0].values,
-    curRowIdx: 0,
-    columns: contents[0].columns,
-    aliasByParent: aliasByParent,
-    signNameIdx: signNameIdx,
-  };
-
-  numSelectedSignatures = indices.length;
-
-  if ($('#mapDisplay').is(':visible') && makeMarkers) {
-    for (let i = 0; i < indices.length; i++) {
-      let row = indices[i];
-      let signatureName = contents[0].values[i][signNameIdx];
-
-      // handle map marker only if map is visible
-      let marker = '';
-      if (row in mapMarkers) {
-        marker = mapMarkers[row];
-      } else {
-        let lat = parseFloat(contents[0].values[i][latIdx]);
-        let lon = parseFloat(contents[0].values[i][lonIdx]);
-        if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
-          marker = new MarkerWithData([lat, lon], {inscription: signatureName});
-          let popupText = "<b>" + signatureName + "</b>";
-          marker.bindPopup(popupText);
-          mapMarkers[row] = marker;
+      if (columnName === 'signature_text') {
+        if (signatureId in gAliasByParent) {
+          columnData += ' (' + gAliasByParent[signatureId].join('|') + ')';
+          rowObj['aliases'] = gAliasByParent[signatureId].join(';');
+        } else {
+          rowObj['aliases'] = '';
         }
       }
-      if (marker instanceof Object) {
-        markers.addLayer(marker);
-        markersLatLon.push(marker.getLatLng());
+
+      rowObj[columnName] = columnData;
+      rowObj[columnName + 'html'] = escapeHtml(columnData);
+    }
+
+    /////////////////////////////////////
+    // fill in images
+    let directImagesQuery = db.exec("SELECT id, link_url, direct_url FROM runes_imagelink WHERE "
+      + "direct_url <> '' AND meta_id = " + row[metaColumn] + " LIMIT 9");
+    let indirectImagesQuery = [];
+    let directImagesValue = [];
+    let indirectImagesValue = [];
+
+    if (directImagesQuery.length > 0) {
+      let ids = directImagesQuery[0].values.map((v, i) => v[0]);
+      ids = ids.join(',');
+      indirectImagesQuery = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + row[metaColumn] + "' AND id NOT IN (" + ids + ")");
+      directImagesValue = directImagesQuery[0].values;
+    } else {
+      indirectImagesQuery = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + row[metaColumn] + "'");
+    }
+
+    if (indirectImagesQuery.length > 0) {
+      indirectImagesValue = indirectImagesQuery[0].values;
+    }
+
+    let allImagesQuery = db.exec("SELECT link_url FROM runes_imagelink WHERE meta_id = " + row[metaColumn]);
+    let allImages = [];
+    if (allImagesQuery.length > 0) {
+      allImages = allImagesQuery[0].values;
+    }
+
+    rowObj['directImages'] = directImagesValue;
+    rowObj['indirectImages'] = indirectImagesValue;
+    let indirectImages = 'No images.';
+    if (rowObj['indirectImages'].length > 0) {
+      indirectImages = '<ul>';
+      rowObj['indirectImages'].map(function (v, i) {
+        indirectImages += `<li><a href="${v[0]}" contentEditable="false" target="_blank">${v[0]}</a></li>`;
+      });
+      indirectImages += '</ul>';
+    }
+    rowObj['indirectImageshtml'] = indirectImages;
+    rowObj['images'] = allImages;
+
+    // make image gallery of direct image links
+    let directImages = '';
+    if (rowObj['directImages'].length > 0) {
+      directImages = '<div class="container-fluid"><div class="row">';
+      rowObj['directImages'].map(function (v, i) {
+          if (i % 3 == 0) {
+            directImages += "</div>";
+            if (i < 9)
+              directImages += '<div class="row">';
+          }
+          directImages += `<div class="col-md-4"><a href="${v[1]}" contentEditable="false" target="_blank"><img src="${v[2]}" class="img-responsive"></a></div>`;
+      });
+      directImages += '</div></div>';
+    }
+    rowObj['directImageshtml'] = directImages;
+    /////////////////////////////////////
+
+    /////////////////////////////////////
+    // fill in crosses
+    let numCrosses = row[numCrossesColumn];
+    if (numCrosses > 0) {
+      rowObj['crosses'] = crossesForMeta(row[metaColumn]);
+    } else {
+      rowObj['crosses'] = [];
+    }
+    /////////////////////////////////////
+
+    rowObj['signature_text_raw'] = row[signatureColumn];
+    rowObj['latitude'] = row[latitudeColumn];
+    rowObj['longitude'] = row[longitudeColumn];
+
+    dbMap[signatureId] = rowObj;
+  }
+
+  return dbMap;
+}
+
+function clearMarkers() {
+  markers.clearLayers();
+}
+
+function makeMarkers() {
+  let markersLatLon = [];
+
+  for (let i = 0; i < gRootsJson.length; i++) {
+    let signatureName = gRootsJson[i].signature;
+    let marker = '';
+    let row = gRootsJson[i].id;
+    let inscriptionData = gDbAsMap[gRootsJson[i].id];
+
+    if (row in mapMarkers) {
+      marker = mapMarkers[row];
+    } else {
+      let lat = parseFloat(inscriptionData.latitude);
+      let lon = parseFloat(inscriptionData.longitude);
+      if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
+        marker = new MarkerWithData([lat, lon], {
+          signature: signatureName,
+          id: gRootsJson[i].id,
+        });
+        let popupText = "<b>" + signatureName + "</b>";
+        //marker.bindPopup(popupText);
+        marker.bindTooltip(signatureName, {permanent: true});
+        mapMarkers[row] = marker;
       }
     }
 
-    if (markersLatLon.length > 0) {
-      let markersBounds = L.latLngBounds(markersLatLon);
-      myMap.fitBounds(markersBounds);
+    if (marker instanceof Object) {
+      markers.addLayers(marker);
+      markersLatLon.push(marker.getLatLng());
     }
   }
 
-  renderIsDone = true;
-  renderParams.mainDisplay.innerHTML += "<img src='{% static 'runes/jstree/themes/default/throbber.gif' %}'><br>";
-  setTimeout(signatureRenderHelper, 10, renderParams);
+  if (markersLatLon.length > 0) {
+    let markersBounds = L.latLngBounds(markersLatLon);
+    myMap.fitBounds(markersBounds);
+  }
+  return markersLatLon;
 }
 
-function signatureRenderHelper(renderParams) {
-  if (numSelectedSignatures == 0) {
+/* Scroll to a signature selected in jsTree or simply to 0 top offset
+ */
+function scrollToSelectedSignature() {
+  var nodes = $('#jstree').jstree(true).get_selected(true);
+  if (nodes === undefined || nodes.length == 0) {
+    gMainScrollArea.scrollTop = 0;
+    hideLoading();
     return;
   }
 
-  if (renderParams.curRowIdx < numSelectedSignatures) {
-    if (!renderIsDone) {
-      setTimeout(signatureRenderHelper, 50, renderParams);
+  scrollToInscription(nodes[0].original.signature, nodes[0].id, true);
+}
+
+/* Scroll main display so that it shows the desired inscription.
+ * signature is a textual signature, i.e. 'IR 3'
+ * inscriptionId is a corresponding DB row ID. For example, 5.
+ * updateTree is true or false. True - scrolls jsTree as well.
+ */
+function scrollToInscription(signature, inscriptionId, updateTree) {
+  var section = document.getElementById(signature);
+  if (updateTree === undefined) {
+    updateTree = true;
+  }
+
+  if (section) {
+    gMainScrollArea.scrollTop = section.offsetTop;
+    gClusterizeParams = {};
+    setTimeout(hideLoading, 500);
+  } else {
+    // desired signature is not in the current cluster. We will have to search for it.
+
+    if (!Object.keys(gClusterizeParams) || Object.keys(gClusterizeParams).length == 0) {
+      gClusterizeParams = {
+        direction: 'up',
+        seekFactor: 10,
+        iteration: 0,
+        maxTries: 150,
+      };
+    }
+    if (gClusterizeParams.iteration >= gClusterizeParams.maxTries) {
+      gClusterizeParams = {};
+      setTimeout(hideLoading, 500);
       return;
     }
 
-    setTimeout(renderSignature, 20, renderParams);
-  } else {
-    let idx = renderParams.mainDisplay.innerHTML.indexOf('<article');
-    if (idx != -1) {
-      renderParams.mainDisplay.innerHTML = renderParams.mainDisplay.innerHTML.slice(idx);
+    // figure out where shall we scroll up or down by comparing the first signature
+    // in the currently visible cluster with requested signature
+    var inscriptionNode = document.getElementById(inscriptionId);
+    var rowClicked = $('.jstree-node').index(inscriptionNode);
+
+    var approxItemHeight = gMainClusterize.options.item_height;
+    var approxItemScrollTop = rowClicked * approxItemHeight;
+    // scroll approximately to the requested signature. Since individual
+    // inscriptions are rendered with different height, we can not calculate the exact
+    // location.
+    gMainScrollArea.scrollTop = approxItemScrollTop;
+
+    // give time to render new set of inscription
+    setTimeout(scrollToInscriptionStep2, 5, rowClicked, signature, inscriptionId, updateTree);
+  }
+  if (updateTree) {
+    var el = document.getElementById(inscriptionId + '_anchor');
+    console.log('Searched for ' + inscriptionId + '_anchor');
+    if (el) {
+      $('#jstree').scrollTop(el.offsetTop);
+      $('#jstree').jstree(true).deselect_all(true);
+      $('#jstree').jstree(true).select_node(inscriptionId, true);
     }
   }
 }
 
-// Depends on global variables: db
-function renderSignature(renderParams) {
-  renderIsDone = false;
+// Next step in scrolling: determine which direction shall be scroll to
+function scrollToInscriptionStep2(rowClicked, signature, inscriptionId, updateTree) {
+  var visibleNodes = $('#mainDisplay > .inscription-section');
+  var firstVisibleId = document.getElementById($(visibleNodes[0]).attr('dbId'));
+  var rowVisible = $('.jstree-node').index(firstVisibleId);
 
-  let curRow = renderParams.allRows[renderParams.curRowIdx];
-  let userSelectedDisplay = renderParams.userSelectedDisplay;
-  let showHeaders = renderParams.showHeaders;
-  let metaIdIdx = renderParams.metaIdIdx;
-  let columns = renderParams.columns;
-  let aliasByParent = renderParams.aliasByParent;
-  let signatureName = curRow[renderParams.signNameIdx];
+  if (rowVisible > rowClicked)
+    gClusterizeParams.direction = 'down';
+  if (gMainClusterize.getRowsAmount() > 3000) {
+    gClusterizeParams.seekFactor = 60;
+  }
 
-  let highlightColumns = ['transliteration', 'normalisation_scandinavian', 'normalisation_norse'];
-  let customColumns = new Array(...highlightColumns);
-  customColumns.push('english_translation');
-  const paragraphSymbol = '§';
-  const sidesMarker = '§A';
-  const readingMarker = '§P';
-  let staticBase = "{% static 'runes/images/cross_forms/' %}";
-  let signIdIdx = columns.indexOf('signature_id');
-  let signatureId = curRow[signIdIdx];
+  scrollToInscriptionStep3(signature, inscriptionId, updateTree);
+}
 
-  let paragraph = `<article signature="${signatureName}" id="${signatureName}" class="inscription-section">`;
-  console.log('Got userSelectedDisplay: ' + userSelectedDisplay);
+// Next step - scroll more in the desired direction
+function scrollToInscriptionStep3(signature, inscriptionId, updateTree) {
+  var shift = gMainClusterize.options.cluster_height * 0.5;
+  if (gClusterizeParams.direction === 'down')
+    shift = shift * -1;
+  var newTop = gMainScrollArea.scrollTop + shift;
+  gMainScrollArea.scrollTop = newTop;
+  gClusterizeParams.iteration++;
 
-  for (let j = 0; j < userSelectedDisplay.length; j++) {
-    let columnName = userSelectedDisplay[j];
-    let humanName = humanNameForColumnName(columnName);
-    let columnIdx = columns.indexOf(columnName);
-    let columnData = curRow[columnIdx];
+  setTimeout(scrollToInscription, 2, signature, inscriptionId, updateTree);
+}
 
-    if (showHeaders) {
-      paragraph += '<h4>' + humanName + '</h4>';
-    } else if (paragraph.length > 0 && columnData !== '') {
-      paragraph += '<br>';
-    }
+// Get all inscriptions from jsTree and convert it to array of HTML tags,
+// which are ready for rendering.
+function inscriptions2markup() {
+  // array of all isncription IDs/signatures
+  let signatures = gRootsJson.map((obj, i) => obj.id);;
 
-    columnData = escapeHtml(columnData);
+  // we have no nodes in the tree
+  if (signatures.length == 0)
+    return [];
 
-    if (userSelectedDisplay[j] == 'images') {
-      let directImages = db.exec("SELECT id, link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "' AND direct_url <> '' LIMIT 9");
-      let dbImages = [];
-      if (directImages.length > 0) {
-        let ids = directImages[0].values.map(function (v, i) { return v[0]; });
-        ids = ids.join(',');
-        dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "' AND id NOT IN (" + ids + ")");
-      } else {
-        dbImages = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + curRow[metaIdIdx] + "'");
-      }
-      let indirectImages = 'No images.';
-      if (dbImages.length > 0) {
-        indirectImages = '<ul>';
-        dbImages[0].values.map(function (v, i) {
-          indirectImages += `<li><a href="${v[0]}" contentEditable="false" target="_blank">${v[0]}</a></li>`;
-        });
-        indirectImages += '</ul>';
-      }
+  const showHeaders = $('#chkDisplayHeaders').is(":checked");
 
-      if (directImages.length == 0) {
-        paragraph += indirectImages;
-        continue;
-      }
+  let markupData = [];
 
-      paragraph += '<div class="container-fluid"><div class="row">';
-      directImages[0].values.map(function (v, i) {
-        if (i % 3 == 0) {
-          paragraph += "</div>";
-          if (i < 9)
-            paragraph += '<div class="row">';
-        }
-        paragraph += `<div class="col-md-4"><a href="${v[1]}" contentEditable="false" target="_blank"><img src="${v[2]}" class="img-responsive"></a></div>`;
-      });
-      paragraph += '</div></div>';
+  for (let i = 0; i < signatures.length; i++) {
+    let signatureId = signatures[i];
 
-      if (indirectImages !== 'No images.') {
-        paragraph += '<br>' + indirectImages;
+    let inscriptionData = gDbAsMap[signatureId];
+    let signatureName = inscriptionData['signature_text_raw'];
+
+    let paragraph = `<article signature="${signatureName}" id="${signatureName}" dbId="${signatureId}" class="inscription-section">`;
+
+    for (let j = 0; j < userSelectedDisplay.length; j++) {
+      let columnName = userSelectedDisplay[j];
+      let humanName = humanNameForColumnName(columnName);
+      let columnData = '';
+      if (columnName in inscriptionData)
+        columnData = inscriptionData[columnName + 'html'];
+
+      if (showHeaders) {
+        paragraph += '<h4>' + humanName + '</h4>';
+      } else if (paragraph.length > 0 && columnData !== '') {
+        paragraph += '<br>';
       }
 
-      continue;
-    }
+      //columnData = escapeHtml(columnData);
 
-    if (jQuery.inArray(userSelectedDisplay[j], customColumns) != -1) {
-      let cssStyle = 'normalization';
-      if (~userSelectedDisplay[j].indexOf('transliteration')) {
-        cssStyle = 'transliteration';
-      } else if (~userSelectedDisplay[j].indexOf('english_translation')) {
-        cssStyle = '';
-      }
-
-      if (userSelectedDisplay[j].indexOf('english_translation') == -1
-        && gMatchedWordIndices.hasOwnProperty(signatureId)) {
-        // this is one of columns that should have highlighted data
-        // from set with word indices to array
-        columnData = columnData.trim();
-        let matchedWords = [...gMatchedWordIndices[signatureId]];
-        // sort in descending order
-        matchedWords = matchedWords.sort(function (a, b) { return b - a; } );
-        if (columnName.indexOf('transliteration') != -1) {
-          // double space have special meaning => it's designates a word that is not
-          // present in transliterated text, but is present in other texts. Very important!
-          columnData = columnData.replace(/\s{2}/g, ' &nbsp; ');
-        }
-        let words = getWordBoundaries(columnData, gWordSearchRegexEsc, gWordPunctuationRegexEsc);
-        var highlightedStr = columnData;
-        for (let k = 0; k < matchedWords.length; k++) {
-          let idx = matchedWords[k];
-          let wordStart = words[idx].start;
-          let wordEnd = words[idx].end;
-
-          if (words[idx].text[0] == '§') {
-            // this is a paragraph, do nothing
-            continue;
-          }
-
-          highlightedStr = columnData.slice(0, wordStart)
-            + '<span class="highlighted">'
-            + words[idx].text
-            + '</span>'
-            + highlightedStr.slice(wordEnd);
-        }
-        columnData = highlightedStr;
-      }
-      // Smiley is a special symbol: word substitute when word is not present
-      // We do not need to show it.
-      columnData = columnData.replace(/ ☺ /g, ' ');
-
-      if (~columnData.indexOf(paragraphSymbol)) {
-        let parts = columnData.split(paragraphSymbol);
-        let listHeader = '';
-        listHeader = "Sides or/and reading variants:"
-
-        paragraph += listHeader;
-        paragraph += '<ul>';
-        for (let k = 0; k < parts.length; k++) {
-          let part = parts[k];
-
-          if (!part.trim())
-            continue;
-
-          part = paragraphSymbol + part;
-          paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
-        }
-        paragraph += '</ul>';
-      } else {
-        // no parts in the columnData
-        paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
-      }
-      continue;
-    }
-
-    if (userSelectedDisplay[j] === 'crosses') {
-      let numCrossesColumnIdx = columns.indexOf('num_crosses');
-      let numCrosses = curRow[numCrossesColumnIdx];
-      if (!numCrosses || numCrosses == 0) {
-        paragraph += 'No crosses';
-        continue;
-      }
-
-      paragraph += '<table class="crosses" border="1">';
-      paragraph += '<thead><tr>';
-      paragraph += '<th>A</th>';
-      paragraph += '<th>B</th>';
-      paragraph += '<th>C</th>';
-      paragraph += '<th>D</th>';
-      paragraph += '<th>E</th>';
-      paragraph += '<th>F</th>';
-      paragraph += '<th>G</th>';
-      paragraph += '</th></thead>';
-      paragraph += '<tbody>';
-
-      let allCrosses = crossesForMeta(curRow[metaIdIdx]);
-      for (let k = 0; k < allCrosses.length; k++) {
-        if (allCrosses[k][0].length > 0) {
-          // this is a cross from undefined group
-          paragraph += '<tr><td colspan="7">' + allCrosses[k][0][0].name + '</td></tr>';
+      if (columnName === 'images') {
+        if (inscriptionData['directImages'].length == 0) {
+          paragraph += inscriptionData['indirectImageshtml'];
           continue;
         }
-        paragraph += '<tr>';
-        // we have 8 groups in total, 0 being free-text and not a real group
-        for (let gr = 1; gr < 8; gr++) {
-          let crossForms = allCrosses[k][gr];
-          if (crossForms.length == 0) {
-            paragraph += '<td><span class="null">&#8709;</span></td>';
+        paragraph += inscriptionData['directImageshtml'];
+        if (inscriptionData['indirectImages'].length > 0) {
+          // add image links as they have not been added yet
+          paragraph += '<br>' + inscriptionData['indirectImageshtml'];
+        }
+
+        continue;
+      }
+
+      if (jQuery.inArray(columnName, customColumns) != -1) {
+        let cssStyle = 'normalization';
+        if (~columnName.indexOf('transliteration')) {
+          cssStyle = 'transliteration';
+        } else if (~columnName.indexOf('english_translation')) {
+          cssStyle = '';
+        }
+
+        if (columnName.indexOf('english_translation') == -1
+            && gMatchedWordIndices.hasOwnProperty(signatureId)) {
+          // this is one of the columns that should have highlighted data
+
+          columnData = columnData.trim();
+          // from set with word indices to array
+          let matchedWords = [...gMatchedWordIndices[signatureId]];
+          // sort in descending order
+          matchedWords = matchedWords.sort(function (a, b) { return b - a; } );
+          if (columnName.indexOf('transliteration') != -1) {
+            // double space have special meaning => it's designates a word that is not
+            // present in transliterated text, but is present in other texts. Very important!
+            columnData = columnData.replace(/\s{2}/g, ' &nbsp; ');
+          }
+          let words = getWordBoundaries(columnData, gWordSearchRegexEsc, gWordPunctuationRegexEsc);
+          var highlightedStr = columnData;
+          for (let k = 0; k < matchedWords.length; k++) {
+            let idx = matchedWords[k];
+            let wordStart = words[idx].start;
+            let wordEnd = words[idx].end;
+
+            if (words[idx].text[0] == '§') {
+              // this is a paragraph, do nothing
+              continue;
+            }
+
+            highlightedStr = columnData.slice(0, wordStart)
+              + '<span class="highlighted">'
+              + words[idx].text
+              + '</span>'
+              + highlightedStr.slice(wordEnd);
+          }
+          columnData = highlightedStr;
+        }
+
+        // Smiley is a special symbol: word substitute when word is not present
+        // We do not need to show it.
+        columnData = columnData.replace(/ ☺ /g, ' ');
+
+        if (~columnData.indexOf(paragraphSymbol)) {
+          let parts = columnData.split(paragraphSymbol);
+          let listHeader = '';
+          listHeader = "Sides or/and reading variants:"
+
+          paragraph += listHeader;
+          paragraph += '<ul>';
+          for (let k = 0; k < parts.length; k++) {
+            let part = parts[k];
+
+            if (!part.trim())
+              continue;
+
+            part = paragraphSymbol + part;
+            paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
+          }
+          paragraph += '</ul>';
+        } else {
+          // no parts in the columnData
+          paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
+        }
+        continue;
+      }
+
+      if (columnName === 'crosses') {
+        if (inscriptionData.num_crosses == 0) {
+          paragraph += 'No crosses.';
+          continue;
+        }
+
+        paragraph += '<table class="crosses" border="1">';
+        paragraph += '<thead><tr>';
+        paragraph += '<th>A</th>';
+        paragraph += '<th>B</th>';
+        paragraph += '<th>C</th>';
+        paragraph += '<th>D</th>';
+        paragraph += '<th>E</th>';
+        paragraph += '<th>F</th>';
+        paragraph += '<th>G</th>';
+        paragraph += '</th></thead>';
+        paragraph += '<tbody>';
+
+        let allCrosses = inscriptionData['crosses'];
+        for (let k = 0; k < allCrosses.length; k++) {
+          if (allCrosses[k][0].length > 0) {
+            // this is a cross from undefined group
+            paragraph += '<tr><td colspan="7">' + allCrosses[k][0][0].name + '</td></tr>';
             continue;
           }
-          paragraph += '<td>';
-          paragraph += allCrosses[k][gr].map(function (v, i) {
-            let url = staticBase + v.name + '.png';
-            let res = '<img src="' + url + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
-            if (v.isCerain == 0) {
-              res += '?';
+          paragraph += '<tr>';
+          // we have 8 groups in total, 0 being free-text and not a real group
+          for (let gr = 1; gr < 8; gr++) {
+            let crossForms = allCrosses[k][gr];
+            if (crossForms.length == 0) {
+              paragraph += '<td><span class="null">&#8709;</span></td>';
+              continue;
             }
-            return res;
-          }).join(', ');
-          paragraph += '</td>';
+            paragraph += '<td>';
+            paragraph += allCrosses[k][gr].map(function (v, i) {
+              let url = staticBase + v.name + '.png';
+              let res = '<img src="' + url + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
+              if (v.isCerain == 0) {
+                res += '?';
+              }
+              return res;
+            }).join(', ');
+            paragraph += '</td>';
+          }
         }
+        paragraph += '</tbody></table>';
+        continue;
       }
-      paragraph += '</tbody></table>';
-      continue;
-    }
 
-    if (userSelectedDisplay[j] === 'signature_text') {
-      if (signatureId in aliasByParent) {
-        columnData += ' (' + aliasByParent[signatureId].join('|') + ')';
+      if (columnData == '' && showHeaders) {
+        columnData = '<i>Absent, not in the database.</i>';
       }
+      paragraph += columnData;
     }
+    paragraph += '</article>';
 
-    if (columnData == '' && showHeaders) {
-      columnData = '<i>Absent</i>';
-    }
-    paragraph += columnData;
+    markupData.push(paragraph);
   }
-  paragraph += '</article>';
 
-  renderParams.mainDisplay.innerHTML += paragraph;
-
-  // prepare for the next run
-  renderParams.curRowIdx += 1;
-  renderIsDone = true;
-  setTimeout(signatureRenderHelper, 10, renderParams);
+  return markupData;
 }
 
 /* Find all crosses related to particular metaId.
@@ -1861,8 +2107,7 @@ function humanNameForColumnName(columnName) {
   if (a) {
     return a.text;
   }
-  return "Undefined";
-  //return displayFields().find(x => x.value === columnName).text;
+  return columnName;
 }
 
 function initMultiselect() {
@@ -1914,6 +2159,96 @@ function setTooltip(btn, message) {
   }, 500);
 }
 
+// Import list of signatures provided from a file
+// Function argument fileContent is the actual file content.
+function importSignaturesHandler(fileContent) {
+  if (fileContent === null) {
+    return;
+  }
+  if (/[\x00-\x08\x0E-\x1F]/.test(fileContent)) {
+    alert("Seems like the file you've selected is not textual. Please select a different file.");
+    $('#loading').hide();
+    return;
+  }
+
+  var csvData = Papa.parse(fileContent);
+  var numLines = csvData.data.length;
+  let firstDataRow = 0;
+  let signatureColumn = 0;
+  let rules = [];
+  let multiline = false;
+  let numEntries = 0;
+  let maxEntries = 200;
+
+  if (numLines > 1) {
+    let signatureCandidate = csvData.data[0].findIndex(item => 'signature' === item.toLowerCase());
+    if (signatureCandidate != -1) {
+      firstDataRow = 1;
+      signatureColumn = signatureCandidate;
+    }
+
+    numEntries = csvData.data.length;
+    if (numEntries > maxEntries) {
+      numEntries = maxEntries;
+      alert('You are trying to import more than ' + maxEntries + ' signatures. This is currently \
+        not supported and your import will be limited to the first ' + maxEntries + ' signatures.');
+    }
+    for (var i = firstDataRow; i < numEntries; i++) {
+      // iterate over rows
+      var rule = {
+        id: "signature_text",
+        field: "signature_text",
+        type: "string",
+        input: "text",
+        operator: "equal",
+      };
+
+      rule.value = csvData.data[i][signatureColumn].trim();
+
+      rules.push(rule);
+    }
+  } else {
+    // single line, treat every value as a signature
+    numEntries = csvData.data[0].length;
+    if (numEntries > maxEntries) {
+      numEntries = maxEntries;
+      alert('You are trying to import more than ' + maxEntries + ' signatures. This is currently \
+        not supported and your import will be limited to the first ' + maxEntries + ' signatures.');
+    }
+    for (var i = 0; i < numEntries; i++) {
+      // iterate over columns
+      var rule = {
+        id: "signature_text",
+        field: "signature_text",
+        type: "string",
+        input: "text",
+        operator: "equal",
+      };
+
+      rule.value = csvData.data[0][i].trim();
+
+      rules.push(rule);
+    }
+  }
+
+  var allRules = {
+    condition: 'OR',
+    rules: rules,
+    not: false,
+  };
+
+  $('#builder').queryBuilder('setRules', allRules, true);
+  $('#loading').hide();
+}
+
+function showLoading() {
+  $('#loading').show();
+}
+
+function hideLoading() {
+  $('#loading').hide();
+}
+
 var clipboard = [];
 $(function() {
   var xhr = new XMLHttpRequest();
@@ -1926,6 +2261,7 @@ $(function() {
   formatDialog.hide();
   $('#alertObj').hide();
   $('#containerRuleIo').hide();
+  $('#containerImportSignatures').hide();
 
   $('.clip').each(function (i) {
     // prepare buttons for clipboard library
@@ -1946,45 +2282,70 @@ $(function() {
     setTooltip(e.trigger, 'Failed!');
   });
 
-  // customMarker = L.Marker.extend({
-  //    options: {
-  //       myId: -1,
-  //    }
-  // });
-  myMap = L.map('mapDisplay').setView([57.481491, 18.485840], 8);
-  let osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+  myMap = L.map('mapDisplay').setView([56.607512, 16.439838], 8);
+  let osmAttrib = '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
-      minZoom: 1,
-      maxZoom: 15,
+      maxZoom: 18,
       attribution: osmAttrib
     }
   ).addTo(myMap);
   markers = L.markerClusterGroup({
-    showCoverageOnHover: false,
-    removeOutsideVisibleBounds: false,
+    showCoverageOnHover: true,
+    chunkedLoading: true,
   });
   markers.on('click', function (a) {
-    var section = document.getElementById(a.layer.options.inscription);
-    section.parentNode.scrollTop = section.offsetTop;
+    scrollToInscription(a.layer.options.signature, a.layer.options.id);
   });
   markers.addTo(myMap);
 
   // Next phase, jstree creation/initialization
   $('#jstree')
   .on('ready.jstree', function () {
-      $('#loading').hide();
-      applyPagination();
+      if (gMainClusterize === null) {
+        gMainClusterize = new Clusterize({
+          rows: inscriptions2markup(),
+          scrollId: 'mainScrollArea',
+          contentId: 'mainDisplay',
+          callbacks: {
+            clusterChanged: function () {
+            }
+          },
+        });
+      } else {
+        gMainClusterize.update(inscriptions2markup());
+      }
+      clearMarkers();
+      makeMarkers();
+      displayStatistics();
+
+      hideLoading();
+  })
+  .on('refresh.jstree', function() {
+    if (gAfterReset) {
+      $('#jstree').scrollTop(0);
+      gAfterReset = false;
+    }
   })
   .on('changed.jstree', function(node, eventObj) {
     if (eventObj.action == 'select_node') {
-      displaySignatureInfo();
+      if (eventObj.selected.length == 0 || gAfterReset)
+        return;
+
+      let inscriptionId = parseInt(eventObj.node.id, 10);
+      scrollToInscription(eventObj.node.original.signature, inscriptionId, false);
+      if (inscriptionId in mapMarkers && $('#mapDisplay').is(':visible')) {
+        marker = mapMarkers[inscriptionId];
+
+        myMap.setView(marker.getLatLng(), 18);
+      }
     }
   })
   .jstree({
       'core': {
           'animation': 0,
           'data': fetchTreeData,
+          'multiple': false,
       }
   });
 
@@ -1995,6 +2356,9 @@ $(function() {
     } else {
       $('#btnRuleExporter').html('Show rule manager');
     }
+  });
+  $('#btnClearRules').on('click', function() {
+    $('#builder').queryBuilder('reset');
   });
 
   $('#btnRulesExport').on('click', function() {
@@ -2010,15 +2374,141 @@ $(function() {
     $('#builder').queryBuilder('setRules', rules, true);
   });
 
+  $('#btnSearch').on('click', function() {
+    if (applyFilters()) {
+      gMainClusterize.update(inscriptions2markup());
+      clearMarkers();
+      makeMarkers();
+
+      $('#jstree').jstree(true).refresh();
+      displayStatistics();
+    }
+  });
+  $('#btnResetSearch').on('click', function() {
+    gRootsJson = gOriginalData;
+    resetSearchStats();
+    gAfterReset = true;
+    $('#jstree').jstree(true).refresh(false, true);
+    gMainClusterize.update(inscriptions2markup());
+    clearMarkers();
+    makeMarkers();
+
+    displayStatistics();
+    gMainScrollArea.scrollTop = 0;
+  });
+
+  function onCsvWorkerMessage(e) {
+    var csvBody = e.data.csv;
+    var columns = e.data.columns;
+    var csv = '\ufeff'; // add unicode BOM
+    for (var i = 0; i < columns.length; i++) {
+      csv += humanNameForColumnName(columns[i]) + ',';
+      if (columns[i] === 'signature_text') {
+        csv += 'Alternative signatures' + ',';
+      }
+    }
+    csv = csv.slice(0, -1) + '\r\n';
+    csv += csvBody;
+
+    var exportedFilename = 'rundata-net_results.csv';
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, exportedFilename);
+    } else {
+      var link = document.createElement("a");
+      if (link.download !== undefined) { // feature detection
+          // Browsers that support HTML5 download attribute
+          var url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", exportedFilename);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
+    }
+  }
+
+  $('#btnImportResults').on('click', function() {
+    var obj = $('#containerImportSignatures');
+    obj.toggle();
+    if (obj.is(':visible')) {
+      $('#btnImportResults').html('Hide import tool');
+    } else {
+      $('#btnImportResults').html('Show import tool');
+    }
+  });
+  $('#btnExportResults').on('click', function() {
+    var myWorker = new Worker("{% static 'runes/csv.worker.js' %}");
+    myWorker.onmessage = onCsvWorkerMessage;
+    myWorker.postMessage({
+      inscriptions: gDbAsMap,
+      rows: gRootsJson,
+      columns: userSelectedDisplay.concat(['latitude', 'longitude']),
+    });
+  });
+
+  let dropArea = document.getElementById('drop-area');
+  ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false)
+  })
+  ;['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false)
+  })
+
+  ;['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false)
+  })
+  dropArea.addEventListener('drop', handleDrop, false)
+  document.getElementById('fileElem').addEventListener('change', handleImportWrapper, false);
+
+  function handleDrop(e) {
+    let dt = e.dataTransfer;
+    let files = dt.files;
+
+    handleFiles(files);
+  }
+  // Event handler that stops event propagation. Used for drag and drop support
+  function preventDefaults (e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  function highlight(e) {
+    dropArea.classList.add('highlight')
+  }
+
+  function unhighlight(e) {
+    dropArea.classList.remove('highlight')
+  }
+  function handleImportWrapper(evt) {
+    handleFiles(evt.target.files);
+  }
+  function handleFiles(files) {
+    //([...files]).forEach(uploadFile)
+    if (files.length == 0) {
+      return;
+    }
+    var fileReader = new FileReader();
+    var file = files[0]; // be sure to take just a single file
+    fileReader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) {
+        $('#loading-sub-text').html('This dialog will disappear once data is ready');
+        showLoading();
+        setTimeout(importSignaturesHandler, 10, evt.target.result);
+      }
+    }
+    fileReader.readAsText(file);
+  }
 });
 
 // 45 sec timeout
-setTimeout(function() {
+var gLoadingTimer = setTimeout(function() {
   if ($('#loading').is(':visible')) {
     $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
     alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
   }
-}, 45000);
+}, 90000);
+// $('#loading').hide();
 </script>
 
 </body>
