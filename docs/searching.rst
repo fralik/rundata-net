@@ -89,6 +89,8 @@ will be given later.
       patterns in different inscription texts. All patterns must be present in a single word. We may
       illustrate such search with the :ref:`example below <searching-word-search>`.
 
+.. _search-normalization-label:
+
 Case sensitivity in searches and search normalization
 -----------------------------------------------------
 
@@ -362,8 +364,25 @@ Notes about searching across words
 Several things should be kept in mind when performing searches across words:
 
 * The search pattern is a regular expression.
-* The logical NOT operator should not be used. Although the number of found inscription may be
-  correct, the highlight mechanism will not work.
+* The logical NOT operator should not be used. Although the number of found
+  inscription may be correct, the highlight mechanism will not work.
+
+Searching for bind runes
+------------------------
+
+You mae recall from section :ref:`search-normalization-label`, that binding rune
+symbol is treated as a special symbol. It is thus removed from the search in
+the database.
+
+Let's say you wish to find inscriptions that have :samp:`f^u` in the
+transliterated text. The search you may carry out is :samp:`Transliterated runic text contains fu`.
+It is thus impossible to automatically dstinguish between cases where bind rune
+was used and cases where :samp:`fu` appeared without it.
+
+The same is true when bind rune was used to connect two words. For example,
+inscription :samp:`Vg 76` contains the following transilterated text :samp:`h[-ær]ium : a^t^ ^biþia : bat[ær]`.
+To search for it, you may search for :samp:`at biþia`.
+
 
 Search capabilities not present in Rundata-net (compared with Rundata)
 ----------------------------------------------------------------------
@@ -373,16 +392,17 @@ Rundata has some special symbols that may be used in word searches:
 * :samp:`#V` arbitrary vowel.
 * :samp:`#K` arbitrary consonant.
 * :samp:`#X` arbitrary character.
-* :samp:`\\` used before a letter to indicate that it is to be searched for in this exact form
-  (capital or lower case, with or without accent). Used before a special
-  character, :samp:`\\` means that the character is deprived of its special
-  function and should be treated as an ordinary letter.
-* :samp:`@` placed between two characters to indicate that there should be no punctuation mark
-  between them.
+* :samp:`\\` used before a letter to indicate that it is to be searched for in
+  this exact form (capital or lower case, with or without accent). Used before
+  a special character, :samp:`\\` means that the character is deprived of its
+  special function and should be treated as an ordinary letter.
+* :samp:`@` placed between two characters to indicate that there should be no
+  punctuation mark between them.
 
-**These symbols are not supported in Rundata-net!** Furthermore, it is not possible to search for
-punctuation in inscription texts.
+**These symbols are not supported in Rundata-net!** Furthermore, it is not
+possible to search for punctuation in inscription texts.
 
 Another type of search that is not available in Rundata-net is the
-:guilabel:`Full text search in information file`, i.e. full-text search across inscription meta data.
+:guilabel:`Full text search in information file`, i.e. full-text search across
+inscription meta data.
 

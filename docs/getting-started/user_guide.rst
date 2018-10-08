@@ -161,27 +161,31 @@ searching rules will be removed and search query will consist of a single
 placeholder rule.
 
 Importing and exporting results
--------------------------------
+===============================
 
 It is possible to export search results and to import list of inscriptions.
 
 :guilabel:`Export results` button allow to export all search results in a file.
-File is create in a
+File is created in a
 `comma-separated values <https://en.wikipedia.org/wiki/Comma-separated_values>`_
 (CSV) format. This format can be viewed as a table where each row corresponds to
 an individual inscription and each column to some information (for example,
-signature text). Many programs can open CSV files. For example, it should be
-possible to open them directly in Excel.
+signature text). Many programs can open CSV files. It should be
+possible to open them directly in Excel. If you have problems opening this file
+in Excel, please refer to Google and find out how to do it. `Office support`_,
+`Wiki How <https://www.wikihow.com/Open-CSV-Files>`_,
+`macOS Table Tool <https://itunes.apple.com/app/table-tool/id1122008420?mt=12>`_
+pages may be useful.
 
 Rundata-net exports data in a file with default name :file:`rundata-net_results.csv`.
-User may select the location where the file will be save to and the name of the
+User may select the location where the file will be saved to and the name of the
 file. Exported file contains all inscriptions from the list of inscriptions.
 Number of columns will correspond to the number of selected inscription properties,
 i.e. number of columns corresponds to the right-hand list of the main display
 configuration dialog box. First line of the file is a header and it will contain
 column names. Each value is *escaped* by quotes, i.e. :samp:`Öl 2` is written
 as :samp:`"Öl 2"` in the file. If you open the file in Excel, you shall not notice
-that. Some values may contain a list of values. This is true, for example for
+that. Some values may contain a list of values. This is true for example for
 column :guilabel:`Images`. An inscription may have multiple images assigned to it.
 In such a case, values are separated by a semicolon. For example value
 :samp:`DR 411;B 1071;L 1323` consist of three values :samp:`DR 411`, :samp:`B 1071`,
@@ -191,17 +195,19 @@ It is possible to import list of inscriptions in Rundata-net. A typical user cas
 is if a user would like to study more closely a list of inscriptions given in
 a publication.
 
-.. warning::
-
-    The import is limited to 200 inscriptions!
-
 :guilabel:`Show import tool` button shows a panel from which a user can select
 a file or drop a file to that area. Rundata-net supports 3 file formats for import.
 
-*Format #1*. Simple format where all inscriptions are written on one line separated by a comma.
-Example of such a file::
+..  important::
 
-    Öl Köping13,Ög ATA322-4035-2011:14,Sö 175,U 381
+    A general rule. If a signature contains a comma as it's part, then such
+    signature must be enclosed by quotes, i.e. you must write :samp:`"G IK365,8"`
+    instead of :samp:`G IK365,8`. This is true for all the formats described below.
+
+*Format #1*. Simple format where all inscriptions are written on one line
+separated by a comma. Example of such a file::
+
+    Öl Köping13,Ög ATA322-4035-2011:14,Sö 175,U 381,"G IK365,8",Öl 1,Öl 11
 
 Example is available for download as :download:`csv-one-line.csv`.
 
@@ -211,6 +217,8 @@ Example is available for download as :download:`csv-one-line.csv`.
     Ög ATA322-4035-2011:14
     Sö 175
     U 381
+    "G IK365,8"
+    U 358
 
 Example is available for download as :download:`csv-multiline.txt`.
 
@@ -224,13 +232,17 @@ a file with a header::
     2,Ög ATA322-4035-2011:14
     3,Sö 175
     4, U 381
+    5,"G IK365,8"
 
-Example is available for download as :download:`csv-header.csv`.
+Example is available for download as :download:`csv-header.csv`. Note that
+there may be spaces around non-enclosed signatures, like on line 4 in the example
+above.
 
 .. note::
 
     Regardless of the format signatures are always given without any special
-    symbols like † or $.
+    symbols like † or $. In fact, $ will be added to search parameter, but it
+    is interpreted as part of a regular expression.
 
 Special symbols
 ---------------
@@ -280,3 +292,4 @@ beauties such as ``{b/t}{a/o}``. You may need more clicks and a bit more typing
 with a query builder, but the representation of rules in it is no doubt
 more user-friendly.
 
+.. _Office support: https://support.office.com/en-us/article/import-or-export-text-txt-or-csv-files-5250ac4c-663c-47ce-937b-339e391393ba
