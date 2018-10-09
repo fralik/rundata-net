@@ -165,7 +165,7 @@ Importing and exporting results
 
 It is possible to export search results and to import list of inscriptions.
 
-:guilabel:`Export results` button allow to export all search results in a file.
+:guilabel:`Export results` button allows to export all search results in a file.
 File is created in a
 `comma-separated values <https://en.wikipedia.org/wiki/Comma-separated_values>`_
 (CSV) format. This format can be viewed as a table where each row corresponds to
@@ -194,6 +194,12 @@ and :samp:`L 1323`. All coordinates are given in `WGS 84 <https://en.wikipedia.o
 It is possible to import list of inscriptions in Rundata-net. A typical user case
 is if a user would like to study more closely a list of inscriptions given in
 a publication.
+
+.. warning::
+
+    Rundata-net assumes that imported files are in Unicode encoding. It seems
+    that Excel will not use Unicode by default if user simply selects :guilabel:`Save` file.
+    This is the first thing to check if you experience problems importing files.
 
 :guilabel:`Show import tool` button shows a panel from which a user can select
 a file or drop a file to that area. Rundata-net supports 3 file formats for import.
@@ -242,7 +248,25 @@ above.
 
     Regardless of the format signatures are always given without any special
     symbols like † or $. In fact, $ will be added to search parameter, but it
-    is interpreted as part of a regular expression.
+    is interpreted as part of a regular expression (see :doc:`/searching` for
+    information about regular expressions).
+
+.. tip::
+
+    The way import from file works is that Rundata-net takes a list of signatures
+    and creates a single search rule for all of them. If you have just a couple of
+    signatures, which you would like to import or visualize, then you can enter
+    them directly in the program. You do not put them into a file. You need to
+    add a search rule :guilabel:`Signature` with operator :samp:`matches expression`
+    and write your signatures in form :samp:`signature 1$|signature 2$|signature 3$`,
+    i.e. list of signatures suffixed by $ symbol and separated by :samp:`|`.
+    Why there is symbol $ after each signature? Consider a regular expression
+    search with value :samp:`Öl 1`. Such a search yields 11 inscriptions and can
+    be interpreted as *find all inscriptions where signature contains Öl 1*.
+    If we however add $ symbol to the end of signature, i.e. :samp:`Öl 1$`, then
+    the search rule is interpreted as *find all inscriptions where signature ends
+    with Öl 1*. Only a single inscription matches this criteria. More details
+    about regular expressions search is provided in :doc:`Searching section</searching>`.
 
 Special symbols
 ---------------
