@@ -27,6 +27,8 @@ The client side utilizes a lot of excellent Javascript libraries. Here is the li
 * `Bootbox.js <http://bootboxjs.com/>`_, released under :extlink:`MIT <https://github.com/makeusabrew/bootbox/blob/master/LICENSE.md>`.
 * `SQLite compiled to javascript <https://github.com/kripken/sql.js/>`_, released under :extlink:`MIT <https://github.com/kripken/sql.js/blob/master/LICENSE>`.
 * `jQuery Multiselect <http://crlcu.github.io/multiselect/>`_, released under :extlink:`MIT <https://github.com/crlcu/multiselect/blob/master/LICENSE>`.
+* `Papa Parse <https://www.papaparse.com>`_, released under :extlink:`MIT <https://github.com/mholt/PapaParse/blob/master/LICENSE>`.
+* `Leaflet.fullscreen <https://github.com/Leaflet/Leaflet.fullscreen>`_ plugin for Leaflet, released under :extlink:`ISC <https://github.com/Leaflet/Leaflet.fullscreen/blob/gh-pages/LICENSE>`.
 
 
 *******
@@ -75,9 +77,7 @@ The following is a list of the browsers in which Rundata-net is known to work. A
 +-------------------+---------+---------------------------------+
 | Internet Explorer | \-      | Not supported                   |
 +-------------------+---------+---------------------------------+
-| Safari            |  11     | Might work in some earlier      |
-|                   |         | versions, but has not been      |
-|                   |         | tested.                         |
+| Safari            |  \-     | Not supported                   |
 +-------------------+---------+---------------------------------+
 
 **********

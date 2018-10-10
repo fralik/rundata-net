@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="{% static 'runes/css/MarkerCluster.Default.css' %}" />
     -->
     <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
+    <link href="{% static 'runes/leaflet.fullscreen/leaflet.fullscreen.css' %}" rel='stylesheet' />
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
@@ -479,6 +480,7 @@ if (isSafari()) {
 <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
 <script src="{% static 'runes/papaparse.min.js' %}"></script>
+<script src="{% static 'runes/leaflet.fullscreen/Leaflet.fullscreen.min.js' %}"></script>
 
 <script type="text/javascript">
 var entityMap = {
@@ -2297,7 +2299,9 @@ $(function() {
     setTooltip(e.trigger, 'Failed!');
   });
 
-  myMap = L.map('mapDisplay').setView([56.607512, 16.439838], 8);
+  myMap = L.map('mapDisplay', {
+    fullscreenControl: true,
+  }).setView([56.607512, 16.439838], 8);
   let osmAttrib = '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
@@ -2308,11 +2312,18 @@ $(function() {
   markers = L.markerClusterGroup({
     showCoverageOnHover: true,
     chunkedLoading: true,
+    maxClusterRadius: 60,
   });
   markers.on('click', function (a) {
     scrollToInscription(a.layer.options.signature, a.layer.options.id);
   });
   markers.addTo(myMap);
+  myMap.on('fullscreenchange', function () {
+    gMainClusterize.refresh();
+    if (!myMap.isFullscreen()) {
+      gMainScrollArea.scrollTop = 0;
+    }
+  });
 
   // Next phase, jstree creation/initialization
   $('#jstree')
