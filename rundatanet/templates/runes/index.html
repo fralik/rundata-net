@@ -147,6 +147,9 @@
       #fileElem {
         display: none;
       }
+      #alertObj {
+        display: none;
+      }
       /********************************
        * drop area styles end
        */
@@ -168,7 +171,7 @@
 
   <div class="container-fluid">
     <div class="row">
-      <div class="col alert alert-danger hidden" role="alert" id="alertObj"></div>
+      <div class="col alert alert-danger" role="alert" id="alertObj"></div>
     </div>
 
     <div class="row">
@@ -1475,6 +1478,11 @@ function onDbLoaded(e) {
   clearTimeout(gLoadingTimer);
 }
 
+function dismissAlert() {
+  if ($('#alertObj').is(":visible")) {
+    $('#alertObj').hide(500);
+  }
+}
 // Data provider for jsTree.
 function fetchTreeData(obj, cb) {
   if (obj.id === '#') {
@@ -2346,6 +2354,15 @@ $(function() {
       displayStatistics();
 
       hideLoading();
+      // let's check if this is the first time user visits us
+      if (document.cookie.split(';').filter((item) => item.includes('visited=')).length == 0) {
+        // it is the first time
+        var about_url = "{% url 'runes:about' %}";
+        $('#alertObj').html('Looks like you are visiting Rundata.info for the first time. If this is the case, then it might be beneficial to read the <a href="http://rundata-net.rtfd.io/" target="_blank">help</a> and visit <a href="' + about_url + '" target="_blank">About</a> page BEFORE you continue!<br>If you have been here before, just ignore this message.<br>This message will disappear in one minute. <a href="#" onclick="dismissAlert(); return false;" title="Click to close this alert">Dismiss this message now!</button>');
+        $('#alertObj').show(500);
+        setTimeout(dismissAlert, 60000);
+        document.cookie = "visited=true; expires=Fri, 31 Dec 9999 23:59:59 GMT";
+      }
   })
   .on('refresh.jstree', function() {
     if (gAfterReset) {

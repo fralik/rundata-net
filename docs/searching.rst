@@ -71,12 +71,13 @@ different value types:
 * Textual for the filter *Signature*. This is the most common type. It contains
   textual information (which may be letters, special symbols, or digits).
 
-Operators are differentiated on the basis of the search value type of the respective rule. Their meaning
-should be clear from their name. A possible exception to this are the *matches*
-operators for textual information. These operators allow one to specify a `regular
-expression pattern <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Writing_a_regular_expression_pattern>`_. This is very similar
-to how a search in text is made in the original Rundata. Several examples of such searches
-will be given later.
+Operators are differentiated on the basis of the search value type of the
+respective rule. Their meaning should be clear from their name. A possible
+exception to this are the *matches* operators for textual information. These
+operators allow one to specify a
+`regular expression pattern <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Writing_a_regular_expression_pattern>`_. This is very
+similar to how a search in text is made in the original Rundata. Several examples
+of such searches will be given later.
 
 .. attention::
 
