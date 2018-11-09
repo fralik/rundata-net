@@ -102,9 +102,6 @@
       .inscription-section {
         border-bottom: 2px solid #999;
       }
-      .search-status {
-        padding-left: 10px;
-      }
       .zero-padding-left {
         padding-left: 0px;
       }
@@ -153,6 +150,25 @@
       /********************************
        * drop area styles end
        */
+       .row {
+        /*border: 1px solid #ccc;*/
+       }
+      .pt-3,
+      .py-3 {
+        padding-top: 1rem !important;
+      }
+      .pb-3,
+      .py-3 {
+        padding-bottom: 1rem !important;
+      }
+      .pb-5,
+      .py-5 {
+        padding-bottom: 3rem !important;
+      }
+      .pb-6,
+      .py-6 {
+        padding-bottom: 9rem !important;
+      }
     </style>
   </head>
 <body style="">
@@ -189,181 +205,208 @@
 
       <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
     </div>
+
     <div class="row">
-      <div class="col search-status" id="lblNumAvailable"></div>
+      <div class="col-md-2" id="lblNumAvailable">6751 inscriptions.</div>
+      <div class="col-md-6 col-sm-8">&nbsp;</div>
+      <div class="col-md-4 col-sm-2">
+        <div class="checkbox" id="chkShowSelectedInscriptions">
+          <label>
+            <input type="checkbox">Show ONLY selected inscriptions on map
+          </label>
+        </div>
+      </div>
     </div>
     <div class="row">
-      <div class="col">&nbsp;</div>
+      <div class="col-xs-12">&nbsp;</div>
     </div>
 
-    <div class="row" role="group" aria-label="">
+    <form class="row pb-3 vertical-align" role="group">
+      <div class="col-md-2">
+        Control buttons:
+      </div>
+      <div class="col-md-10" aria-label="">
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Choose what to show about each inscription</button>
+        <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
+        <button type="button" class="btn btn-default" id="btnRuleExporter" data-toggle="modal" data-target="#containerRuleIo">Export/import search parameters</button>
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modalResultsIo">Export/import results</button>
+      </div>
+    </form>
+
+    <section role="group" class="row vertical-align py-3">
+      <div class="col-md-2">Copy symbols to clipboard:</div>
+      <div class="col-md-10 btn-group" role="group">
+        <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
+        <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
+        <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
+        <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
+        <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
+        <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
+        <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
+        <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
+        <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
+        <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
+        <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
+        <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
+        <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
+        <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
+        <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
+        <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
+        <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
+        <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+      </div>
+    </section>
+
+    <div class="row py-3" role="group" aria-label="">
       <div class="col-md-offset-2 col-md-3">
         <button type="button" class="col-md-12 btn btn-success" id="btnSearch">Search</button>
       </div>
       <div class="col-md-2">
         <button type="button" class="col-md-12 btn btn-default" id="btnResetSearch">Reset search</button>
       </div>
+      <button type="button" class="btn btn-default col-md-2" id="btnClearRules">Clear search parameters</button>
     </div>
 
-    <form class="row top-margin" role="group">
-      <!--<div class="checkbox col-md-2">
-        <input type="checkbox" id="chkApplyFilters">
-        <label for="chkApplyFilters">Apply filter(s)</label>
-      </div>-->
-      <div class="col-md-2 zero-padding-left">
-        Control buttons:
-      </div>
-      <div class="col-md-10" aria-label="">
-        <div class="btn-group" role="group" aria-label="">
-          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Configure main display</button>
-          <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
-        </div>
-        <div class="btn-group" role="group" aria-label="">
-          <button type="button" class="btn btn-default" id="btnRuleExporter">Show rule manager</button>
-          <button type="button" class="btn btn-default" id="btnClearRules">Clear all rules</button>
-        </div>
-        <div class="btn-group" role="group" aria-label="">
-          <button type="button" class="btn btn-default" id="btnImportResults">Show import tool</button>
-          <button type="button" class="btn btn-default" id="btnExportResults">Export results</button>
-        </div>
-      </div>
-    </form>
-
-    <section role="group" class="row vertical-align top-margin">
-      <div class="col-md-2 zero-padding-left">Copy symbols to clipboard:</div>
-      <div class="col-md-10 btn-group" role="group">
-        <button type="button" class="btn clip" id="btnOUmlautSmall">ö</button>
-        <button type="button" class="btn clip" id="btnOUmlaut">Ö</button>
-        <button type="button" class="btn clip" id="btnAaSmall">å</button>
-        <button type="button" class="btn clip" id="btnAa">Å</button>
-        <button type="button" class="btn clip" id="btnAaUmlautSmall">ä</button>
-        <button type="button" class="btn clip" id="btnAaUmlaut">Ä</button>
-        <button type="button" class="btn clip" id="btnTh">þ</button>
-        <button type="button" class="btn clip" id="btnEn">ñ</button>
-        <button type="button" class="btn clip" id="btnDh">ð</button>
-        <button type="button" class="btn clip" id="btnDh">ï</button>
-        <button type="button" class="btn clip" id="btnAe">æ</button>
-        <button type="button" class="btn clip" id="btnAe">Æ</button>
-        <button type="button" class="btn clip" id="btnOe">ø</button>
-        <button type="button" class="btn clip" id="btnOe">Ø</button>
-        <button type="button" class="btn clip" id="btnOe2">œ</button>
-        <button type="button" class="btn clip" id="btnOe2">Œ</button>
-        <button type="button" class="btn clip" id="btnOhakeSmall">ô</button>
-        <button type="button" class="btn clip" id="btnOhakeCapital">Ô</button>
-      </div>
-    </section>
-    <section role="group" class="row"><div class="col">&nbsp;</div></section>
-
-    <section role="dialog" class="row" id="containerImportSignatures">
-      <div id="drop-area" class="col-md-8 col-md-offset-1">
-        <form class="my-form" id="form-signature-import">
-          <div class="form-group">
-            <p>Import file with signatures by dragging and dropping or selecting it. Read more about the possible file formats in the documentation.</p>
-            <label for="fileElem" class="button">Select a file</label>
-            <input type="file" id="fileElem">
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <div id="divFormatDialog" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
-      <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="divFormatDialogLabel">Configure inscription display</h4>
-          </div>
-          <div class="model-body" style="padding-top: 1em; padding-left: 1em; padding-right: 1em;">
-            <div class="row" style="padding-left: 1em; padding-right: 1em;">
-              <p class="col alert alert-danger hidden" role="alert" id="formatDialogAlertObj"></p>
-            </div>
-            <div class="row" style="padding-left: 1em; padding-right: 1em;">
-              <div class="col"><p>Here you can select which properties are shown on the main display when an inscription is selected. List on the left contains properties available for selection.
-              List on the right contains properties selected for display.</p>
-              <p>Check <em>Display headers</em> checkbox if you want to see property name as long as it's value. If unchecked, only the value is displayed.</p>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-sm-5">
-                <select name="from[]" id="multiselect" class="form-control" size="8" multiple="multiple"></select>
-                <div class="row">
-                  <form role="form" class="col-sm-6">
-                    <div class="checkbox">
-                      <input type="checkbox" id="chkDisplayHeaders" checked>
-                      <label for="chkDisplayHeaders">Display headers</label>
-                    </div>
-                  </form>
-                </div>
-              </div>
-
-              <div class="col-sm-2">
-                <button type="button" id="multiselect_rightAll" class="btn btn-block"><i class="glyphicon glyphicon-forward"></i></button>
-                <button type="button" id="multiselect_rightSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
-                <button type="button" id="multiselect_leftSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
-                <button type="button" id="multiselect_leftAll" class="btn btn-block"><i class="glyphicon glyphicon-backward"></i></button>
-              </div>
-
-              <div class="col-sm-5">
-                <select name="to[]" id="multiselect_to" class="form-control" size="8" multiple="multiple"></select>
-                <div class="row">
-                  <div class="col-sm-6">
-                    <button type="button" id="multiselect_move_up" class="btn btn-block"><i class="glyphicon glyphicon-arrow-up"></i></button>
-                  </div>
-                  <div class="col-sm-6">
-                    <button type="button" id="multiselect_move_down" class="btn btn-block"><i class="glyphicon glyphicon-arrow-down"></i></button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="btnApplyDisplayFormat">Apply changes</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="containerRuleIo" class="row container-fluid">
-      <div class="row">
-        <div class="col-md-6" style="margin-left: 2%">Use the tool below to preserve your search rules between sessions. Clicking Export will give you
-        search rules in text format. You can copy text and save it elsewhere. Next time you load work
-        with Rundata-net you can import that text.</div>
-      </div>
-      <div class="row">
-        <div class="col-md-10 btn-group" role="group" aria-label="" style="margin-left: 2%">
-          <button type="button" class="btn btn-default" id="btnRulesExport">Export</button>
-          <button type="button" class="btn btn-default" id="btnRulesImport">Import</button>
-        </div>
-      </div>
-      <form class="row" style="margin-left: 2%">
-        <textarea id="ruleIo" class="col-md-6 col-xs-10" rows="15"></textarea>
-      </form>
-    </div>
-
-    <div class="row">
-      <div id="builder" class="col"></div>
-    </div>
-    <div class="row">
-      <div class="col">&nbsp;</div>
-    </div>
-    <div class="row">
-      <div class="col">&nbsp;</div>
-    </div>
-    <div class="row">
-      <div class="col">&nbsp;</div>
-    </div>
-    <div class="row">
-      <div class="col">&nbsp;</div>
-    </div>
-    <div class="row">
-      <div class="col">&nbsp;</div>
-    </div>
-    <div class="row">
-      <div class="col">&nbsp;</div>
+    <div class="row pb-6">
+      <div id="builder" class="col-xs-12"></div>
     </div>
 
   </div>
+
+  <div id="divFormatDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="divFormatDialogLabel">Configure inscription display</h4>
+        </div>
+        <div class="modal-body" style="padding-top: 1em; padding-left: 1em; padding-right: 1em;">
+          <div class="row" style="padding-left: 1em; padding-right: 1em;">
+            <p class="col alert alert-danger hidden" role="alert" id="formatDialogAlertObj"></p>
+          </div>
+          <div class="row" style="padding-left: 1em; padding-right: 1em;">
+            <div class="col"><p>Here you can select which properties are shown on the main display when an inscription is selected. List on the left contains properties available for selection.
+            List on the right contains properties selected for display.</p>
+            <p>Check <em>Display headers</em> checkbox if you want to see property name as long as it's value. If unchecked, only the value is displayed.</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-5">
+              <select name="from[]" id="multiselect" class="form-control" size="8" multiple="multiple"></select>
+              <div class="row">
+                <form role="form" class="col-sm-6">
+                  <div class="checkbox">
+                    <input type="checkbox" id="chkDisplayHeaders" checked>
+                    <label for="chkDisplayHeaders">Display headers</label>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="col-sm-2">
+              <button type="button" id="multiselect_rightAll" class="btn btn-block"><i class="glyphicon glyphicon-forward"></i></button>
+              <button type="button" id="multiselect_rightSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
+              <button type="button" id="multiselect_leftSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
+              <button type="button" id="multiselect_leftAll" class="btn btn-block"><i class="glyphicon glyphicon-backward"></i></button>
+            </div>
+
+            <div class="col-sm-5">
+              <select name="to[]" id="multiselect_to" class="form-control" size="8" multiple="multiple"></select>
+              <div class="row">
+                <div class="col-sm-6">
+                  <button type="button" id="multiselect_move_up" class="btn btn-block"><i class="glyphicon glyphicon-arrow-up"></i></button>
+                </div>
+                <div class="col-sm-6">
+                  <button type="button" id="multiselect_move_down" class="btn btn-block"><i class="glyphicon glyphicon-arrow-down"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnApplyDisplayFormat">Apply changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="containerRuleIo" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="containerRuleIoLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h4>
+        </div>
+
+        <div class="modal-body">
+          <div class="row">
+            <p class="col-xs-12">
+              Use the tool below to preserve your search rules between sessions. Clicking <em>Export</em> will give you search rules in text format. You can copy text and save it elsewhere. Next time you load work with Rundata-net you can import that text.
+            </p>
+          </div>
+
+          <div class="row py-3">
+            <div class="col-xs-12 btn-group" role="group" aria-label="">
+              <button type="button" class="btn btn-default" id="btnRulesImport">Import</button>
+              <button type="button" class="btn btn-default" id="btnRulesExport">Export</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12">
+              <textarea id="ruleIo" rows="15" style="width: 100%;"></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <section role="dialog" class="modal fade" id="modalResultsIo" tabindex="-1" role="dialog" arial-labelledby="divResultsIoLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="divResultsIoLabel">Export search results, import signatures</h4>
+        </div>
+
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-xs-offset-1 col-xs-10">
+              <p>Export search results in CSV format by clicking <em>Export</em> button bellow.<br>Read more about exporting <a href="https://rundata-net.readthedocs.io/en/latest/getting-started/user_guide.html#importing-and-exporting-results">in the documentation</a>.</p>
+              <button type="button" class="col-xs-3 btn btn-default" id="btnExportResults"><b>Export search results</b></button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12"><hr></div>
+          </div>
+
+          <div class="row">
+            <div id="drop-area" class="col-xs-10 col-xs-offset-1">
+              <form class="my-form" id="form-signature-import">
+                <div class="form-group">
+                  <p>Import file with signatures by dragging and dropping it in highlighted area or by selecting it. Read more about the possible file formats <a href="https://rundata-net.readthedocs.io/en/latest/getting-started/user_guide.html#importing-and-exporting-results">in the documentation</a>.</p>
+                  <label for="fileElem" class="button">Select a file</label>
+                  <input type="file" id="fileElem">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+  </section>
 
   <aside id="loading" class="loading-screen" style="position:fixed; top:0; right:0; bottom:0; left:0; z-index:9999; background-color: #000; opacity: 0.6;">
     <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4" style="position:absolute; top:50%; margin-top:-7em">
@@ -469,6 +512,7 @@ if (isSafari()) {
 <script src="{% static 'query-builder/interact.min.js' %}"></script>
 <!--<script type="text/javascript" src="{% static 'runes/chosen/chosen.jquery.min.js' %}"></script>-->
 <script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
+<script src="{% static 'query-builder/my-templates.js' %}"></script>
 <!-- end of query builder js -->
 
 <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet-src.js"
@@ -1345,6 +1389,8 @@ function onDbLoaded(e) {
   });
 
   $('#builder').queryBuilder({
+    display_empty_filter: false,
+    select_placeholder: '!!! Click here to choose search parameter !!!',
     operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat([
       { type: 'alternatives_in',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'cross_form', nb_inputs: 1, multiple: false, apply_to: ['string'] },
@@ -1366,7 +1412,9 @@ function onDbLoaded(e) {
         not_contains_glob: "doesn't contain",
         my_regex: 'matches expression',
         word_regexp: 'matches across words',
-      }
+      },
+      add_rule: 'Add search parameter',
+      add_group: 'Add search group',
     },
 
     // SQL export (first half)
@@ -1390,6 +1438,9 @@ function onDbLoaded(e) {
 
     filters: queryBuilderFilters,
     sort_filters: true,
+    templates: {
+      group: gBuilderCustomGroup,
+    },
   })
   // SQL export (second half)
   .on('ruleToSQL.queryBuilder.filter', function (e, rule, sqlValue, sqlOperator) {
@@ -2189,7 +2240,7 @@ function setTooltip(btn, message) {
   // do not care about multiple calls to setTimeout
   setTimeout(function() {
     that.tooltip('hide');
-  }, 500);
+  }, 900);
 }
 
 function doSearch() {
@@ -2285,8 +2336,6 @@ $(function() {
   initMultiselect();
   formatDialog.hide();
   $('#alertObj').hide();
-  $('#containerRuleIo').hide();
-  $('#containerImportSignatures').hide();
 
   $('.clip').each(function (i) {
     // prepare buttons for clipboard library
@@ -2301,7 +2350,7 @@ $(function() {
   });
   clipboard = new ClipboardJS('.btn');
   clipboard.on('success', function(e) {
-    setTooltip(e.trigger, 'Copied!');
+    setTooltip(e.trigger, 'Copied to clipboard!');
   });
   clipboard.on('error', function(e) {
     setTooltip(e.trigger, 'Failed!');
@@ -2392,14 +2441,6 @@ $(function() {
       }
   });
 
-  $('#btnRuleExporter').on('click', function() {
-    $('#containerRuleIo').toggle();
-    if ($('#containerRuleIo').is(':visible')) {
-      $('#btnRuleExporter').html('Hide rule manager');
-    } else {
-      $('#btnRuleExporter').html('Show rule manager');
-    }
-  });
   $('#btnClearRules').on('click', function() {
     $('#builder').queryBuilder('reset');
   });
@@ -2465,10 +2506,6 @@ $(function() {
     }
   }
 
-  $('#btnImportResults').on('click', function() {
-    toggleImportTool();
-  });
-
   $('#btnExportResults').on('click', function() {
     var myWorker = new Worker("{% static 'runes/csv.worker.js' %}");
     myWorker.onmessage = onCsvWorkerMessage;
@@ -2498,7 +2535,7 @@ $(function() {
     let files = dt.files;
 
     handleFiles(files);
-    toggleImportTool();
+    closeResultsIoModal();
   }
   // Event handler that stops event propagation. Used for drag and drop support
   function preventDefaults (e) {
@@ -2514,7 +2551,7 @@ $(function() {
   }
   function handleImportWrapper(evt) {
     handleFiles(evt.target.files);
-    toggleImportTool();
+    closeResultsIoModal();
 
     // reset form, so that we can import the same file again if we need to
     $('form#form-signature-import').get(0).reset();
@@ -2535,14 +2572,9 @@ $(function() {
     }
     fileReader.readAsText(file);
   }
-  function toggleImportTool() {
-    var obj = $('#containerImportSignatures');
-    obj.toggle();
-    if (obj.is(':visible')) {
-      $('#btnImportResults').html('Hide import tool');
-    } else {
-      $('#btnImportResults').html('Show import tool');
-    }
+  function closeResultsIoModal() {
+    var obj = $('#modalResultsIo');
+    obj.modal('hide');
   }
 });
 
