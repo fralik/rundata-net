@@ -175,13 +175,41 @@
   <nav class="navbar navbar-default navbar-static-top">
     <div class="container">
       <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
         <a class="navbar-brand" href="#">Rundata-net</a>
       </div>
-      <ul class="nav navbar-nav navbar-right">
-        <li class=""><a href="{% url 'runes:about' %}" target="_blank">About</a></li>
-        <li class=""><a href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
-        <li class=""><a href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
-      </ul>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Map <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#" id="mHideMap">Hide map</a></li>
+              <li><a href="#"><div class="checkbox">
+                <input type="checkbox" id="chkShowSelectedInscriptions">
+                <label for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
+              </div></a></li>
+            </ul>
+          </li>
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Import/Export <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#" data-toggle="modal" data-target="#containerRuleIo">Search parameters</a></li>
+              <li><a href="#" data-toggle="modal" data-target="#modalResultsIo">Results</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li class=""><a href="{% url 'runes:about' %}" target="_blank">About</a></li>
+          <li class=""><a href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
+          <li class=""><a href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+        </ul>
+      </div> <!--/.navbar-collapse-->
     </div>
   </nav>
 
@@ -207,10 +235,6 @@
       <div class="col-md-2" id="lblNumAvailable">6751 inscriptions.</div>
       <div class="col-md-6 col-sm-8">&nbsp;</div>
       <div class="col-md-4 col-sm-2">
-        <div class="checkbox">
-          <input type="checkbox" id="chkShowSelectedInscriptions">
-          <label for="chkShowSelectedInscriptions">Show ONLY selected inscriptions on map</label>
-        </div>
       </div>
     </div>
     <div class="row">
@@ -223,9 +247,6 @@
       </div>
       <div class="col-md-10" aria-label="">
         <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Choose what to show about each inscription</button>
-        <button type="button" class="btn btn-default" id="btnShowMap">Hide map</button>
-        <button type="button" class="btn btn-default" id="btnRuleExporter" data-toggle="modal" data-target="#containerRuleIo">Export/import search parameters</button>
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modalResultsIo">Export/import results</button>
       </div>
     </form>
 
@@ -735,16 +756,17 @@ function onDisplayFormatClicked(e) {
   $(this).prev().click();
 }
 
-function onShowMapClicked() {
+function onHideMapClicked() {
+  console.log('here');
   $('#mapDisplay').toggle();
   var mainContainer = $('#mainDisplay');
 
   if ($('#mapDisplay').is(':visible')) {
-    $('#btnShowMap').html('Hide map');
+    $('#mHideMap').html('Hide map');
     mainContainer.removeClass('col-md-10 col-sm-10');
     mainContainer.addClass('col-md-6 col-sm-8');
   } else {
-    $('#btnShowMap').html('Show map');
+    $('#mHideMap').html('Show map');
     mainContainer.removeClass('col-md-6 col-sm-8');
     mainContainer.addClass('col-md-10 col-sm-10');
   }
@@ -1518,7 +1540,6 @@ function onDbLoaded(e) {
 
   // button handlers
   $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
-  $('#btnShowMap').on('click', onShowMapClicked);
   $('#chkShowSelectedInscriptions').on('change', function() {
     clearMarkers();
     makeMarkers();
@@ -2259,6 +2280,8 @@ function doSearch() {
 
     // skip_loading, forget_state
     $('#jstree').jstree(true).refresh(false, true);
+
+    displayStatistics();
   }
 }
 
@@ -2581,6 +2604,9 @@ $(function() {
     var obj = $('#modalResultsIo');
     obj.modal('hide');
   }
+
+  $('#mHideMap').on('click', onHideMapClicked);
+
 });
 
 // 45 sec timeout
@@ -2590,7 +2616,7 @@ var gLoadingTimer = setTimeout(function() {
     alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
   }
 }, 90000);
-// $('#loading').hide();
+//$('#loading').hide();
 </script>
 
 </body>
