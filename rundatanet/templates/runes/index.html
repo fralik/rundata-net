@@ -197,10 +197,7 @@
         </div>
       </div>
 
-      <div id="mainScrollArea" class="clusterize-scroll col-md-6 col-sm-8 table-bordered my-fixed-height">
-        <div id="mainDisplay" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false" class="clusterize-content">
-          <div class="clusterize-no-data">Loading data...</div>
-        </div>
+      <div id="mainDisplay" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false" class="col-md-6 col-sm-8 table-bordered my-fixed-height pre-scrollable">
       </div>
 
       <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
@@ -210,10 +207,9 @@
       <div class="col-md-2" id="lblNumAvailable">6751 inscriptions.</div>
       <div class="col-md-6 col-sm-8">&nbsp;</div>
       <div class="col-md-4 col-sm-2">
-        <div class="checkbox" id="chkShowSelectedInscriptions">
-          <label>
-            <input type="checkbox">Show ONLY selected inscriptions on map
-          </label>
+        <div class="checkbox">
+          <input type="checkbox" id="chkShowSelectedInscriptions">
+          <label for="chkShowSelectedInscriptions">Show ONLY selected inscriptions on map</label>
         </div>
       </div>
     </div>
@@ -584,11 +580,14 @@ var gWordSearchRegex = new RegExp("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|
 var gWordSearchRegexEsc = new RegExp(escapeHtml("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)"), 'g');
 var gWordPunctuationRegex = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+");
 var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+"));
+
 // Whenever we need to render a batch of inscriptions, we identify each batch with gRenderBatchId. This can be
 // used in situation when we need to render a batch when another batch is still in rendering process.
 // I.e. we have batch 1 which is currently rendering. We have batch 2 that shall be rendered. In this case,
 // batch 1 must be cancelled.
 var gRenderBatchId = 0;
+// True while rendering of signature information is in progress.
+var gRenderInProgress = false;
 // Global variable that is assigned with timer ID for displaySignatureInfo function call.
 // If it is a valid ID, then we must not execute another call to displaySignatureInfo.
 // Used to accumulate multiple jstree.changed events.
@@ -615,7 +614,7 @@ var gMainClusterize = null;
 var gClusterizeParams = {};
 // Indicates if we are in a state 'after user clicked reset'
 var gAfterReset = false;
-var gMainScrollArea = document.getElementById('mainScrollArea');
+var gMainScrollArea = document.getElementById('mainDisplay');
 
 // defaults. TODO: should be replaced with reading from local storage memory
 userSelectedDisplay = ['signature_text', 'transliteration', 'english_translation', 'found_location',
@@ -664,9 +663,6 @@ function dbToJson(columnNames, values, rootsWithChildren = null) {
 
   let dbJson = values.map(function(v, i) {
       var hasChildren = false;
-      //if (rootsWithChildren !== null && rootsWithChildren.has(v[0])) {
-          //hasChildren = true;
-      //}
 
       let additional = '';
       if (lostIdx != -1 && newReadingIdx != -1) {
@@ -731,8 +727,7 @@ function onDisplayFormatClicked(e) {
     if (!arraysEqual(userSelectedDisplay, selectedValues) || newShowHeaders != lastShowHeaders) {
       userSelectedDisplay = selectedValues;
 
-      gMainClusterize.update(inscriptions2markup());
-      scrollToSelectedSignature();
+      displaySignatureInfo();
 
       lastShowHeaders = newShowHeaders;
     }
@@ -742,16 +737,16 @@ function onDisplayFormatClicked(e) {
 
 function onShowMapClicked() {
   $('#mapDisplay').toggle();
-  var mainContainer = $('#mainScrollArea');
+  var mainContainer = $('#mainDisplay');
 
   if ($('#mapDisplay').is(':visible')) {
     $('#btnShowMap').html('Hide map');
-    mainContainer.removeClass('col-md-10');
-    mainContainer.addClass('col-md-6');
+    mainContainer.removeClass('col-md-10 col-sm-10');
+    mainContainer.addClass('col-md-6 col-sm-8');
   } else {
     $('#btnShowMap').html('Show map');
-    mainContainer.removeClass('col-md-6');
-    mainContainer.addClass('col-md-10');
+    mainContainer.removeClass('col-md-6 col-sm-8');
+    mainContainer.addClass('col-md-10 col-sm-10');
   }
 }
 
@@ -1153,7 +1148,7 @@ function onDbLoaded(e) {
   // make a hash map for quick read access
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
-  gRootIds = new Map(contents[0].values.map((v, i) => [v[0], 1]));
+  gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
   gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
 
   ////////////////////////////////////////////////////////////////////
@@ -1524,6 +1519,10 @@ function onDbLoaded(e) {
   // button handlers
   $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
   $('#btnShowMap').on('click', onShowMapClicked);
+  $('#chkShowSelectedInscriptions').on('change', function() {
+    clearMarkers();
+    makeMarkers();
+  });
 
   // seems that the data has been loaded. Do not need this timer any more.
   clearTimeout(gLoadingTimer);
@@ -1544,6 +1543,32 @@ function fetchTreeData(obj, cb) {
 
     cb.call(this, gRootsJson);
   }
+}
+
+function displaySignatureInfo() {
+  let indices = $('#jstree').jstree(true).get_selected();
+  if (indices.length == 0)
+    return;
+
+  if (gRenderInProgress) {
+    gRenderInProgress = false;
+    setTimeout(displaySignatureInfo, 300);
+    return;
+  }
+  let mainDisplayDom = document.getElementById('mainDisplay');
+  mainDisplayDom.innerHTML = "<img src='{% static 'runes/jstree/themes/default/throbber.gif' %}'><br>";
+  gRenderInProgress = true;
+  setTimeout(renderSignatures, 100);
+}
+
+function renderSignatures() {
+  if (!gRenderInProgress)
+    return;
+
+  let html = inscriptions2markup();
+  let mainDisplayDom = document.getElementById('mainDisplay');
+  mainDisplayDom.innerHTML = html;
+  gRenderInProgress = false;
 }
 
 /* Once db is loaded convert all content to key-value object
@@ -1694,12 +1719,30 @@ function clearMarkers() {
 
 function makeMarkers() {
   let markersLatLon = [];
+  let sourceObj = gRootsJson;
 
-  for (let i = 0; i < gRootsJson.length; i++) {
-    let signatureName = gRootsJson[i].signature;
+  const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
+  if (showSelected) {
+    console.log('Need to show selected only');
+    let indices = $('#jstree').jstree(true).get_selected();
+    if (indices.length == 0) {
+      return;
+    }
+    sourceObj = [];
+    for (let i = 0; i < indices.length; i++) {
+      let needle = parseInt(indices[i], 10);
+      if (gRootIds.has(needle)) {
+        let idx = gRootIds.get(needle);
+        sourceObj.push(gRootsJson[idx]);
+      }
+    }
+  }
+
+  for (let i = 0; i < sourceObj.length; i++) {
+    let signatureName = sourceObj[i].signature;
     let marker = '';
-    let row = gRootsJson[i].id;
-    let inscriptionData = gDbAsMap[gRootsJson[i].id];
+    let row = sourceObj[i].id;
+    let inscriptionData = gDbAsMap[sourceObj[i].id];
 
     if (row in mapMarkers) {
       marker = mapMarkers[row];
@@ -1751,54 +1794,16 @@ function scrollToSelectedSignature() {
  */
 function scrollToInscription(signature, inscriptionId, updateTree) {
   var section = document.getElementById(signature);
-  if (updateTree === undefined) {
-    updateTree = true;
-  }
-
   if (section) {
     gMainScrollArea.scrollTop = section.offsetTop;
-    gClusterizeParams = {};
-    setTimeout(hideLoading, 500);
   } else {
-    // desired signature is not in the current cluster. We will have to search for it.
-
-    if (!Object.keys(gClusterizeParams) || Object.keys(gClusterizeParams).length == 0) {
-      gClusterizeParams = {
-        direction: 'up',
-        seekFactor: 10,
-        iteration: 0,
-        maxTries: 150,
-      };
-    }
-    if (gClusterizeParams.iteration >= gClusterizeParams.maxTries) {
-      gClusterizeParams = {};
-      setTimeout(hideLoading, 500);
-      return;
-    }
-
-    // figure out where shall we scroll up or down by comparing the first signature
-    // in the currently visible cluster with requested signature
-    var inscriptionNode = document.getElementById(inscriptionId);
-    var rowClicked = $('.jstree-node').index(inscriptionNode);
-
-    var approxItemHeight = gMainClusterize.options.item_height;
-    var approxItemScrollTop = rowClicked * approxItemHeight;
-    // scroll approximately to the requested signature. Since individual
-    // inscriptions are rendered with different height, we can not calculate the exact
-    // location.
-    gMainScrollArea.scrollTop = approxItemScrollTop;
-
-    // give time to render new set of inscription
-    setTimeout(scrollToInscriptionStep2, 5, rowClicked, signature, inscriptionId, updateTree);
-  }
-  if (updateTree) {
-    var el = document.getElementById(inscriptionId + '_anchor');
-    console.log('Searched for ' + inscriptionId + '_anchor');
+  var el = document.getElementById(inscriptionId + '_anchor');
     if (el) {
       $('#jstree').scrollTop(el.offsetTop);
-      $('#jstree').jstree(true).deselect_all(true);
-      $('#jstree').jstree(true).select_node(inscriptionId, true);
     }
+
+    $('#jstree').jstree(true).deselect_all();
+    $('#jstree').jstree(true).select_node(inscriptionId);
   }
 }
 
@@ -1832,8 +1837,12 @@ function scrollToInscriptionStep3(signature, inscriptionId, updateTree) {
 // Get all inscriptions from jsTree and convert it to array of HTML tags,
 // which are ready for rendering.
 function inscriptions2markup() {
-  // array of all isncription IDs/signatures
-  let signatures = gRootsJson.map((obj, i) => obj.id);;
+
+  // array of all inscription IDs/signatures
+  let signatures = $('#jstree').jstree(true).get_selected();
+
+  // array of all inscription IDs/signatures
+  //let signatures = gRootsJson.map((obj, i) => obj.id);;
 
   // we have no nodes in the tree
   if (signatures.length == 0)
@@ -2245,15 +2254,17 @@ function setTooltip(btn, message) {
 
 function doSearch() {
   if (applyFilters()) {
-    gMainClusterize.update(inscriptions2markup());
-
     clearMarkers();
     makeMarkers();
 
+    // skip_loading, forget_state
     $('#jstree').jstree(true).refresh(false, true);
-    displayStatistics();
-    gMainScrollArea.scrollTop = 0;
   }
+}
+
+function selectFirstSignature() {
+  let root = $('#jstree').jstree(true).get_node('#');
+  $('#jstree').jstree(true).select_node(root.children[0]);
 }
 
 // Import list of signatures provided from a file
@@ -2385,19 +2396,20 @@ $(function() {
   // Next phase, jstree creation/initialization
   $('#jstree')
   .on('ready.jstree', function () {
-      if (gMainClusterize === null) {
-        gMainClusterize = new Clusterize({
-          rows: inscriptions2markup(),
-          scrollId: 'mainScrollArea',
-          contentId: 'mainDisplay',
-          callbacks: {
-            clusterChanged: function () {
-            }
-          },
-        });
-      } else {
-        gMainClusterize.update(inscriptions2markup());
-      }
+      // if (gMainClusterize === null) {
+      //   gMainClusterize = new Clusterize({
+      //     rows: inscriptions2markup(),
+      //     scrollId: 'mainScrollArea',
+      //     contentId: 'mainDisplay',
+      //     callbacks: {
+      //       clusterChanged: function () {
+      //       }
+      //     },
+      //   });
+      // } else {
+      //   gMainClusterize.update(inscriptions2markup());
+      // }
+
       clearMarkers();
       makeMarkers();
       displayStatistics();
@@ -2412,32 +2424,26 @@ $(function() {
         setTimeout(dismissAlert, 60000);
         document.cookie = "visited=true; expires=Fri, 31 Dec 9999 23:59:59 GMT";
       }
+      $('#jstree').jstree(true).select_node('1');
   })
   .on('refresh.jstree', function() {
-    if (gAfterReset) {
       $('#jstree').scrollTop(0);
-      gAfterReset = false;
-    }
+      selectFirstSignature();
   })
   .on('changed.jstree', function(node, eventObj) {
     if (eventObj.action == 'select_node') {
-      if (eventObj.selected.length == 0 || gAfterReset)
-        return;
-
-      let inscriptionId = parseInt(eventObj.node.id, 10);
-      scrollToInscription(eventObj.node.original.signature, inscriptionId, false);
-      if (inscriptionId in mapMarkers && $('#mapDisplay').is(':visible')) {
-        marker = mapMarkers[inscriptionId];
-
-        myMap.setView(marker.getLatLng(), 18);
+      if ($('#chkShowSelectedInscriptions').is(':checked')) {
+        clearMarkers();
+        makeMarkers();
       }
+      displaySignatureInfo();
     }
   })
   .jstree({
       'core': {
           'animation': 0,
           'data': fetchTreeData,
-          'multiple': false,
+          'multiple': true,
       }
   });
 
@@ -2464,14 +2470,13 @@ $(function() {
   $('#btnResetSearch').on('click', function() {
     gRootsJson = gOriginalData;
     resetSearchStats();
-    gAfterReset = true;
-    $('#jstree').jstree(true).refresh(false, true);
-    gMainClusterize.update(inscriptions2markup());
     clearMarkers();
     makeMarkers();
 
+    // skip_loading, forget_state
+    $('#jstree').jstree(true).refresh(false, true);
+
     displayStatistics();
-    gMainScrollArea.scrollTop = 0;
   });
 
   function onCsvWorkerMessage(e) {
