@@ -570,6 +570,7 @@ var db = null;
 // original data when no filter is applied.
 // Used as cache, so we can skip quering the db again
 var gOriginalData = [];
+var gOriginalIds = [];
 var gRootIds = []; // Map of parent/root inscription IDs
 var gRootsJson = []; // JSON representation for gRootIds
 var signatureNames = []; // names of all signatures in the DB
@@ -975,6 +976,7 @@ function applyFilters() {
   // make a hash map for quick read access
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
+  gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
   gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
 
   return true;
@@ -1193,6 +1195,7 @@ function onDbLoaded(e) {
   ////////////////////////////////////////////////////////////////////
 
   gOriginalData = gRootsJson;
+  gOriginalIds = gRootIds;
   gDbAsMap = convertDbToKeyMap();
 
   contents = db.exec("SELECT signature_text FROM signatures");
@@ -2492,6 +2495,7 @@ $(function() {
   });
   $('#btnResetSearch').on('click', function() {
     gRootsJson = gOriginalData;
+    gRootIds = gOriginalIds;
     resetSearchStats();
     clearMarkers();
     makeMarkers();
