@@ -79,4 +79,3 @@ is provided by `Digital Ocean`_.
 Note that we used :program:`virtualenv` to install the Python dependencies. You should repeat the ``source rundata_venv/bin/activate`` command each time you want to run Rundata-net.
 
 .. _`Digital Ocean`: https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-16-04
-

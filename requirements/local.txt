@@ -1,9 +1,11 @@
 -r ./base.txt
 
-Werkzeug==0.14.1  # The comprehensive WSGI web application library, https://github.com/pallets/werkzeug
+Werkzeug==3.0.1  # The comprehensive WSGI web application library, https://github.com/pallets/werkzeug
 #ipdb==0.11  # Integration of IPython pdb, https://github.com/gotcha/ipdb
-Sphinx==1.7.6  # https://github.com/sphinx-doc/sphinx
+Sphinx==7.2.6  # https://github.com/sphinx-doc/sphinx
 #psycopg2-binary==2.7.5  # https://github.com/psycopg/psycopg2
+pre-commit
+pre-commit-hooks
 
 # Testing
 # ------------------------------------------------------------------------------
@@ -14,6 +16,10 @@ Sphinx==1.7.6  # https://github.com/sphinx-doc/sphinx
 # ------------------------------------------------------------------------------
 #flake8==3.5.0  # https://github.com/PyCQA/flake8
 #coverage==4.5.1  # https://github.com/nedbat/coveragepy
+black==22.*
+isort==5.8.*
+bandit==1.7.5
+django-upgrade
 
 # Django
 # ------------------------------------------------------------------------------
@@ -21,6 +27,6 @@ Sphinx==1.7.6  # https://github.com/sphinx-doc/sphinx
 #django-test-plus==1.0.22  # https://github.com/revsys/django-test-plus
 
 #django-debug-toolbar==1.9.1  # https://github.com/jazzband/django-debug-toolbar
-django-extensions==2.1.1  # https://github.com/django-extensions/django-extensions
+django-extensions==3.2.3  # https://github.com/django-extensions/django-extensions
 #django-coverage-plugin==1.5.0  # https://github.com/nedbat/django_coverage_plugin
 #pytest-django==3.2.1  # https://github.com/pytest-dev/pytest-django

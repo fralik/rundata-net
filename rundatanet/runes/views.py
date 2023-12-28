@@ -5,4 +5,3 @@ from django.shortcuts import render
 #     #inscriptions = Signature.objects.filter(parent__isnull=True)
 #     #context = {'inscriptions': inscriptions}
 #     return render(request, 'runes/one.html', {})
-

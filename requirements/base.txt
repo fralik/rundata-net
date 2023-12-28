@@ -1,14 +1,14 @@
-pytz==2018.5  # Python historical timezone library and database , https://github.com/stub42/pytz
+pytz==2023.3.post1  # Python historical timezone library and database , https://github.com/stub42/pytz
 awesome-slugify==1.6.5  # Python flexible slugify function , https://github.com/dimka665/awesome-slugify
 #Pillow==5.1.0  # https://github.com/python-pillow/Pillow
-argon2-cffi==18.1.0  # Password hashes, https://github.com/hynek/argon2_cffi
-whitenoise==3.3.1  # Radically simplified static file serving for Python web apps, https://github.com/evansd/whitenoise
+argon2-cffi==23.1.0  # Password hashes, https://github.com/hynek/argon2_cffi
+whitenoise==6.6.0  # Radically simplified static file serving for Python web apps, https://github.com/evansd/whitenoise
 #redis>=2.10.5  # https://github.com/antirez/redis
 
 # Django
 # ------------------------------------------------------------------------------
-django==2.0.8  # pyup: < 2.1  # https://www.djangoproject.com/
-django-environ==0.4.5  # https://github.com/joke2k/django-environ
+django==5.*  # pyup: < 2.1  # https://www.djangoproject.com/
+django-environ==0.11.2  # https://github.com/joke2k/django-environ
 #django-model-utils==3.1.1  # https://github.com/jazzband/django-model-utils
 #django-allauth==0.35.0  # https://github.com/pennersr/django-allauth
 #django-crispy-forms==1.7.2  # https://github.com/django-crispy-forms/django-crispy-forms

@@ -1,12 +1,14 @@
 from django.db import models
 
+
 # Create your models here.
 class Signature(models.Model):
     signature_text = models.CharField(max_length=200)
-    parent = models.ForeignKey('self',
+    parent = models.ForeignKey(
+        "self",
         blank=True,
         null=True,
-        related_name='children',
+        related_name="children",
         on_delete=models.CASCADE,
     )
     # meta = models.ForeignKey('MetaInformation',
@@ -22,11 +24,13 @@ class Signature(models.Model):
     class Meta:
         db_table = "signatures"
         indexes = [
-            models.Index(fields=['signature_text']),
+            models.Index(fields=["signature_text"]),
         ]
+
 
 class CrossForm(models.Model):
     """CrossForm is a building block of crosses. Each cross consists of a list of CrossForms"""
+
     name = models.CharField(max_length=200)
     group_id = models.PositiveIntegerField(default=0, blank=False, null=False)
 
@@ -36,33 +40,30 @@ class CrossForm(models.Model):
     class Meta:
         db_table = "cross_forms"
 
+
 class CrossDefinition(models.Model):
     """CrossDefinition is used to construct a list of CrossForm objects"""
-    cross = models.ForeignKey('Cross', blank=False, null=False,
-        on_delete=models.CASCADE,
-        related_name = "forms")
-    form = models.ForeignKey(CrossForm,
-        on_delete=models.CASCADE,
-        blank=False,
-        null=False)
+
+    cross = models.ForeignKey("Cross", blank=False, null=False, on_delete=models.CASCADE, related_name="forms")
+    form = models.ForeignKey(CrossForm, on_delete=models.CASCADE, blank=False, null=False)
     is_certain = models.BooleanField(default=True)
 
     class Meta:
         db_table = "cross_definitions"
 
+
 class Cross(models.Model):
     """Cross defines one particular cross"""
+
     # Cross contains a link to meta information and accessible from
     # meta information via <meta>.crosses. Each meta can have several crosses.
     # Each cross is a list of CrossDefinition objects.
-    meta = models.ForeignKey('MetaInformation',
-        on_delete=models.CASCADE,
-        blank=False,
-        null=False,
-        related_name="crosses")
+    meta = models.ForeignKey(
+        "MetaInformation", on_delete=models.CASCADE, blank=False, null=False, related_name="crosses"
+    )
 
     def __str__(self):
-        res = [];
+        res = []
         res.append("{} => ".format(self.id))
         for i, crossDefinition in enumerate(self.forms.all()):
             if i:
@@ -74,6 +75,7 @@ class Cross(models.Model):
     class Meta:
         db_table = "crosses"
 
+
 class MaterialType(models.Model):
     name = models.TextField(blank=False, unique=True)
 
@@ -83,10 +85,11 @@ class MaterialType(models.Model):
     class Meta:
         db_table = "material_types"
 
+
 class Material(models.Model):
-    type = models.ForeignKey(MaterialType,
-        on_delete=models.CASCADE)
+    type = models.ForeignKey(MaterialType, on_delete=models.CASCADE)
     name = models.TextField(blank=True, null=False, unique=False)
+
 
 # default: blank=False, null=False
 class MetaInformation(models.Model):
@@ -101,13 +104,13 @@ class MetaInformation(models.Model):
     # Placering
     current_location = models.TextField(blank=True)
     # Koordinater
-    latitude = models.DecimalField(max_digits = 9, decimal_places = 6, default=0)
-    longitude = models.DecimalField(max_digits = 9, decimal_places = 6, default=0)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
     # Urspr. plats?
     original_site = models.TextField(blank=True)
     # Nuv. koord.
-    present_latitude = models.DecimalField(max_digits = 9, decimal_places = 6, default=0)
-    present_longitude = models.DecimalField(max_digits = 9, decimal_places = 6, default=0)
+    present_latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
+    present_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
     # Sockenkod/Fornlämningsnr.
     parish_code = models.TextField(blank=True)
     # Runtyper
@@ -147,23 +150,21 @@ class MetaInformation(models.Model):
     # If inscription is recent (Santida)
     recent = models.BooleanField(default=False)
 
-    signature = models.OneToOneField(Signature,
-        on_delete = models.CASCADE,
-        related_name = 'meta'
-        )
+    signature = models.OneToOneField(Signature, on_delete=models.CASCADE, related_name="meta")
 
     def __str__(self):
         return "Meta for {}".format(self.signature.signature_text)
 
     class Meta:
-        db_table = 'meta_information'
+        db_table = "meta_information"
         indexes = [
-            models.Index(fields=['found_location']),
-            models.Index(fields=['parish']),
-            models.Index(fields=['municipality']),
-            models.Index(fields=['current_location']),
-            models.Index(fields=['style']),
+            models.Index(fields=["found_location"]),
+            models.Index(fields=["parish"]),
+            models.Index(fields=["municipality"]),
+            models.Index(fields=["current_location"]),
+            models.Index(fields=["style"]),
         ]
+
 
 # class SignatureMetaRelation(models.Model):
 #     signature = models.OneToOneField(Signature,
@@ -175,13 +176,15 @@ class MetaInformation(models.Model):
 #         related_name = 'signature'
 #         )
 
+
 class ImageLink(models.Model):
-    meta = models.ForeignKey(MetaInformation, on_delete=models.CASCADE,related_name='images')
+    meta = models.ForeignKey(MetaInformation, on_delete=models.CASCADE, related_name="images")
     link_url = models.URLField()
     direct_url = models.URLField(blank=True)
 
+
 class PersonalName(models.Model):
-    """ Storage of personal names from all text files. """
+    """Storage of personal names from all text files."""
 
     value = models.CharField(max_length=60, unique=True, blank=False, null=False)
     """str: Personal name value"""
@@ -190,29 +193,25 @@ class PersonalName(models.Model):
         return "{}".format(self.value)
 
     class Meta:
-        indexes = [
-            models.Index(fields=['value'])
-        ]
+        indexes = [models.Index(fields=["value"])]
+
 
 class NameUsage(models.Model):
-    """ Information about how a personal name is used in text. """
+    """Information about how a personal name is used in text."""
 
-    name = models.ForeignKey(PersonalName,
-        on_delete = models.CASCADE,
-        related_name="usage")
+    name = models.ForeignKey(PersonalName, on_delete=models.CASCADE, related_name="usage")
 
     word_index = models.PositiveIntegerField(default=0, blank=False, null=False)
     """int: Index of the word inside the text, e.g. 5 means this name is
          the fith word in the text."""
 
-    signature = models.ForeignKey(Signature,
-        on_delete = models.CASCADE,
-        related_name = "personal_names"
-    )
+    signature = models.ForeignKey(Signature, on_delete=models.CASCADE, related_name="personal_names")
 
     def __str__(self):
-        return "Signature {}, name {}, word index {}".format(self.signature.signature_text,
-            self.name.value, self.word_index)
+        return "Signature {}, name {}, word index {}".format(
+            self.signature.signature_text, self.name.value, self.word_index
+        )
+
 
 class TextModel(models.Model):
     # original value which can be displayed to user
@@ -221,58 +220,67 @@ class TextModel(models.Model):
     search_value = models.TextField(blank=True, null=False)
 
     def __str__(self):
-        return '{}: {}'.format(self.signature.signature_text, self.value)
+        return "{}: {}".format(self.signature.signature_text, self.value)
 
     class Meta:
         abstract = True
 
 
 class NormalisationNorse(TextModel):
-    signature = models.OneToOneField(Signature,
+    signature = models.OneToOneField(
+        Signature,
         on_delete=models.CASCADE,
         primary_key=True,
-        related_name='normalisation_norse',
+        related_name="normalisation_norse",
     )
+
     class Meta:
-        db_table = 'normalisation_norse'
+        db_table = "normalisation_norse"
         indexes = [
-            models.Index(fields=['search_value']),
+            models.Index(fields=["search_value"]),
         ]
+
 
 class NormalisationScandinavian(TextModel):
-    signature = models.OneToOneField(Signature,
+    signature = models.OneToOneField(
+        Signature,
         on_delete=models.CASCADE,
         primary_key=True,
-        related_name='normalisation_scandinavian',
+        related_name="normalisation_scandinavian",
     )
+
     class Meta:
-        db_table = 'normalisation_scandinavian'
+        db_table = "normalisation_scandinavian"
         indexes = [
-            models.Index(fields=['search_value']),
+            models.Index(fields=["search_value"]),
         ]
 
+
 class TransliteratedText(TextModel):
-    signature = models.OneToOneField(Signature,
+    signature = models.OneToOneField(
+        Signature,
         on_delete=models.CASCADE,
         primary_key=True,
-        related_name='transliteration',
+        related_name="transliteration",
     )
+
     class Meta:
-        db_table = 'transliterated_text'
+        db_table = "transliterated_text"
         indexes = [
-            models.Index(fields=['search_value']),
+            models.Index(fields=["search_value"]),
         ]
 
 
 class TranslationEnglish(TextModel):
-    signature = models.OneToOneField(Signature,
+    signature = models.OneToOneField(
+        Signature,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name="translation_english",
     )
-    class Meta:
-        db_table = 'translation_english'
-        indexes = [
-            models.Index(fields=['search_value']),
-        ]
 
+    class Meta:
+        db_table = "translation_english"
+        indexes = [
+            models.Index(fields=["search_value"]),
+        ]

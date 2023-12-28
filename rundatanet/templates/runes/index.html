@@ -756,7 +756,7 @@ function storageAvailable(type) {
 
 function getUserSelectedDisplay() {
   var defaults = ['signature_text', 'transliteration', 'english_translation', 'found_location',
-      'parish', 'municipality', 'district', 'current_location', 'images'];    
+      'parish', 'municipality', 'district', 'current_location', 'images'];
   var fieldsToDisplay = defaults;
 
   if (storageAvailable('localStorage')) {
@@ -772,7 +772,7 @@ function saveUserSelectedDisplay() {
   if (!storageAvailable('localStorage'))
     return;
   storage = window['localStorage'];
-  
+
   var selectedValues = $('#multiselect_to option').map((index, el) => $(el).val()).toArray();
   // ensure it is an array and encode it as json string, because local storage can work with string only.
   var selectedValuesArray = JSON.stringify(selectedValues ? [].concat(selectedValues) : []);
@@ -2236,7 +2236,7 @@ function displayFields() {
     'original_site', 'images', 'rune_type', 'carver', 'num_crosses', 'crosses', 'dating', 'style',
     'material_type', 'material', 'objectInfo', 'reference', 'additional'];
   let sortValue = 1;
-  if (storageAvailable('localStorage')) 
+  if (storageAvailable('localStorage'))
   {
     var storage = window['localStorage'];
     if (storage.getItem(gUserSelectedDisplayKey)) {

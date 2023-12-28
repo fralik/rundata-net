@@ -406,4 +406,3 @@ possible to search for punctuation in inscription texts.
 Another type of search that is not available in Rundata-net is the
 :guilabel:`Full text search in information file`, i.e. full-text search across
 inscription meta data.
-
