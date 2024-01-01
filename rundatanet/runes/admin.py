@@ -143,7 +143,7 @@ class SignatureAdmin(NestedModelAdmin):
         TranslationEnglishInline,
     ]
 
-    search_fields = ("signature_text__exact",)
+    search_fields = ("signature_text",)
     ordering = ("id",)
     readonly_fields = ("signature_text", "parent")
 
