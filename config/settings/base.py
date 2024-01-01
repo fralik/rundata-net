@@ -36,16 +36,17 @@ USE_TZ = True
 # DATABASES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
-internal_db_path = str(APPS_DIR.path("static").path("runes").path("runes.sqlite3"))
+default_db = str(APPS_DIR.path("django_default_db.sqlite3"))
 
 DATABASES = {
-    "default": env.db("DATABASE_URL", default=f"sqlite:///{internal_db_path}"),
+    # We use different sqlite databases in order to avoid DB locks
+    "default": env.db("DATABASE_URL", default=f"sqlite:///{default_db}"),
     "runes_db": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": internal_db_path,
+        "NAME": str(APPS_DIR.path("static").path("runes").path("runes.sqlite3")),
     },
 }
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
+# DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASE_ROUTERS = ["rundatanet.runes.dbRouter.RunesDatabaseRouter"]
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -75,11 +76,12 @@ THIRD_PARTY_APPS = [
     #'allauth.account',
     #'allauth.socialaccount',
     #'rest_framework',
+    "nested_admin",
 ]
 LOCAL_APPS = [
     #'rundatanet.users.apps.UsersConfig',
     # Your stuff: custom apps go here
-    "rundatanet.runes.apps.RunesConfig"
+    "rundatanet.runes.apps.RunesConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
