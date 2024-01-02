@@ -40,7 +40,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Rundatanet"
-copyright = """2018, Vadim Frolov"""
+copyright = """2018, 2023, 2024 Vadim Frolov"""
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
