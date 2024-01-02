@@ -2,8 +2,10 @@
 import os
 import sys
 
-if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+
+def main():
+    settings_module = "config.settings.production" if "RUNDATA_PROD" in os.environ else "config.settings.local"
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
 
     try:
         from django.core.management import execute_from_command_line
@@ -28,3 +30,7 @@ if __name__ == "__main__":
     sys.path.append(os.path.join(current_path, "rundatanet"))
 
     execute_from_command_line(sys.argv)
+
+
+if __name__ == "__main__":
+    main()
