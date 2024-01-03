@@ -8,13 +8,35 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["www.rundata.info"])
+default_allowed_hosts = ["www.rundata.info", "rundata.info"]
+if "DJANGO_ALLOWED_HOSTS" in env:
+    default_allowed_hosts += env.list("DJANGO_ALLOWED_HOSTS")
+if "WEBSITE_HOSTNAME" in env:
+    # Configure the domain name using the environment variable
+    # that Azure automatically creates for us.
+    ALLOWED_HOSTS = default_allowed_hosts + [env("WEBSITE_HOSTNAME")]
+    CSRF_TRUSTED_ORIGINS = ["https://" + env("WEBSITE_HOSTNAME")]
 
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
-DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
+if "AZURE_POSTGRESQL_CONNECTIONSTRING" in env:
+    # Configure Postgres database based on connection string of the libpq Keyword/Value form
+    # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+    conn_str = env("AZURE_POSTGRESQL_CONNECTIONSTRING")
+    conn_str_params = {pair.split("=")[0]: pair.split("=")[1] for pair in conn_str.split(" ")}
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": conn_str_params["dbname"],
+            "HOST": conn_str_params["host"],
+            "USER": conn_str_params["user"],
+            "PASSWORD": conn_str_params["password"],
+        }
+    }
+else:
+    DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
+    DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
+    DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -89,9 +111,8 @@ _AWS_EXPIRY = 60 * 60 * 24 * 7
 #    'CacheControl': f'max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate',
 # }
 
-# STATIC
-# ------------------------
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATIC (see also storages)
+# --------------------------
 
 # MEDIA
 # ------------------------------------------------------------------------------
@@ -100,7 +121,7 @@ STORAGES = {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 # MEDIA_URL = f'https://s3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}/'
@@ -151,8 +172,12 @@ INSTALLED_APPS += ["gunicorn"]  # noqa F405
 # WhiteNoise
 # ------------------------------------------------------------------------------
 # http://whitenoise.evans.io/en/latest/django.html#enable-whitenoise
-# MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware'] + MIDDLEWARE  # noqa F405
-
+try:
+    # Whitenoise must be placed after "django.middleware.security.SecurityMiddleware"
+    index = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
+    MIDDLEWARE.insert(index + 1, "whitenoise.middleware.WhiteNoiseMiddleware")
+except ValueError:
+    MIDDLEWARE = ["whitenoise.middleware.WhiteNoiseMiddleware"] + MIDDLEWARE  # noqa F405
 
 # LOGGING
 # ------------------------------------------------------------------------------

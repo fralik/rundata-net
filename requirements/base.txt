@@ -2,7 +2,7 @@ pytz==2023.3.post1  # Python historical timezone library and database , https://
 awesome-slugify==1.6.5  # Python flexible slugify function , https://github.com/dimka665/awesome-slugify
 #Pillow==5.1.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==23.1.0  # Password hashes, https://github.com/hynek/argon2_cffi
-whitenoise==6.6.0  # Radically simplified static file serving for Python web apps, https://github.com/evansd/whitenoise
+whitenoise[brotli]==6.6.0  # Radically simplified static file serving for Python web apps, https://github.com/evansd/whitenoise
 #redis>=2.10.5  # https://github.com/antirez/redis
 
 # Django
@@ -18,3 +18,4 @@ django-nested-admin==4.0.* # https://github.com/theatlantic/django-nested-admin
 # Django REST Framework
 #djangorestframework==3.8.2  # https://github.com/encode/django-rest-framework
 #coreapi==2.3.3  # https://github.com/core-api/python-client
+django-extensions==3.2.3 # https://github.com/django-extensions/django-extensions
