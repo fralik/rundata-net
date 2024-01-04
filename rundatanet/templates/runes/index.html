@@ -509,7 +509,7 @@ if (isSafari()) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/jstree.min.js" integrity="sha512-z8+IQvZEPLZTS3Dj7gklMVJfJMNbQjIQwmKMwAuX+P9KkzEmDIiXybdXsbWuoMlQ942SfyNafeu6JdOGwzCx0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.3.0/bootbox.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/0.5.0/js/sql.js" integrity="sha512-IMT/3ETUh+rSJuqfNa4vPjERmrEflwQCNvuZ0Pjl2GzlKOG2BEhlPPC3Ak1xMagQ7uR06aMzodPy8Kn7Tl0LQw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js" integrity="sha512-KMs6GZJsWI3DXBlu2QMbVdaHJbFrzVDYeccH/Ipuvtg3IOHnABXwUZbIhr5ybFSNYL6Bde1dCQ37xtszsBZcSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- begin of query builder js -->
 <script src="{% static 'query-builder/moment.min.js' %}"></script>
@@ -1168,14 +1168,7 @@ function wordByCharPos(wordStarts, charPos) {
   return -1;
 }
 
-function onDbLoaded(e) {
-  if (!this.response) {
-    return;
-  }
-
-  var uInt8Array = new Uint8Array(this.response);
-  db = new SQL.Database(uInt8Array);
-
+function onDbLoaded() {
   // add support for regexp searches
   db.create_function('regexp', function (regexValue, fieldData) {
     // do not recreate expression objects
@@ -2461,12 +2454,24 @@ function hideLoading() {
 
 var clipboard = [];
 $(function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.4", true);
-  xhr.responseType = 'arraybuffer';
-  xhr.addEventListener("load", onDbLoaded);
-  xhr.send();
-  // hideLoading();
+  const sqlConfig = {
+    locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
+  };
+  initSqlJs(sqlConfig).then(function(SQL) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.4", true);
+    xhr.responseType = 'arraybuffer';
+    xhr.addEventListener("load", function() {
+      console.log('we got sql data from server');
+
+      var uInt8Array = new Uint8Array(this.response);
+      db = new SQL.Database(uInt8Array);
+      onDbLoaded();
+    });
+    xhr.send();
+  }).catch(function (reason) {
+    console.log(`Failed to init SQL: ${reason}`);
+  });
 
   initMultiselect();
   formatDialog.hide();
@@ -2687,7 +2692,6 @@ $(function() {
     $('form#form-signature-import').get(0).reset();
   }
   function handleFiles(files) {
-    //([...files]).forEach(uploadFile)
     if (files.length == 0) {
       return;
     }
@@ -2711,14 +2715,14 @@ $(function() {
 
 });
 
-// 45 sec timeout
+// 90 sec timeout
 var gLoadingTimer = setTimeout(function() {
   if ($('#loading').is(':visible')) {
     $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
     alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
   }
 }, 90000);
-//$('#loading').hide();
+
 </script>
 
 </body>
