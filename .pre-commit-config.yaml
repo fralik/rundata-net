@@ -73,4 +73,4 @@ repos:
         language: python
         types: [text]
         stages: [commit]
-        exclude: .*/notebooks/
+        exclude: .*js|.*css

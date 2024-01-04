@@ -19,17 +19,13 @@
     {% endif %}
 
     <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'runes/jstree/themes/default/style.min.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/themes/default/style.min.css" integrity="sha512-P8BwDSUInKMA7I116Z1RFg/Dfk85uFdliEUYO7vQlwtxLVMNvZimfMAQsaf++9EhlAGOVX6yhDQAIY3/70jDUg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
      integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
      crossorigin=""/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
-    <!--
-    <link rel="stylesheet" href="{% static 'runes/css/MarkerCluster.css' %}" />
-    <link rel="stylesheet" href="{% static 'runes/css/MarkerCluster.Default.css' %}" />
-    -->
     <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
     <link href="{% static 'runes/leaflet.fullscreen/leaflet.fullscreen.css' %}" rel='stylesheet' />
 
@@ -441,13 +437,10 @@
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <!-- query builder styles -->
-<!-- <link href="{% static 'query-builder/bootstrap-datepicker3.min.css' %}" rel="stylesheet"> -->
-<!-- <link href="{% static 'query-builder/bootstrap-slider.min.css' %}" rel="stylesheet"> -->
-<link href="{% static 'query-builder/selectize.bootstrap3.css' %}" rel="stylesheet">
-<link href="{% static 'query-builder/bootstrap-select.min.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/css/selectize.bootstrap3.min.css" integrity="sha512-m0OaCrpn73wqb57AHrDyM1gWhG2RSnn7HQ9Sug26n/6zX9DgPHrZBdYwVZa1N9W1fpmOZAItnWQwPYltXWqFMA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css" integrity="sha512-JvHT+I28ECA8gHQ+i8UATgOt5lJBG/pp+KYe7VfILX7Q8GjSA15YdBPKbanVUG1FamvWg6WiqRIfAaxpmaGKKA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/awesome-bootstrap-checkbox/0.3.7/awesome-bootstrap-checkbox.css" rel="stylesheet">
-<link href="{% static 'query-builder/query-builder.default.min.css' %}" rel="stylesheet">
-<!--<link href="{% static 'runes/chosen/chosen.min.css' %}" rel="stylesheet">-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@2.5.2/dist/css/query-builder.default.min.css" integrity="sha256-t0OO5vutCzErqiAiLqVcVPbR3krMH9aTnzbtbjmiFUU=" crossorigin="anonymous">
 <link href="{% static 'runes/jquery-ui/jquery-ui.min.css' %}" rel="stylesheet">
 <!-- end of query builder styles -->
 
@@ -513,21 +506,17 @@ if (isSafari()) {
 
 <script src="https://unpkg.com/clipboard@2.0.0/dist/clipboard.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<script src="{% static 'runes/jstree/jstree.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/jstree.min.js" integrity="sha512-z8+IQvZEPLZTS3Dj7gklMVJfJMNbQjIQwmKMwAuX+P9KkzEmDIiXybdXsbWuoMlQ942SfyNafeu6JdOGwzCx0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.3.0/bootbox.min.js"></script>
-<script src="{% static 'runes/interact.min.js' %}"></script>
-<script src="{% static 'runes/sql.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/0.5.0/js/sql.js" integrity="sha512-IMT/3ETUh+rSJuqfNa4vPjERmrEflwQCNvuZ0Pjl2GzlKOG2BEhlPPC3Ak1xMagQ7uR06aMzodPy8Kn7Tl0LQw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- begin of query builder js -->
 <script src="{% static 'query-builder/moment.min.js' %}"></script>
-<!-- <script src="{% static 'query-builder/bootstrap-datepicker.min.js' %}"></script> -->
-<!--<script src="{% static 'query-builder/bootstrap-slider.min.js' %}"></script>-->
-<script src="{% static 'query-builder/selectize.min.js' %}"></script>
-<script src="{% static 'query-builder/bootstrap-select.min.js' %}"></script>
-<script src="{% static 'query-builder/query-builder.standalone.min.js' %}"></script>
-<script src="{% static 'query-builder/interact.min.js' %}"></script>
-<!--<script type="text/javascript" src="{% static 'runes/chosen/chosen.jquery.min.js' %}"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/selectize@0.12.4/dist/js/standalone/selectize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js" integrity="sha512-wxLJoyhMdb3r9t00CpwvDsbgnHongW0fzpEKS2Y0X2H+ThyUd0AhHVD1/SH37RGSE2/krrzpU+71E37X7UV+4w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@2.5.2/dist/js/query-builder.standalone.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs@1.3.3/dist/interact.min.js" integrity="sha256-xDVbjmOet3n1w9fUkbwXlf9M5Kxaji3kq0vRxOOZz+A=" crossorigin="anonymous"></script>
 <script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
 <script src="{% static 'query-builder/my-templates.js' %}"></script>
 <!-- end of query builder js -->
@@ -536,14 +525,13 @@ if (isSafari()) {
  integrity="sha512-+ZaXMZ7sjFMiCigvm8WjllFy6g3aou3+GZngAtugLzrmPFKFK7yjSri0XnElvCTu/PrifAYQuxZTybAEkA8VOA=="
  crossorigin=""></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
-<!-- <script src="{% static 'runes/leaflet.markercluster.js' %}"></script> -->
 
 <script src="{% static 'runes/multiselect.min.js' %}"></script>
 <script src="{% static 'runes/pixabay/jquery.auto-complete.min.js' %}"></script>
 <!-- <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script> -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
-<script src="{% static 'runes/papaparse.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.3/papaparse.min.js" integrity="sha512-AHuRHNDvzJWmGpGhswFB+Akkr1IwuqumT1Po40zlwgjBP1RnoCf3cP/EHBF/3ilfdYaocNQrUrCkE7q8RpN0fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="{% static 'runes/leaflet.fullscreen/Leaflet.fullscreen.min.js' %}"></script>
 
 <script type="text/javascript">
@@ -904,7 +892,7 @@ function prepareAutoComplete(ruleId, opt) {
         "not_begins_with", "contains", "not_contains", "ends_with",
         "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
   const type = opt.type || 'string';
-  const size = opt.size || 70;
+  const size = opt.size || 100;
 
   let contents = [];
   if (ruleId.indexOf('normalisation') != -1) {
