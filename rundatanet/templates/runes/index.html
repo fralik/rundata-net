@@ -1373,6 +1373,8 @@ function onDbLoaded(e) {
     prepareAutoComplete('original_site'),
     prepareAutoComplete('rune_type'),
     prepareAutoComplete('dating'),
+    prepareAutoComplete('year_from', {operators: ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between']}),
+    prepareAutoComplete('year_to', {operators: ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between']}),
     prepareAutoComplete('carver'),
     prepareAutoComplete('material'),
     prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators}),
@@ -2173,6 +2175,14 @@ function displayFields() {
     {
       value: 'dating',
       text: 'Dating',
+    },
+    {
+      value: 'year_from',
+      text: 'Year (from)',
+    },
+    {
+      value: 'year_to',
+      text: 'Year (to)',
     },
     {
       value: 'style',

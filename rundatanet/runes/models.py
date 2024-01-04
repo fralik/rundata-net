@@ -120,6 +120,10 @@ class MetaInformation(models.Model):
 
     # Period/Datering
     dating = models.TextField(blank=True)
+    # more accurate dating with year from and year to
+    year_from = models.PositiveIntegerField(blank=True, null=True)
+    year_to = models.PositiveIntegerField(blank=True, null=True)
+
     # Stilgruppering
     style = models.TextField(blank=True)
     # Ristare
@@ -214,6 +218,14 @@ class NameUsage(models.Model):
 
 
 class TextModel(models.Model):
+    """Base class for all text models
+
+    Text models are used to store text data in a way that is suitable for search.
+    They are simple models with two fields: value and search_value. The first one
+    stores value which is displayed to user, the second one stores stripped version of the value
+    suitable for running text search on.
+    """
+
     # original value which can be displayed to user
     value = models.TextField(blank=True, null=False)
     # stripped version of value suitable for search
@@ -281,6 +293,21 @@ class TranslationEnglish(TextModel):
 
     class Meta:
         db_table = "translation_english"
+        indexes = [
+            models.Index(fields=["search_value"]),
+        ]
+
+
+class TranslationSwedish(TextModel):
+    signature = models.OneToOneField(
+        Signature,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="translation_swedish",
+    )
+
+    class Meta:
+        db_table = "translation_swedish"
         indexes = [
             models.Index(fields=["search_value"]),
         ]
