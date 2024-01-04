@@ -881,12 +881,30 @@ function prepareBooleanRule(opt) {
   };
 }
 
+function prepareIntegerField(ruleId, opt) {
+  if (!opt) opt = {};
+  const fieldId = opt.fieldId || ruleId;
+  const operators = opt.operators || ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between'];
+  const size = opt.size || 10;
+
+  return {
+    id: ruleId,
+    field: fieldId,
+    label: humanNameForColumnName(fieldId),
+    type: 'integer',
+    size: size,
+    operators: operators,
+  }
+}
+
 function prepareAutoComplete(ruleId, opt) {
   if (!opt) opt = {};
-  let fieldId = opt.fieldId || ruleId;
-  let operators = opt.operators || ['equal', 'not_equal', 'begins_with',
+  const fieldId = opt.fieldId || ruleId;
+  const operators = opt.operators || ['equal', 'not_equal', 'begins_with',
         "not_begins_with", "contains", "not_contains", "ends_with",
         "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
+  const type = opt.type || 'string';
+  const size = opt.size || 70;
 
   let contents = [];
   if (ruleId.indexOf('normalisation') != -1) {
@@ -907,7 +925,7 @@ function prepareAutoComplete(ruleId, opt) {
     id: ruleId,
     field: fieldId,
     label: humanNameForColumnName(fieldId),
-    type: 'string',
+    type: type,
     plugin: 'autoComplete',
     plugin_config: {
       minChars: 0,
@@ -923,7 +941,7 @@ function prepareAutoComplete(ruleId, opt) {
       menuClass: ' clusterize-content ',
       attachToParent: true,
     },
-    size: 70,
+    size: size,
     operators: operators,
   }
 }
@@ -1373,8 +1391,8 @@ function onDbLoaded(e) {
     prepareAutoComplete('original_site'),
     prepareAutoComplete('rune_type'),
     prepareAutoComplete('dating'),
-    prepareAutoComplete('year_from', {operators: ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between']}),
-    prepareAutoComplete('year_to', {operators: ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between']}),
+    prepareIntegerField('year_from'),
+    prepareIntegerField('year_to'),
     prepareAutoComplete('carver'),
     prepareAutoComplete('material'),
     prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators}),
