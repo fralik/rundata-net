@@ -572,7 +572,6 @@ var markers = []; // Leaflet markers group
 // Number of signatures selected by user
 var gNumSelectedSignatures = [];
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
-var gRegExpMap = {}; // Object of all regex expressions
 var gRegExpMapG = {}; // Object of all regex expressions with global flag
 var gWordIndices = {}; // Object that contains matched word indices across inscription text.
     // Words in this case are based on values prepared for search.
@@ -888,8 +887,8 @@ function prepareIntegerField(ruleId, opt) {
 function prepareAutoComplete(ruleId, opt) {
   if (!opt) opt = {};
   const fieldId = opt.fieldId || ruleId;
-  const operators = opt.operators || ['equal', 'not_equal', 'begins_with',
-        "not_begins_with", "contains", "not_contains", "ends_with",
+  const operators = opt.operators || ["contains", "not_contains", 'equal', 'not_equal', 'begins_with',
+        "not_begins_with", "ends_with",
         "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
   const type = opt.type || 'string';
   const size = opt.size || 100;
@@ -1168,32 +1167,36 @@ function wordByCharPos(wordStarts, charPos) {
   return -1;
 }
 
+function sqlRegexp(regexValue, fieldData) {
+  // do not recreate expression objects
+  if (!gRegExpMapG.hasOwnProperty(regexValue)) {
+    gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
+  }
+  let res = -1;
+  // take care of special tokens that get spoiled by several string handlers before
+  const expr = new RegExp(regexValue.replace(/\\\\/g, '\\'));
+  var exprResult = expr.test(fieldData);
+  if (exprResult == true)
+    res = 1;
+
+  return res;
+}
+
 function onDbLoaded() {
   // add support for regexp searches
-  db.create_function('regexp', function (regexValue, fieldData) {
-    // do not recreate expression objects
-    if (!gRegExpMap.hasOwnProperty(regexValue)) {
-      gRegExpMap[regexValue] = new RegExp(regexValue);
-      gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
-    }
-    let res = -1;
-    if (gRegExpMap[regexValue].test(fieldData))
-      res = 1;
-
-    return res;
-  });
+  db.create_function('regexp', sqlRegexp);
 
   // Add support for searches across words
   db.create_function('wordRegexp', function (regexValue, fieldData, id, fieldName) {
-    if (!gRegExpMap.hasOwnProperty(regexValue)) {
-      gRegExpMap[regexValue] = new RegExp(regexValue);
+    if (!gRegExpMapG.hasOwnProperty(regexValue)) {
       gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
     }
 
     // Test method doesn't really work with global regexps. At least
     // when regex is stored in a global variable, i.e. preserves state
     // between function calls
-    if (gRegExpMap[regexValue].test(fieldData) == true) {
+    const expr = new RegExp(regexValue);
+    if (expr.test(fieldData) == true) {
       // Use gRegExpMapG from now on. This is important!
 
       wordStarts = getWordStarts(fieldData);
