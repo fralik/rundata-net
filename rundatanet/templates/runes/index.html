@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 {% load settings %}
 <!DOCTYPE html>
 <html lang="en">
@@ -499,8 +499,8 @@ if (ieVersion !== false && ieVersion <= 12) {
   window.location.href = "{% url 'runes:about' %}#browser-support";
 }
 if (isSafari()) {
-  alert('It seems like you are using Safari. Safari is known to have issues. Will refirect you to About page.');
-  window.location.href = "{% url 'runes:about' %}#browser-support";
+  alert('It seems like you are using Safari. Safari is known to have issues. Use at your own risk :)');
+  // window.location.href = "{% url 'runes:about' %}#browser-support";
 }
 </script>
 
@@ -572,6 +572,7 @@ var markers = []; // Leaflet markers group
 // Number of signatures selected by user
 var gNumSelectedSignatures = [];
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
+let gRegExpMap = {}; // Object of all regex expressions
 var gRegExpMapG = {}; // Object of all regex expressions with global flag
 var gWordIndices = {}; // Object that contains matched word indices across inscription text.
     // Words in this case are based on values prepared for search.
@@ -850,14 +851,17 @@ function selectizeFilter(fieldId) {
   .v => default value, optional. If not provided, set to 0.
 */
 function prepareBooleanRule(opt) {
-  let fieldId = opt.f || opt.r;
-  let defaultValue = opt.v || 0;
+  if (!opt) opt = {};
+  const fieldId = opt.f || opt.r;
+  const defaultValue = opt.v || 0;
+  const optgroup = opt.optgroup || "other";
 
   return {
     id: opt.r,
     label: opt.l,
     type: 'integer',
     field: fieldId,
+    optgroup: optgroup,
     input: 'radio',
     values: [
       {0: 'No'},
@@ -873,10 +877,12 @@ function prepareIntegerField(ruleId, opt) {
   const fieldId = opt.fieldId || ruleId;
   const operators = opt.operators || ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between'];
   const size = opt.size || 10;
+  const optgroup = opt.optgroup || "other";
 
   return {
     id: ruleId,
     field: fieldId,
+    optgroup: optgroup,
     label: humanNameForColumnName(fieldId),
     type: 'integer',
     size: size,
@@ -892,6 +898,7 @@ function prepareAutoComplete(ruleId, opt) {
         "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
   const type = opt.type || 'string';
   const size = opt.size || 100;
+  const optgroup = opt.optgroup || "other";
 
   let contents = [];
   if (ruleId.indexOf('normalisation') != -1) {
@@ -911,6 +918,7 @@ function prepareAutoComplete(ruleId, opt) {
   return {
     id: ruleId,
     field: fieldId,
+    optgroup: optgroup,
     label: humanNameForColumnName(fieldId),
     type: type,
     plugin: 'autoComplete',
@@ -1051,7 +1059,7 @@ function getWordStarts(str, regexStr) {
   if (regexStr === undefined) {
     regexStr = '\\s';
   }
-  let r = new RegExp(regexStr, 'g');
+  let r = new RegExp(regexStr, 'gu');
   var matches = [-1];
   while ((arr = r.exec(str)) !== null) {
     matches.push(arr.index);
@@ -1168,39 +1176,59 @@ function wordByCharPos(wordStarts, charPos) {
 }
 
 function sqlRegexp(regexValue, fieldData) {
+  // take care of special tokens that get spoiled by several string handlers before
+  const trueRegexValue = regexValue.replace(/\\\\/g, '\\');
+
   // do not recreate expression objects
   if (!gRegExpMapG.hasOwnProperty(regexValue)) {
-    gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
+    // Use unicode flag for all regexps
+    gRegExpMapG[regexValue] = new RegExp(trueRegexValue, 'gu');
+  }
+  if (!gRegExpMap.hasOwnProperty(regexValue)) {
+    // Use unicode flag for all regexps
+    gRegExpMap[regexValue] = new RegExp(trueRegexValue, 'u');
   }
   let res = -1;
-  // take care of special tokens that get spoiled by several string handlers before
-  const expr = new RegExp(regexValue.replace(/\\\\/g, '\\'));
-  var exprResult = expr.test(fieldData);
-  if (exprResult == true)
+  var exprResult = gRegExpMap[regexValue].test(fieldData);
+  if (exprResult == true) {
     res = 1;
+  }
+
+  // reset expression
+  gRegExpMap[regexValue].lastIndex = 0;
 
   return res;
 }
 
-function onDbLoaded() {
-  // add support for regexp searches
-  db.create_function('regexp', sqlRegexp);
+function sqlWordRegexp(regexValue, fieldData, id, fieldName) {
+  // regexValue is a string that contains a regular expression
+  // fieldData is a string that contains a text of inscription
+  // id is a signature ID, integer
+  // fieldName is a column name, string
 
-  // Add support for searches across words
-  db.create_function('wordRegexp', function (regexValue, fieldData, id, fieldName) {
-    if (!gRegExpMapG.hasOwnProperty(regexValue)) {
-      gRegExpMapG[regexValue] = new RegExp(regexValue, 'g');
-    }
+  const trueRegexValue = regexValue.replace(/\\\\/g, '\\');
 
-    // Test method doesn't really work with global regexps. At least
-    // when regex is stored in a global variable, i.e. preserves state
-    // between function calls
-    const expr = new RegExp(regexValue);
-    if (expr.test(fieldData) == true) {
+  if (!gRegExpMapG.hasOwnProperty(regexValue)) {
+    gRegExpMapG[regexValue] = new RegExp(trueRegexValue, 'gu');
+  }
+  if (!gRegExpMap.hasOwnProperty(regexValue)) {
+    gRegExpMap[regexValue] = new RegExp(trueRegexValue, 'u');
+  }
+
+  // Test method doesn't really work with global regexps. At least
+  // when regex is stored in a global variable, i.e. preserves state
+  // between function calls
+
+  // reset expressions
+  gRegExpMap[regexValue].lastIndex = 0;
+  gRegExpMapG[regexValue].lastIndex = 0;
+
+
+  try {
+    if (gRegExpMap[regexValue].test(fieldData) == true) {
       // Use gRegExpMapG from now on. This is important!
 
       wordStarts = getWordStarts(fieldData);
-
       var matchIndices = [];
       while ((array1 = gRegExpMapG[regexValue].exec(fieldData)) !== null) {
         minWordIdx = wordByCharPos(wordStarts, array1.index);
@@ -1217,9 +1245,19 @@ function onDbLoaded() {
       }
       return 1;
     }
+  } catch (error) {
+    console.log(`Error in sqlWordRegexp: ${error}`);
+  }
 
-    return -1;
-  });
+  return -1;
+}
+
+function onDbLoaded() {
+  // add support for regexp searches
+  db.create_function('regexp', sqlRegexp);
+
+  // Add support for searches across words
+  db.create_function('wordRegexp', sqlWordRegexp);
 
   // get all root signatures (that are not aliases)
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
@@ -1273,6 +1311,7 @@ function onDbLoaded() {
     id: 'material_type',
     field: 'materialType_id',
     label: 'Material type',
+    optgroup: "other",
     type: 'string',
     plugin: 'autoComplete',
     plugin_config: {
@@ -1294,11 +1333,23 @@ function onDbLoaded() {
   /////////////////////////////////////
   // Initialzie QueryBuilder
   //////////////////////////////////////
-  var glob_operators = ['equal', 'not_equal', 'begins_with_glob', "not_begins_with_glob", "contains_glob",
-   "not_contains_glob", "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp"];
+  const glob_operators = [
+    "contains_glob", "not_contains_glob", "whole_word", "begins_with_glob", "not_begins_with_glob",
+    "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp"
+  ];
+  const optGroups = {
+    "gr_signature": {
+      "en": "Inscription ID",
+      "sv": "Signatura",
+    },
+    "gr_texts": "Texts",
+    "other": "---",
+  };
+
   var queryBuilderFilters = [
     {
       id: 'signature_text',
+      optgroup: "gr_signature",
       field: 'signature_text',
       label: humanNameForColumnName('signature_text'),
       type: 'string',
@@ -1329,6 +1380,7 @@ function onDbLoaded() {
     },
     {
       id: 'signature_country',
+      optgroup: "gr_signature",
       field: 'signature_text',
       label: 'Country or Swedish province',
       type: 'string',
@@ -1379,10 +1431,16 @@ function onDbLoaded() {
     prepareIntegerField('year_to'),
     prepareAutoComplete('carver'),
     prepareAutoComplete('material'),
-    prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators}),
-    prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators}),
-    prepareAutoComplete('english_translation'),
-    prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators}),
+    prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators, optgroup: "gr_texts"}),
+    prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators, optgroup: "gr_texts"}),
+    prepareAutoComplete('english_translation', {
+      optgroup: "gr_texts",
+      operators: [
+        "contains", "not_contains", "whole_word", 'begins_with', "not_begins_with", "ends_with",
+        "not_ends_with", "is_empty", 'is_not_empty', 'equal', 'not_equal', "my_regex",
+      ],
+    }),
+    prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('style'),
     prepareAutoComplete('reference'),
     prepareAutoComplete('additional'),
@@ -1392,6 +1450,7 @@ function onDbLoaded() {
     {
       id: 'alternatives',
       label: 'Has alternative(s)?',
+      optgroup: "other",
       type: 'integer',
       input: 'radio',
       field: 'signature_id',
@@ -1407,6 +1466,7 @@ function onDbLoaded() {
     {
       id: 'num_crosses',
       label: 'Number of crosses',
+      optgroup: "other",
       type: 'integer',
       input: 'number',
       validation: {
@@ -1424,6 +1484,7 @@ function onDbLoaded() {
       id: 'cross_form',
       label: 'Cross form',
       type: 'string',
+      optgroup: "other",
       operators: ['cross_form'],
       input: function (rule, name) {
         //let $container = rule.$el.find('.rule-value-container');
@@ -1477,6 +1538,7 @@ function onDbLoaded() {
       { type: 'not_contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'my_regex', nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'word_regexp', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'whole_word', nb_inputs: 1, multiple: false, apply_to: ['string'] },
     ]),
 
     lang: {
@@ -1489,6 +1551,7 @@ function onDbLoaded() {
         not_contains_glob: "doesn't contain",
         my_regex: 'matches expression',
         word_regexp: 'matches across words',
+        whole_word: "contains whole word",
       },
       add_rule: 'Add search parameter',
       add_group: 'Add search group',
@@ -1505,6 +1568,7 @@ function onDbLoaded() {
       not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'},
       my_regex: { op: 'REGEXP ?', mod: '{0}'},
       word_regexp: { op: 'wordRegexp(?)', mod: '{0}'},
+      whole_word: { op: 'REGEXP ?', mod: '\\b{0}\\b'},
     },
     plugins: {
       'bt-tooltip-errors': null,
@@ -1518,6 +1582,7 @@ function onDbLoaded() {
     templates: {
       group: gBuilderCustomGroup,
     },
+    optgroups: optGroups,
   })
   // SQL export (second half)
   .on('ruleToSQL.queryBuilder.filter', function (e, rule, sqlValue, sqlOperator) {
@@ -1637,7 +1702,7 @@ function displaySignatureInfo() {
     return;
   }
   let mainDisplayDom = document.getElementById('mainDisplay');
-  mainDisplayDom.innerHTML = "<img src='{% static 'runes/jstree/themes/default/throbber.gif' %}'><br>";
+  mainDisplayDom.innerHTML = "<img src='https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/themes/default-dark/throbber.gif'><br>";
   gRenderInProgress = true;
   setTimeout(renderSignatures, 100);
 }
