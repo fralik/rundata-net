@@ -77,7 +77,7 @@ The following is a list of the browsers in which Rundata-net is known to work. A
 +-------------------+---------+---------------------------------+
 | Internet Explorer | \-      | Not supported                   |
 +-------------------+---------+---------------------------------+
-| Safari            |  \-     | Not supported                   |
+| Safari            |         | Not tested, but should work     |
 +-------------------+---------+---------------------------------+
 
 **********

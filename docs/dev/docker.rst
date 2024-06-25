@@ -3,6 +3,7 @@ Development with Docker
 ========================
 
 .. module:: rundata
+   :no-index:
 
 This section describes how to run development version of Rundata-net with `Docker`_.
 Using Docker, it is possible to have Rundata-net up and running much easier

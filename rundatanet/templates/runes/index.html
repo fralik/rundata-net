@@ -534,6 +534,7 @@ if (isSafari()) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.3/papaparse.min.js" integrity="sha512-AHuRHNDvzJWmGpGhswFB+Akkr1IwuqumT1Po40zlwgjBP1RnoCf3cP/EHBF/3ilfdYaocNQrUrCkE7q8RpN0fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="{% static 'runes/leaflet.fullscreen/Leaflet.fullscreen.min.js' %}"></script>
 
+
 <script type="text/javascript">
 var entityMap = {
   '&': '&amp;',
@@ -582,6 +583,8 @@ var gWordIndices = {}; // Object that contains matched word indices across inscr
 var gMatchedWordIndices = {}; // A processed version of gWordIndices. It is a map that provides
     // information which words are matched for particular signature id. Key is signature id,
     // values set of matched word indices.
+var gHighlights = {};
+let gSearch2Original = {}; // mapping used for highlighting search results
 var gFoundPersonalNames = 0;
 var gWordVariants = 0;
 // regex that is used to separate words in displayed inscription texts.
@@ -650,6 +653,115 @@ MarkerWithData = L.Marker.extend({
       inscription: '',
    }
 });
+
+// QueryBuilder plugin for case-(in)sensitive search
+$.fn.queryBuilder.define('case-rule', function(options) {
+  let self = this;
+
+  // Bind events
+  this.on('afterInit', function() {
+    self.$el.on('click.queryBuilder', '[data-case=rule]', function () {
+      let $rule = $(this).closest($.fn.queryBuilder.constructor.selectors.rule_container);
+      let rule = self.getModel($rule);
+      rule.ignoreCase = !rule.ignoreCase;
+      console.log(`afterInit: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
+      // print rule configuration
+      console.log(rule);
+    });
+
+    self.model.on('update', function(e, node, field) {
+      if (node instanceof $.fn.queryBuilder.constructor.Rule && field === 'ignoreCase') {
+        console.log(`update: ${node.id}, ignoreCase: ${node.ignoreCase}`);
+        self.updateRuleCaseIgnore(node);
+      }
+    });
+  });
+
+  // Init case-sensitivity property
+  this.on('afterAddRule', function(e, rule) {
+    rule.__.ignoreCase = false;
+  });
+
+  this.on('afterCreateRuleInput.filter', function(e, rule) {
+    // Show plugin's button only for text fields
+    if (!rule.filter || typeof rule.filter.input !== 'string') {
+      rule.$el.find(cssSelectorPluginCaseRule).hide();
+      return;
+    }
+
+    if (rule.filter.input.indexOf('text') === -1) {
+      rule.$el.find(cssSelectorPluginCaseRule).hide();
+    } else {
+      rule.$el.find(cssSelectorPluginCaseRule).show();
+    }
+  });
+
+  // Modify templates
+  if (!options.disable_template) {
+    this.on('getRuleTemplate.filter', function(h) {
+      var $h = $($.parseHTML(h.value));
+      $h.find($.fn.queryBuilder.constructor.selectors.rule_actions).prepend(
+          '<button type="button" class="btn btn-xs btn-default" active data-case="rule">' +
+          '<i class="' + options.icon_checked + '"></i> ' +
+          '<span class="case-rule-text">' + self.translate('Search with case') + '</span>' +
+          '</button>'
+      );
+      h.value = $h.prop('outerHTML');
+    });
+  }
+
+  // Export "case-rule" to JSON
+  this.on('ruleToJson.filter', function(e, rule) {
+    e.value.ignoreCase = rule.ignoreCase;
+  });
+
+  // Read "case-rule" from JSON
+  this.on('jsonToRule.filter', function(e, json) {
+    e.value.ignoreCase = !!json.ignoreCase;
+  });
+
+  // Export case selector to SQL
+  this.on('ruleToSQL.filter', function(e, rule, value, sqlFn) {
+    console.log(`ruleToSQL.filter: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
+    if (rule.ignoreCase) {
+      e.value = 'NOCASE ( ' + e.value + ' )';
+    }
+  });
+}, {
+  icon_unchecked: 'glyphicon glyphicon-unchecked',
+  icon_checked: 'glyphicon glyphicon-check',
+  disable_template: false
+});
+
+$.fn.queryBuilder.constructor.utils.defineModelProperties($.fn.queryBuilder.constructor.Rule, ['ignoreCase']);
+
+const cssSelectorPluginCaseRule = $.fn.queryBuilder.constructor.selectors.rule_actions + ' [data-case=rule]';
+
+$.fn.queryBuilder.extend({
+  /**
+   * Performs actions when a rule's case selector changes
+   * @param {Rule} rule
+   * @fires module:plugins.CaseSelector.updateRuleCaseIgnore
+   * @private
+   */
+  updateRuleCaseIgnore: function(rule) {
+      console.log(`updateRuleCaseIgnore: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
+      rule.$el.find(cssSelectorPluginCaseRule + "> .case-rule-text")
+          .text(this.translate(rule.ignoreCase ? 'Ignore case' : 'Search with case'));
+          //.find('i').attr('class', rule.ignoreCase ? options.icon_checked : options.icon_unchecked);
+
+      /**
+       * After the rule's case selector has been modified
+       * @event afterUpdateRuleCaseSelector
+       * @memberof module:plugins.CaseSelector
+       * @param {Rule} rule
+       */
+      this.trigger('afterUpdateRuleCaseSelector', rule);
+
+      this.trigger('rulesChanged');
+  }
+});
+
 
 function displayStatistics() {
   var total = gRootsJson.length;
@@ -893,9 +1005,10 @@ function prepareIntegerField(ruleId, opt) {
 function prepareAutoComplete(ruleId, opt) {
   if (!opt) opt = {};
   const fieldId = opt.fieldId || ruleId;
-  const operators = opt.operators || ["contains", "not_contains", 'equal', 'not_equal', 'begins_with',
-        "not_begins_with", "ends_with",
-        "not_ends_with", "is_empty", 'is_not_empty', "my_regex"];
+  const operators = opt.operators || ["my_contains", "my_not_contains",
+        'my_equal', 'my_not_equal', 'my_begins_with',
+        "my_not_begins_with", "my_ends_with",
+        "my_not_ends_with", "is_empty", 'is_not_empty'];
   const type = opt.type || 'string';
   const size = opt.size || 100;
   const optgroup = opt.optgroup || "other";
@@ -943,6 +1056,7 @@ function prepareAutoComplete(ruleId, opt) {
 
 function resetSearchStats() {
   gWordIndices = {};
+  gHighlights = {};
   gMatchedWordIndices = {};
   gFoundPersonalNames = 0;
   gWordVariants = 0;
@@ -1200,6 +1314,42 @@ function sqlRegexp(regexValue, fieldData) {
   return res;
 }
 
+function sqlRegexpNew(regexValue, fieldData, inscriptionId, ignoreCase, fieldName)
+{
+  //const ignoreCase = rule.ignoreCase;
+
+  // take care of special tokens that get spoiled by several string handlers before
+  const trueRegexValue = regexValue.replace(/\\\\/g, '\\');
+  const modifiers = 'gu' + (ignoreCase ? 'i' : '');
+  const mappingKey = regexValue + '__' + modifiers;
+
+  if (!gRegExpMapG.hasOwnProperty(mappingKey)) {
+    // Use unicode flag for all regexps
+    gRegExpMapG[mappingKey] = new RegExp(trueRegexValue, modifiers);
+  }
+
+  // if there is a match, let's collect highlight statistics
+  let matchResult;
+  let hasMatch = false;
+  while ((matchResult = gRegExpMapG[mappingKey].exec(fieldData)) !== null) {
+    hasMatch = true;
+    const matchStart = matchResult.index;
+    const matchEnd = matchStart + matchResult[0].length;
+    // const matchIndices = range(matchEnd-matchStart, matchStart);
+
+    if (!gHighlights.hasOwnProperty(inscriptionId)) {
+      gHighlights[inscriptionId] = {};
+    }
+    if (!gHighlights[inscriptionId].hasOwnProperty(fieldName)) {
+      gHighlights[inscriptionId][fieldName] = [];
+    }
+    gHighlights[inscriptionId][fieldName].push([matchStart, matchEnd]);
+    console.log(`Signature ${inscriptionId}, field ${fieldName}, match: ${matchStart}-${matchEnd}`);
+  }
+
+  return hasMatch ? 1 : -1;
+}
+
 function sqlWordRegexp(regexValue, fieldData, id, fieldName) {
   // regexValue is a string that contains a regular expression
   // fieldData is a string that contains a text of inscription
@@ -1258,6 +1408,8 @@ function onDbLoaded() {
 
   // Add support for searches across words
   db.create_function('wordRegexp', sqlWordRegexp);
+
+  db.create_function('regexp_new', sqlRegexpNew);
 
   // get all root signatures (that are not aliases)
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
@@ -1334,9 +1486,13 @@ function onDbLoaded() {
   // Initialzie QueryBuilder
   //////////////////////////////////////
   const glob_operators = [
-    "contains_glob", "not_contains_glob", "whole_word", "begins_with_glob", "not_begins_with_glob",
-    "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp"
+    "not_contains_glob", "whole_word", "begins_with_glob", "not_begins_with_glob",
+    "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp", "my_contains",
   ];
+  const text_operators = [
+    "is_empty", "is_not_empty", "my_contains", "my_begins_with"
+  ];
+
   const optGroups = {
     "gr_signature": {
       "en": "Inscription ID",
@@ -1347,6 +1503,7 @@ function onDbLoaded() {
   };
 
   var queryBuilderFilters = [
+    prepareAutoComplete('carver'),
     {
       id: 'signature_text',
       optgroup: "gr_signature",
@@ -1429,16 +1586,12 @@ function onDbLoaded() {
     prepareAutoComplete('dating'),
     prepareIntegerField('year_from'),
     prepareIntegerField('year_to'),
-    prepareAutoComplete('carver'),
     prepareAutoComplete('material'),
     prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('english_translation', {
       optgroup: "gr_texts",
-      operators: [
-        "contains", "not_contains", "whole_word", 'begins_with', "not_begins_with", "ends_with",
-        "not_ends_with", "is_empty", 'is_not_empty', 'equal', 'not_equal', "my_regex",
-      ],
+      operators: text_operators,
     }),
     prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('style'),
@@ -1530,6 +1683,7 @@ function onDbLoaded() {
     display_empty_filter: false,
     select_placeholder: '!!! Click here to choose search parameter !!!',
     operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat([
+      // Add to default operators
       { type: 'alternatives_in',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'cross_form', nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'begins_with_glob',      nb_inputs: 1, multiple: false, apply_to: ['string'] },
@@ -1539,6 +1693,14 @@ function onDbLoaded() {
       { type: 'my_regex', nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'word_regexp', nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'whole_word', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_contains', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_not_contains', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_begins_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_not_begins_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_ends_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_not_ends_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_equal', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_not_equal', nb_inputs: 1, multiple: false, apply_to: ['string'] },
     ]),
 
     lang: {
@@ -1552,6 +1714,14 @@ function onDbLoaded() {
         my_regex: 'matches expression',
         word_regexp: 'matches across words',
         whole_word: "contains whole word",
+        my_contains: "contains",
+        my_not_contains: "doesn't contain",
+        my_begins_with: "begins with",
+        my_ends_with: "ends with",
+        my_not_ends_with: "doesn't end with",
+        my_not_begins_with: "doesn't begin with",
+        my_equal: "equal",
+        my_not_equal: "not equal",
       },
       add_rule: 'Add search parameter',
       add_group: 'Add search group',
@@ -1568,13 +1738,22 @@ function onDbLoaded() {
       not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'},
       my_regex: { op: 'REGEXP ?', mod: '{0}'},
       word_regexp: { op: 'wordRegexp(?)', mod: '{0}'},
-      whole_word: { op: 'REGEXP ?', mod: '\\b{0}\\b'},
+      whole_word: { op: 'regexp_new ?', mod: '\\b{0}\\b'},
+      my_contains: { op: 'regexp_new ?' },
+      my_not_contains: { op: 'not regexp_new ?'},
+      my_begins_with: { op: 'regexp_new ?', mod: '^{0}'},
+      my_not_begins_with: { op: 'not regexp_new ?', mod: '^{0}'},
+      my_ends_with: { op: 'regexp_new ?', mod: '{0}$'},
+      my_not_ends_with: { op: 'not regexp_new ?', mod: '{0}$'},
+      my_equal: { op: 'regexp_new ?', mod: '^{0}$'},
+      my_not_equal: { op: 'not regexp_new ?', mod: '^{0}$'},
     },
     plugins: {
       'bt-tooltip-errors': null,
       'sortable': null,
       'not-group': null,
       'bt-selectpicker': {liveSearch: true, liveSearchStyle: 'startsWith'},
+      'case-rule': null,
     },
 
     filters: queryBuilderFilters,
@@ -1637,6 +1816,12 @@ function onDbLoaded() {
     }
     if (sqlOperator().indexOf('wordRegexp') != -1) {
       e.value = `wordRegexp(${sqlValue}, ${rule.field}, id, '${rule.field}') == 1`;
+    }
+    if (sqlOperator().startsWith('regexp_new')) {
+      e.value = `regexp_new(${sqlValue}, ${rule.field}, signature_text, ${rule.ignoreCase}, '${rule.field}') == 1`;
+    }
+    if (sqlOperator().startsWith('not regexp_new')) {
+      e.value = `regexp_new(${sqlValue}, ${rule.field}, signature_text, ${rule.ignoreCase}, '${rule.field}') == -1`;
     }
   })
   ;
@@ -1995,6 +2180,10 @@ function inscriptions2markup() {
     return [];
 
   const showHeaders = $('#chkDisplayHeaders').is(":checked");
+  const columnStyles = {
+    "transliteration": "transliteration",
+    "normalization": "normalization",
+  };
 
   let markupData = [];
 
@@ -2011,7 +2200,7 @@ function inscriptions2markup() {
       let humanName = humanNameForColumnName(columnName);
       let columnData = '';
       if (columnName in inscriptionData)
-        columnData = inscriptionData[columnName + 'html'];
+        columnData = inscriptionData[columnName];
 
       if (showHeaders) {
         paragraph += '<h4>' + humanName + '</h4>';
@@ -2035,7 +2224,101 @@ function inscriptions2markup() {
         continue;
       }
 
-      if (jQuery.inArray(columnName, customColumns) != -1) {
+      let cssStyle = '';
+      if (columnStyles.hasOwnProperty(columnName)) {
+        cssStyle = columnStyles[columnName];
+      }
+
+      // highlight text
+      if (gHighlights.hasOwnProperty(signatureName) && gHighlights[signatureName].hasOwnProperty(columnName)) {
+        let highlightIndices = gHighlights[signatureName][columnName];
+        console.log(`${signatureName} has ${highlightIndices.length} highlights`);
+        console.log(`They are: ${highlightIndices}`);
+
+        // highlightIndices is an array of tuples (arrays). Each element is an array of two elements
+        // where every two elements are start and end of the highlighted text.
+        // sort highlightIndices in ascending order by the first item in the tuple
+        highlightIndices = highlightIndices.sort(function (a, b) { return a[0] - b[0]; } );
+
+        // convert highlightIndices into consequative regions merging overlapping regions
+        // they may overlap in two cases:
+        // 1. one region is inside another
+        // 2. two regions overlap (one starts before another ends and continues after the end)
+        let regions = [highlightIndices[0]];
+        for (let k = 1; k < highlightIndices.length; k++) {
+          let region = highlightIndices[k];
+          if (region[0] <= regions[regions.length - 1][1]) {
+            // region starts before the last region ends
+            // let's see where it ends
+            if (region[1] > regions[regions.length - 1][1]) {
+              // it ends after the last region ends, so we need to extend the last region
+              regions[regions.length - 1][1] = region[1];
+            } else {
+              // it ends before the last region ends, so we do not need to do anything
+            }
+          } else {
+            // region starts after the last region ends, so we need to add it to the list
+            regions.push(region);
+          }
+        }
+
+        // replace all regions of texts in columnData with `<span class="highlighted">...</span>`
+        let highlightedStr = columnData;
+        console.log(`Column data: ${columnData}`);
+        for (let k = regions.length - 1; k >= 0; k--) {
+          const start_in_search = regions[k][0];
+          const end_in_search = regions[k][1];
+          let start = start_in_search;
+          let end = end_in_search;
+          if (columnName != "english_translation" && gSearch2Original.hasOwnProperty(signatureName) && gSearch2Original[signatureName].hasOwnProperty(columnName)) {
+            start = gSearch2Original[signatureName][columnName][start_in_search];
+            end = gSearch2Original[signatureName][columnName][end_in_search];
+          }
+          // const start = gSearch2Original[signatureName]['transliteration'][start_in_search];
+          // const end = gSearch2Original[signatureName]['transliteration'][end_in_search];
+
+          const highlightedPart = highlightedStr.slice(start, end);
+          console.log(`highlightedPart: ${highlightedPart}`);
+
+          highlightedStr = highlightedStr.slice(0, start)
+            + '<span class="highlighted">'
+            + highlightedStr.slice(start, end)
+            + '</span>'
+            + highlightedStr.slice(end);
+        }
+        columnData = highlightedStr;
+      }
+
+
+      // Smiley is a special symbol: word substitute when word is not present
+      // We do not need to show it.
+      columnData = columnData.replace(/ ☺ /g, ' ');
+
+      if (~columnData.indexOf(paragraphSymbol)) {
+        let parts = columnData.split(paragraphSymbol);
+        let listHeader = '';
+        listHeader = "Sides or/and reading variants:"
+
+        paragraph += listHeader;
+        paragraph += '<ul>';
+        for (let k = 0; k < parts.length; k++) {
+          let part = parts[k];
+
+          if (!part.trim())
+            continue;
+
+          part = paragraphSymbol + part;
+          paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
+        }
+        paragraph += '</ul>';
+        continue;
+      } else {
+        // no parts in the columnData
+        paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
+        continue;
+      }
+
+      /*if (jQuery.inArray(columnName, customColumns) != -1) {
         let cssStyle = 'normalization';
         if (~columnName.indexOf('transliteration')) {
           cssStyle = 'transliteration';
@@ -2104,7 +2387,7 @@ function inscriptions2markup() {
           paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
         }
         continue;
-      }
+      }*/
 
       if (columnName === 'crosses') {
         if (inscriptionData.num_crosses == 0) {
@@ -2520,8 +2803,48 @@ function hideLoading() {
   $('#loading').hide();
 }
 
+async function fetchAndDecompress(url) {
+  // Fetch the compressed file
+  const response = await fetch(url);
+  const reader = response.body.getReader();
+
+  // Create a ReadableStream that decompresses the data
+  const decompressor = new DecompressionStream('gzip');
+  const decompressedStream = new ReadableStream({
+      start(controller) {
+          reader.read().then(function process({ done, value }) {
+              if (done) {
+                  controller.close();
+                  return;
+              }
+              controller.enqueue(value);
+              return reader.read().then(process);
+          });
+      }
+  }).pipeThrough(decompressor);
+
+  // Read the decompressed data and convert it to a string
+  const textDecoder = new TextDecoder();
+  let result = '';
+  const decompressedReader = decompressedStream.getReader();
+  while (true) {
+      const { done, value } = await decompressedReader.read();
+      if (done) break;
+      result += textDecoder.decode(value);
+  }
+
+  // Parse the JSON data
+  const data = JSON.parse(result);
+  return data;
+}
+
 var clipboard = [];
 $(function() {
+
+  fetchAndDecompress("{% static 'runes/search2original.json.gzip' %}?v=1.1.4")
+    .then(data => { console.log('Got data from search2original.json.gzip OK!'); gSearch2Original = data; })
+    .catch(error => console.error(`Failed to get search2original.json.gzip: ${error}`));
+
   const sqlConfig = {
     locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
   };

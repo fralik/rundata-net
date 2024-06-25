@@ -5,22 +5,22 @@ Searching for inscriptions
 This section is a guide for using the search capabilities of Rundata-net. These have been
 briefly introduced in the section :ref:`query-builder-info`.
 
-A search query is created in the query builder. The query builder allows the user
-to define rules, each of which contains one searchable parameter. At times I
-will use the term 'filtering' instead of 'searching'. The terms are interchangeable
-for this particular application.
+Query builder
+-------------
 
-Each rule consists of a property, which is used for searching, the operation which should
-be performed, and a search value. The search value may in fact consist
-of multiple values. Let's have a look at the example :samp:`Signature begins
-with Öl`. Here, :samp:`Signature` is the property we will be searching for
-:samp:`begins with` denotes the operation, and :samp:`Öl` is the value. The result
-of such a search will be a list of inscriptions with a signature value
-beginning with Öl.
+A search query is created using the query builder. The query builder enables users
+to define search parameters and their groups. Occasionally, the term 'filtering' will be used
+interchangeably with 'searching' in this application.
 
-The list of available search properties is mainly based on :ref:`meta-information`
-and :ref:`inscriptions-texts`. The property :samp:`------` is a placeholder and has
-no actual meaning.
+Each rule consists of a property, an operation, and a search value. The property is what
+you are searching for, the operation is the action to be performed, and the search value is
+the criteria to be met, which may include multiple values. For example, consider the query
+:samp:`Signature begins with Öl`. In this case, :samp:`Signature` is the property being searched,
+:samp:`begins with` is the operation, and :samp:`Öl` is the value. The result of this search will
+be a list of inscriptions with a signature that begins with 'Öl'.
+
+The list of available search properties is based on :ref:`meta-information`
+and :ref:`inscriptions-texts`. The property :samp:`------` is a placeholder.
 
 Let's consider an example of the query builder interface in action.
 
@@ -30,50 +30,75 @@ Let's consider an example of the query builder interface in action.
     :alt: An example of query builder interface
     :width: 100%
 
-First note the top left corner. It contains the buttons :guilabel:`NOT`, :guilabel:`AND`,
-:guilabel:`OR`. These are logical operations which may be applied to rules and one or more groups:
+First, note the top left corner. It contains the buttons :guilabel:`NOT`, :guilabel:`AND`,
+and :guilabel:`OR`. These buttons represent logical operations that can be applied to
+search parameters and search groups:
 
-* :guilabel:`NOT` inverses the search of a rule/group. If a certain rule/group search
-  results in *find all inscriptions in Denmark*, then the inverse search is
+* :guilabel:`NOT` inverts the search of a parameter/group. For example, if a parameter/group
+  search results in *find all inscriptions in Denmark*, the inverse search will be
   *find all inscriptions NOT in Denmark*.
-* :guilabel:`AND` performs a logical AND operation between rule/group search values.
-  AND can be used for grouping independent properties. For example, *find all inscriptions
+* :guilabel:`AND` performs a logical AND operation between parameter/group search values.
+  It can be used to group independent properties. For example, *find all inscriptions
   from Denmark* AND *find inscriptions that have at least one cross* will return all
-  inscriptions from Denmark with at least one cross. Wikipedia has `an article
-  <https://en.wikipedia.org/wiki/Logical_conjunction>`_ about logical AND.
-* :guilabel:`OR` performs a logical OR operation between rule/group search values.
-  A logical OR can be used for grouping values with identical property, for example *find all
-  inscriptions from Denmark OR Norway*. See more on `logical OR
-  <https://en.wikipedia.org/wiki/Logical_disjunction>`_ on Wikipedia.
+  inscriptions from Denmark with at least one cross.
+* :guilabel:`OR` performs a logical OR operation between parameter/group search values.
+  It can be used to return results that match any of the search values. For example,
+  *find all inscriptions from Denmark OR Norway* will return all inscriptions from Denmark
+  and Norway. Another example is *find all inscriptions from Denmark OR inscriptions that have
+  at least one cross* will return all inscriptions from Denmark and all inscriptions that have
+  at least one cross.
+
+For more information on NOT/AND/OR, you can refer to this Wikipedia article on `logical disjunction <https://en.wikipedia.org/wiki/Logical_disjunction>`_ .
 
 The currently selected operator is indicated by a slightly darker blue colour. In the
 figure above, :guilabel:`AND` is selected. :guilabel:`NOT` is a checkbox
 and will have a tick when selected.
 
-One way of figuring out which logical operation should be applied to which
-rule, is to follow the grey line from logical operators to rules.
+One way to determine which logical operation should be applied to each search parameter
+is to follow the grey line from the logical operators to the search parameters.
 
 .. figure:: /_static/search_gray_lines.png
     :alt: Following logical operations for group
 
-The control buttons are located to the right. They are used for adding or deleting rules
+The control buttons are located to the right. They are used for adding or deleting search parameters
 and groups, see :ref:`the figure above <figure-query-builder>`.
 
-Each rule has its own operators and value types. The example above presents four
-different value types:
+Search parameters
+^^^^^^^^^^^^^^^^^
 
-* Boolean for the filter *Has alternative(s)?*. This type typically has a Yes/No
-  value.
-* Categorical for the filter *Country*. This type can contain one or several values
-  from a predefined set.
-* Numerical for the filter *Number of crosses*. This type contains an integer or
-  decimal number.
-* Textual for the filter *Signature*. This is the most common type. It contains
-  textual information (which may be letters, special symbols, or digits).
+Remember the figure
 
-Operators are differentiated on the basis of the search value type of the
-respective rule. Their meaning should be clear from their name. A possible
-exception to this are the *matches* operators for textual information. These
+.. _figure-query-builder-2:
+
+.. figure:: /_static/query_builder.png
+    :alt: An example of query builder interface
+    :width: 100%
+
+that contains four search parameters. Each search parameter has its own operator and value type.
+Let's look at the existing value types through the example query:
+
+1. Boolean type (search parameter *Has alternative(s)?*). This type typically has a Yes/No
+   value.
+2. Categorical type (search parameter *Country*). This type contains one or several items
+   from a predefined list of items.
+3. Numerical type (search parameter *Number of crosses*). This type contains an integer or
+   decimal number.
+4. Textual type (search parameter *Signature*). This is the most common type and contains
+   textual information, which may be letters, special symbols, or digits.
+
+Operator is an action that is performed on the search value:
+
+.. _figure-query-operators:
+
+.. figure:: /_static/query_operators.png
+    :alt: An example of operators for textual search type
+    :width: 100%
+
+In a search parameter *Signature begins with N*, the operator is *begins with* and the search
+value is *N*. The search will return all inscriptions with a signature that begins with *N*.
+
+Different search types have different operators. Their meaning should be clear from their name.
+A possible exception to this are the *matches* operators for textual information. These
 operators allow one to specify a
 `regular expression pattern <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Writing_a_regular_expression_pattern>`_. This is very
 similar to how a search in text is made in the original Rundata. Several examples
@@ -95,9 +120,15 @@ of such searches will be given later.
 Case sensitivity in searches and search normalization
 -----------------------------------------------------
 
-Most of the textual-based searches are insensitive as regards capital letters.
-For example, *Öl* is matched to both *Öl* and *öl*. On the other hand,
-*öl* matches *öl* only.
+Rundata-net supports case sensitive and case insensitive searches for text search types.
+User selects search case sensitivity on the right hand side of every search parameters. This means
+that a single search query may contain both case sensitive and case insensitive search parameters.
+
+To illustrate case sensitive searches, consider a search for inscriptions via *Translation to English*:
+
+1. **Translation to English contains Who** (case sensitive). This search will return inscriptions
+   with translations that contain the letters **Who**. Currently, such query returns 11 inscriptions.
+2. **Translation to English contains Who** (case insensitive). This search will return 236 inscriptions.
 
 However, some rules are case sensitive. These are the rules that deal with
 :ref:`inscriptions-texts`, namely:
