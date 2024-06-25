@@ -189,6 +189,10 @@
                 <input type="checkbox" id="chkShowSelectedInscriptions">
                 <label for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
               </div></a></li>
+              <li><a href="#"><div class="checkbox">
+                <input type="checkbox" id="chkShowCurrentLocation">
+                <label for="chkShowCurrentLocation">Show inscriptions based on current location</label>
+              </div></a></li>
             </ul>
           </li>
 
@@ -1854,6 +1858,10 @@ function onDbLoaded() {
     clearMarkers();
     makeMarkers();
   });
+  $('#chkShowCurrentLocation').on('change', function() {
+    clearMarkers();
+    makeMarkers();
+  });
 
   // seems that the data has been loaded. Do not need this timer any more.
   clearTimeout(gLoadingTimer);
@@ -1909,6 +1917,9 @@ function convertDbToKeyMap() {
   let allDisplayColumns = displayFields();
   allDisplayColumns.unshift({value: 'latitude', text: 'latitude'});
   allDisplayColumns.unshift({value: 'longitude', text: 'longitude'});
+  allDisplayColumns.unshift({value: 'present_latitude', text: 'present_latitude'});
+  allDisplayColumns.unshift({value: 'present_longitude', text: 'present_longitude'});
+
   allDisplayColumns.unshift({value: 'signature_id', text: 'some'});
   allDisplayColumns.unshift({value: 'id', text: 'meta_id'});
 
@@ -1931,7 +1942,9 @@ function convertDbToKeyMap() {
   let numCrossesColumn = columns.indexOf('num_crosses');
   let latitudeColumn = columns.indexOf('latitude');
   let longitudeColumn = columns.indexOf('longitude');
-  let signatureIdColumn = columns.indexOf('id'); // it is actually meta ID
+  const presentLatitudeColumn = columns.indexOf('present_latitude');
+  const presentLongitudeColumn = columns.indexOf('present_longitude');
+  const signatureIdColumn = columns.indexOf('id'); // it is actually meta ID
 
   let customColumns = ['transliteration', 'english_translation', 'normalisation_scandinavian', 'normalisation_norse'];
 
@@ -1946,7 +1959,9 @@ function convertDbToKeyMap() {
       // we need to skip some columns
       if (columnName === 'signature_id'
           || columnName === 'latitude'
-          || columnName === 'longitude')
+          || columnName === 'longitude'
+          || columnName === 'present_latitude'
+          || columnName === 'present_longitude')
         continue;
 
       let humanName = humanNameForColumnName(columnName);
@@ -2037,6 +2052,8 @@ function convertDbToKeyMap() {
     rowObj['signature_text_raw'] = row[signatureColumn];
     rowObj['latitude'] = row[latitudeColumn];
     rowObj['longitude'] = row[longitudeColumn];
+    rowObj['present_latitude'] = row[presentLatitudeColumn];
+    rowObj['present_longitude'] = row[presentLongitudeColumn];
 
     dbMap[signatureId] = rowObj;
   }
@@ -2053,8 +2070,8 @@ function makeMarkers() {
   let sourceObj = gRootsJson;
 
   const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
+  const showPresentLocation = $('#chkShowCurrentLocation').is(':checked');
   if (showSelected) {
-    console.log('Need to show selected only');
     let indices = $('#jstree').jstree(true).get_selected();
     if (indices.length == 0) {
       return;
@@ -2072,14 +2089,15 @@ function makeMarkers() {
   for (let i = 0; i < sourceObj.length; i++) {
     let signatureName = sourceObj[i].signature;
     let marker = '';
-    let row = sourceObj[i].id;
+    let row = `${sourceObj[i].id}-showPresent_${showPresentLocation}`;
     let inscriptionData = gDbAsMap[sourceObj[i].id];
 
     if (row in mapMarkers) {
       marker = mapMarkers[row];
     } else {
-      let lat = parseFloat(inscriptionData.latitude);
-      let lon = parseFloat(inscriptionData.longitude);
+      let lat = showPresentLocation ? parseFloat(inscriptionData.present_latitude) : parseFloat(inscriptionData.latitude);
+      let lon = showPresentLocation ? parseFloat(inscriptionData.present_longitude) : parseFloat(inscriptionData.longitude);
+
       if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
         marker = new MarkerWithData([lat, lon], {
           signature: signatureName,
@@ -3038,7 +3056,7 @@ $(function() {
     myWorker.postMessage({
       inscriptions: gDbAsMap,
       rows: gRootsJson,
-      columns: userSelectedDisplay.concat(['latitude', 'longitude']),
+      columns: userSelectedDisplay.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']),
     });
   });
 
