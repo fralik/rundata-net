@@ -3,6 +3,7 @@ Inscription identifier (signature)
 ===================================
 
 .. module:: rundata.database
+  :no-index:
 
 The database contains a collection of runic inscriptions with information about them. Every runic inscription is referenced by a unique identifier also known as signature, i.e. when one searches for a particular inscription by it's ID, we call such search *searching by signature*.
 
