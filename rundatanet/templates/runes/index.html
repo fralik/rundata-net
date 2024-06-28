@@ -2217,8 +2217,9 @@ function inscriptions2markup() {
       let columnName = userSelectedDisplay[j];
       let humanName = humanNameForColumnName(columnName);
       let columnData = '';
-      if (columnName in inscriptionData)
+      if (columnName in inscriptionData) {
         columnData = inscriptionData[columnName];
+      }
 
       if (showHeaders) {
         paragraph += '<h4>' + humanName + '</h4>';
@@ -2307,6 +2308,10 @@ function inscriptions2markup() {
         columnData = highlightedStr;
       }
 
+      // if columnData is not string convert it to string
+      if (typeof columnData !== 'string') {
+        columnData = columnData.toString();
+      }
 
       // Smiley is a special symbol: word substitute when word is not present
       // We do not need to show it.
