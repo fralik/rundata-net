@@ -2861,7 +2861,11 @@ $(function() {
 
   fetchAndDecompress("{% static 'runes/search2original.json.gzip' %}?v=1.1.4")
     .then(data => { console.log('Got data from search2original.json.gzip OK!'); gSearch2Original = data; })
-    .catch(error => console.error(`Failed to get search2original.json.gzip: ${error}`));
+    .catch(error => {
+      console.error(`Failed to get search2original.json.gzip: ${error}`);
+      $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
+      alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
+    });
 
   const sqlConfig = {
     locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
