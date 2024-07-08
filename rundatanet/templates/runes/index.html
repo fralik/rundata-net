@@ -1597,6 +1597,10 @@ function onDbLoaded() {
       optgroup: "gr_texts",
       operators: text_operators,
     }),
+    prepareAutoComplete('swedish_translation', {
+      optgroup: "gr_texts",
+      operators: text_operators,
+    }),
     prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('style'),
     prepareAutoComplete('reference'),
@@ -2289,7 +2293,7 @@ function inscriptions2markup() {
           const end_in_search = regions[k][1];
           let start = start_in_search;
           let end = end_in_search;
-          if (columnName != "english_translation" && gSearch2Original.hasOwnProperty(signatureName) && gSearch2Original[signatureName].hasOwnProperty(columnName)) {
+          if (columnName != "english_translation" && columnName != "swedish_translation" && gSearch2Original.hasOwnProperty(signatureName) && gSearch2Original[signatureName].hasOwnProperty(columnName)) {
             start = gSearch2Original[signatureName][columnName][start_in_search];
             end = gSearch2Original[signatureName][columnName][end_in_search];
           }
@@ -2598,6 +2602,10 @@ function displayFields() {
       text: 'Translation to English',
     },
     {
+      value: 'swedish_translation',
+      text: 'Translation to Swedish',
+    },
+    {
       value: 'transliteration',
       text: 'Transliterated runic text',
     },
@@ -2615,7 +2623,7 @@ function displayFields() {
     },
   ];
   let sortOrder = ['signature_text', 'transliteration', 'normalisation_scandinavian', 'normalisation_norse',
-    'english_translation', 'found_location', 'parish', 'municipality', 'district', 'current_location',
+    'english_translation', 'swedish_translation', 'found_location', 'parish', 'municipality', 'district', 'current_location',
     'original_site', 'images', 'rune_type', 'carver', 'num_crosses', 'crosses', 'dating', 'style',
     'material_type', 'material', 'objectInfo', 'reference', 'additional'];
   let sortValue = 1;
