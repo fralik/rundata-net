@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
     <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
     <link href="{% static 'runes/leaflet.fullscreen/leaflet.fullscreen.css' %}" rel='stylesheet' />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.css" integrity="sha256-b1FUshftUDgzY/VtFMamPDs0o3GER52S9Tk8IK+wOoE=" crossorigin="anonymous">
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
@@ -537,6 +538,7 @@ if (isSafari()) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.3/papaparse.min.js" integrity="sha512-AHuRHNDvzJWmGpGhswFB+Akkr1IwuqumT1Po40zlwgjBP1RnoCf3cP/EHBF/3ilfdYaocNQrUrCkE7q8RpN0fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="{% static 'runes/leaflet.fullscreen/Leaflet.fullscreen.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.js" integrity="sha256-43FlkezpyRF326OVLB4hJ2nwWATdloa0VVWKR727wI4=" crossorigin="anonymous"></script>
 
 
 <script type="text/javascript">
@@ -2954,6 +2956,15 @@ $(function() {
       gMainScrollArea.scrollTop = 0;
     }
   });
+  // add location control to global name space for testing only
+  // on a production site, omit the "lc = "!
+  lc = L.control
+    .locate({
+      strings: {
+        title: "My location"
+      }
+    })
+    .addTo(myMap);
 
   // Next phase, jstree creation/initialization
   $('#jstree')
