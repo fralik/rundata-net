@@ -2202,10 +2202,15 @@ function inscriptions2markup() {
     return [];
 
   const showHeaders = $('#chkDisplayHeaders').is(":checked");
-  const columnStyles = {
-    "transliteration": "transliteration",
-    "normalization": "normalization",
-  };
+  const displayInfo = displayFields();
+
+  // columnStyles is a dictionary where key is a column name and value is a CSS style
+  const columnStyles = displayInfo.reduce(function (result, field) {
+    if (field.css) {
+      result[field.value] = field.css;
+    }
+    return result;
+  }, {});
 
   let markupData = [];
 
@@ -2312,37 +2317,34 @@ function inscriptions2markup() {
         columnData = highlightedStr;
       }
 
-      // if columnData is not string convert it to string
-      if (typeof columnData !== 'string') {
-        columnData = columnData.toString();
-      }
+      if (jQuery.inArray(columnName, customColumns) != -1) {
+        // Smiley is a special symbol: word substitute when word is not present
+        // We do not need to show it.
+        columnData = columnData.replace(/ ☺ /g, ' ');
 
-      // Smiley is a special symbol: word substitute when word is not present
-      // We do not need to show it.
-      columnData = columnData.replace(/ ☺ /g, ' ');
+        if (~columnData.indexOf(paragraphSymbol)) {
+          let parts = columnData.split(paragraphSymbol);
+          let listHeader = '';
+          listHeader = "Sides or/and reading variants:"
 
-      if (~columnData.indexOf(paragraphSymbol)) {
-        let parts = columnData.split(paragraphSymbol);
-        let listHeader = '';
-        listHeader = "Sides or/and reading variants:"
+          paragraph += listHeader;
+          paragraph += '<ul>';
+          for (let k = 0; k < parts.length; k++) {
+            let part = parts[k];
 
-        paragraph += listHeader;
-        paragraph += '<ul>';
-        for (let k = 0; k < parts.length; k++) {
-          let part = parts[k];
+            if (!part.trim())
+              continue;
 
-          if (!part.trim())
-            continue;
-
-          part = paragraphSymbol + part;
-          paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
+            part = paragraphSymbol + part;
+            paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
+          }
+          paragraph += '</ul>';
+          continue;
+        } else {
+          // no parts in the columnData
+          paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
+          continue;
         }
-        paragraph += '</ul>';
-        continue;
-      } else {
-        // no parts in the columnData
-        paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
-        continue;
       }
 
       /*if (jQuery.inArray(columnName, customColumns) != -1) {
@@ -2592,10 +2594,12 @@ function displayFields() {
     {
       value: 'normalisation_norse',
       text: 'Normalization to Old West Norse',
+      css: 'normalization',
     },
     {
       value: 'normalisation_scandinavian',
       text: 'Normalisation to Old Scandinavian',
+      css: 'normalization',
     },
     {
       value: 'english_translation',
@@ -2608,6 +2612,7 @@ function displayFields() {
     {
       value: 'transliteration',
       text: 'Transliterated runic text',
+      css: 'transliteration',
     },
     {
       value: 'num_crosses',
@@ -2651,7 +2656,7 @@ function displayFields() {
 }
 
 function humanNames() {
-  let namesMap = [
+  const namesMap = [
     {
       value: 'runes_personalname',
       text: 'Personal Name'
@@ -2885,7 +2890,7 @@ $(function() {
   };
   initSqlJs(sqlConfig).then(function(SQL) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.4", true);
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.5", true);
     xhr.responseType = 'arraybuffer';
     xhr.addEventListener("load", function() {
       console.log('we got sql data from server');
