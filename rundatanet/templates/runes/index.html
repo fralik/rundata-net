@@ -1860,11 +1860,11 @@ function onDbLoaded() {
   $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
   $('#chkShowSelectedInscriptions').on('change', function() {
     clearMarkers();
-    makeMarkers();
+    makeMarkers({preserveMapArea: true});
   });
   $('#chkShowCurrentLocation').on('change', function() {
     clearMarkers();
-    makeMarkers();
+    makeMarkers({preserveMapArea: true});
   });
 
   // seems that the data has been loaded. Do not need this timer any more.
@@ -2066,12 +2066,14 @@ function convertDbToKeyMap() {
 }
 
 function clearMarkers() {
+  // get currently selected map area, so that we can restore it after clearing
   markers.clearLayers();
 }
 
-function makeMarkers() {
+function makeMarkers({preserveMapArea = false} = {}) {
   let markersLatLon = [];
   let sourceObj = gRootsJson;
+  const oldBounds = myMap.getBounds();
 
   const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
   const showPresentLocation = $('#chkShowCurrentLocation').is(':checked');
@@ -2120,7 +2122,7 @@ function makeMarkers() {
     }
   }
 
-  if (markersLatLon.length > 0) {
+  if (markersLatLon.length > 0 && !preserveMapArea) {
     let markersBounds = L.latLngBounds(markersLatLon);
     myMap.fitBounds(markersBounds);
   }
