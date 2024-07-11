@@ -503,10 +503,6 @@ if (ieVersion !== false && ieVersion <= 12) {
   alert('This version of Internet Explorer is not supported. Please update or use a different browser. Will redirect to About page.');
   window.location.href = "{% url 'runes:about' %}#browser-support";
 }
-if (isSafari()) {
-  alert('It seems like you are using Safari. Safari is known to have issues. Use at your own risk :)');
-  // window.location.href = "{% url 'runes:about' %}#browser-support";
-}
 </script>
 
 <script src="https://unpkg.com/clipboard@2.0.0/dist/clipboard.min.js"></script>
@@ -2122,7 +2118,9 @@ function makeMarkers({preserveMapArea = false} = {}) {
           popupText += `<a href="${getGeoIntentURL(lat, lon)}" target="_self">Drive here!</a>`;
         }
         // Tooltip is simple and is always on, popup supports HTML and is opened  /closed by user
-        marker.bindPopup(popupText, {autoClose: false});
+        if (isMobileDevice()) {
+          marker.bindPopup(popupText, {autoClose: false});
+        }
         marker.bindTooltip(signatureName, {permanent: true}).openTooltip();
         mapMarkers[row] = marker;
       }
@@ -2206,11 +2204,12 @@ function isMobileDevice() {
 }
 
 function getGeoIntentURL(lat, lng) {
-  // if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  //   return `http://maps.apple.com/?daddr=${lat},${lng}`;
-  // } else {
-  return `geo:${lat},${lng}?q=${lat},${lng}`;
-  // }
+  if (isSafari()) {
+    return `http://maps.apple.com/?daddr=${lat},${lng}`;
+  }
+  else {
+    return `geo:${lat},${lng}?q=${lat},${lng}`;
+  }
 }
 
 // Get all inscriptions from jsTree and convert it to array of HTML tags,
