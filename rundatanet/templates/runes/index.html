@@ -191,8 +191,8 @@
                 <label for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
               </div></a></li>
               <li><a href="#"><div class="checkbox">
-                <input type="checkbox" id="chkShowCurrentLocation">
-                <label for="chkShowCurrentLocation">Show inscriptions based on current location</label>
+                <input type="checkbox" id="chkShowOriginalLocation">
+                <label for="chkShowOriginalLocation">Show inscriptions based on original location</label>
               </div></a></li>
             </ul>
           </li>
@@ -1864,7 +1864,7 @@ function onDbLoaded() {
     clearMarkers();
     makeMarkers({preserveMapArea: true});
   });
-  $('#chkShowCurrentLocation').on('change', function() {
+  $('#chkShowOriginalLocation').on('change', function() {
     clearMarkers();
     makeMarkers({preserveMapArea: true});
   });
@@ -2078,7 +2078,7 @@ function makeMarkers({preserveMapArea = false} = {}) {
   const oldBounds = myMap.getBounds();
 
   const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
-  const showPresentLocation = $('#chkShowCurrentLocation').is(':checked');
+  const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
   if (showSelected) {
     let indices = $('#jstree').jstree(true).get_selected();
     if (indices.length == 0) {
@@ -2097,14 +2097,20 @@ function makeMarkers({preserveMapArea = false} = {}) {
   for (let i = 0; i < sourceObj.length; i++) {
     let signatureName = sourceObj[i].signature;
     let marker = '';
-    let row = `${sourceObj[i].id}-showPresent_${showPresentLocation}`;
+    let row = `${sourceObj[i].id}-showOriginal_${showOriginalLocation}`;
     let inscriptionData = gDbAsMap[sourceObj[i].id];
 
     if (row in mapMarkers) {
       marker = mapMarkers[row];
     } else {
-      let lat = showPresentLocation ? parseFloat(inscriptionData.present_latitude) : parseFloat(inscriptionData.latitude);
-      let lon = showPresentLocation ? parseFloat(inscriptionData.present_longitude) : parseFloat(inscriptionData.longitude);
+      let lat = parseFloat(inscriptionData.latitude);
+      let lon = parseFloat(inscriptionData.longitude);
+      if (!showOriginalLocation) {
+        if (inscriptionData.present_latitude != '0' && inscriptionData.present_longitude != '0') {
+          lat = parseFloat(inscriptionData.present_latitude);
+          lon = parseFloat(inscriptionData.present_longitude);
+        }
+      }
 
       if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
         marker = new MarkerWithData([lat, lon], {
