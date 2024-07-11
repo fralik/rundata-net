@@ -2117,9 +2117,13 @@ function makeMarkers({preserveMapArea = false} = {}) {
           signature: signatureName,
           id: gRootsJson[i].id,
         });
-        let popupText = "<b>" + signatureName + "</b>";
-        //marker.bindPopup(popupText);
-        marker.bindTooltip(signatureName, {permanent: true});
+        let popupText = `${signatureName}<br>`;
+        if (isMobileDevice()) {
+          popupText += `<a href="${getGeoIntentURL(lat, lon)}" target="_self">Drive here!</a>`;
+        }
+        // Tooltip is simple and is always on, popup supports HTML and is opened  /closed by user
+        marker.bindPopup(popupText, {autoClose: false});
+        marker.bindTooltip(signatureName, {permanent: true}).openTooltip();
         mapMarkers[row] = marker;
       }
     }
@@ -2195,6 +2199,18 @@ function scrollToInscriptionStep3(signature, inscriptionId, updateTree) {
   gClusterizeParams.iteration++;
 
   setTimeout(scrollToInscription, 2, signature, inscriptionId, updateTree);
+}
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function getGeoIntentURL(lat, lng) {
+  // if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  //   return `http://maps.apple.com/?daddr=${lat},${lng}`;
+  // } else {
+  return `geo:${lat},${lng}?q=${lat},${lng}`;
+  // }
 }
 
 // Get all inscriptions from jsTree and convert it to array of HTML tags,
@@ -2482,6 +2498,27 @@ function inscriptions2markup() {
       }
       paragraph += columnData;
     }
+
+    // if (isMobileDevice()) {
+    //   // Add navigation link
+    //   const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
+    //   let lat = parseFloat(inscriptionData.latitude);
+    //   let lon = parseFloat(inscriptionData.longitude);
+    //   if (!showOriginalLocation) {
+    //     if (inscriptionData.present_latitude != '0' && inscriptionData.present_longitude != '0') {
+    //       lat = parseFloat(inscriptionData.present_latitude);
+    //       lon = parseFloat(inscriptionData.present_longitude);
+    //     }
+    //   }
+
+    //   // add <br/> to paragraph if it doesn't already end with it
+    //   if (paragraph.slice(-5) != '<br>') {
+    //     paragraph += '<br>';
+    //   }
+
+    //   const geoURL = getGeoIntentURL(lat, lon);
+    //   paragraph += `<a href="${geoURL}" target="_blank" contentEditable="false">Drive to inscription!</a><br>`;
+    // }
     paragraph += '</article>';
 
     markupData.push(paragraph);
@@ -2952,8 +2989,8 @@ $(function() {
     chunkedLoading: true,
     maxClusterRadius: 60,
   });
-  markers.on('click', function (a) {
-    scrollToInscription(a.layer.options.signature, a.layer.options.id);
+  markers.on('click', function (e) {
+    scrollToInscription(e.layer.options.signature, e.layer.options.id);
   });
   markers.addTo(myMap);
   myMap.on('fullscreenchange', function () {
