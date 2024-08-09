@@ -167,33 +167,25 @@ It is possible to export search results and to import list of inscriptions.
 
 :guilabel:`Export results` button allows to export all search results in a file.
 File is created in a
-`comma-separated values <https://en.wikipedia.org/wiki/Comma-separated_values>`_
-(CSV) format. This format can be viewed as a table where each row corresponds to
-an individual inscription and each column to some information (for example,
-signature text). Many programs can open CSV files. It should be
-possible to open them directly in Excel. If you have problems opening this file
-in Excel, please refer to Google and find out how to do it. `Office support`_,
-`Wiki How <https://www.wikihow.com/Open-CSV-Files>`_,
-`macOS Table Tool <https://itunes.apple.com/app/table-tool/id1122008420?mt=12>`_
-pages may be useful.
-
-Rundata-net exports data in a file with default name :file:`rundata-net_results.csv`.
+`Office Open XML <https://en.wikipedia.org/wiki/Office_Open_XML>`_
+(xlsx) format. This format can be opened in Excel. Rundata-net exports data in a file
+with default name :file:`rundata-net_results.xlsx`.
 User may select the location where the file will be saved to and the name of the
-file. Exported file contains all inscriptions from the list of inscriptions.
+file. Exported file contains all inscriptions from the list of inscriptions and the search parameters.
 Number of columns will correspond to the number of selected inscription properties,
 i.e. number of columns corresponds to the right-hand list of the main display
 configuration dialog box. First line of the file is a header and it will contain
-column names. Each value is *escaped* by quotes, i.e. :samp:`Öl 2` is written
-as :samp:`"Öl 2"` in the file. If you open the file in Excel, you shall not notice
-that. Some values may contain a list of values. This is true for example for
+column names. Some values may contain a list of values. This is true for example for
 column :guilabel:`Images`. An inscription may have multiple images assigned to it.
 In such a case, values are separated by a semicolon. For example value
 :samp:`DR 411;B 1071;L 1323` consist of three values :samp:`DR 411`, :samp:`B 1071`,
 and :samp:`L 1323`. All coordinates are given in `WGS 84 <https://en.wikipedia.org/wiki/World_Geodetic_System#A_new_World_Geodetic_System:_WGS_84>`_ geodetic system.
 
-It is possible to import list of inscriptions in Rundata-net. A typical user case
-is if a user would like to study more closely a list of inscriptions given in
-a publication.
+The Rundata-net website allows users to import lists of inscriptions for further study and analysis.
+This feature is particularly useful for researchers who wish to examine inscriptions
+detailed in academic publications or other sources. By importing these lists,
+users can easily access and explore the inscriptions within the Rundata-net,
+facilitating deeper analysis and research.
 
 .. warning::
 
@@ -210,14 +202,14 @@ a file or drop a file to that area. Rundata-net supports 3 file formats for impo
     signature must be enclosed by quotes, i.e. you must write :samp:`"G IK365,8"`
     instead of :samp:`G IK365,8`. This is true for all the formats described below.
 
-*Format #1*. Simple format where all inscriptions are written on one line
-separated by a comma. Example of such a file::
+*Format #1*. A simple format where all inscriptions are listed on one line,
+separated by commas. Example of such a file::
 
     Öl Köping13,Ög ATA322-4035-2011:14,Sö 175,U 381,"G IK365,8",Öl 1,Öl 11
 
-Example is available for download as :download:`csv-one-line.csv`.
+An example is available for download as :download:`csv-one-line.csv`.
 
-*Format #2*. File is multiline and each inscription is written on it's own line::
+*Format #2*. A multiline format where each inscription is written on its own line::
 
     Öl Köping13
     Ög ATA322-4035-2011:14
@@ -226,11 +218,11 @@ Example is available for download as :download:`csv-one-line.csv`.
     "G IK365,8"
     U 358
 
-Example is available for download as :download:`csv-multiline.txt`.
+An example is available for download as :download:`csv-multiline.txt`.
 
-*Format #3*. A CSV file with or without the header. If file has no header, then
-the first column is considered to contain signatures. If header is present in file,
-then a column named :samp:`signature` (case insensitive) is used. Example of such
+*Format #3*. A CSV file that may or may not include a header. If the file has no header,
+the first column is assumed to contain signatures. If a header is present,
+the column named :samp:`signature` (case insensitive) is used. Example of such
 a file with a header::
 
     Dating,Signature
@@ -240,33 +232,33 @@ a file with a header::
     4, U 381
     5,"G IK365,8"
 
-Example is available for download as :download:`csv-header.csv`. Note that
+An example is available for download as :download:`csv-header.csv`. Note that
 there may be spaces around non-enclosed signatures, like on line 4 in the example
 above.
 
 .. note::
 
-    Regardless of the format signatures are always given without any special
-    symbols like † or $. In fact, $ will be added to search parameter, but it
-    is interpreted as part of a regular expression (see :doc:`/searching` for
-    information about regular expressions).
+    Regardless of the format, signatures are always provided without any special
+    symbols like † or $. Although $ may be added to a search parameter, it is
+    interpreted as part of a regular expression (see :doc:`/searching` for
+    information on regular expressions).
 
 .. tip::
 
-    The way import from file works is that Rundata-net takes a list of signatures
-    and creates a single search rule for all of them. If you have just a couple of
-    signatures, which you would like to import or visualize, then you can enter
-    them directly in the program. You do not put them into a file. You need to
-    add a search rule :guilabel:`Signature` with operator :samp:`matches expression`
-    and write your signatures in form :samp:`signature 1$|signature 2$|signature 3$`,
-    i.e. list of signatures suffixed by $ symbol and separated by :samp:`|`.
-    Why there is symbol $ after each signature? Consider a regular expression
-    search with value :samp:`Öl 1`. Such a search yields 11 inscriptions and can
-    be interpreted as *find all inscriptions where signature contains Öl 1*.
-    If we however add $ symbol to the end of signature, i.e. :samp:`Öl 1$`, then
-    the search rule is interpreted as *find all inscriptions where signature ends
+    When importing from a file, Rundata-net processes a list of signatures
+    and creates a single search rule for all of them. If you only have
+    a few signatures to import, you can enter them directly. There's no need to
+    put them into a file. Instead, add a search rule :guilabel:`Signature` with
+    operator :samp:`matches expression`, and enter your signatures in the format
+    :samp:`signature 1$|signature 2$|signature 3$`, i.e. a list of signatures
+    suffixed by :samp:`$` symbol and separated by :samp:`|`.
+    Why is three a :samp:`$` symbol after each signature? Consider a regular expression
+    search with the value :samp:`Öl 1`. Such a search yields 11 inscriptions and can
+    be interpreted as *find all inscriptions where the signature contains Öl 1*.
+    However, if we add a :samp:`$` symbol to the end of the signature, i.e. :samp:`Öl 1$`,
+    the search rule is interpreted as *find all inscriptions where the signature ends
     with Öl 1*. Only a single inscription matches this criteria. More details
-    about regular expressions search is provided in :doc:`Searching section</searching>`.
+    about regular expressions searches are provided in the :doc:`Searching section</searching>`.
 
 Special symbols
 ---------------
