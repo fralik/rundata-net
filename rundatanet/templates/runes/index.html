@@ -768,6 +768,35 @@ $.fn.queryBuilder.extend({
 });
 
 
+ // Function to sort filters within each optgroup
+ function sortFilters(filters) {
+  var groupedFilters = {};
+
+  // Group filters by optgroup
+  filters.forEach(function(filter) {
+      if (!groupedFilters[filter.optgroup]) {
+          groupedFilters[filter.optgroup] = [];
+      }
+      groupedFilters[filter.optgroup].push(filter);
+  });
+
+  // Sort filters within each optgroup
+  for (var group in groupedFilters) {
+      groupedFilters[group].sort(function(a, b) {
+          return a.label.localeCompare(b.label);
+      });
+  }
+
+  // Flatten the sorted filters back into a single array
+  var sortedFilters = [];
+  for (var group in groupedFilters) {
+      sortedFilters = sortedFilters.concat(groupedFilters[group]);
+  }
+
+  return sortedFilters;
+}
+
+
 function displayStatistics() {
   var total = gRootsJson.length;
   if (total == 0) {
@@ -1508,7 +1537,8 @@ function onDbLoaded() {
   };
 
   var queryBuilderFilters = [
-    prepareAutoComplete('carver'),
+    // the order of items here defines the order of optgroups, place filters of at least each group in the order you like
+    // filters within a group will be sorted alphabetically
     {
       id: 'signature_text',
       optgroup: "gr_signature",
@@ -1540,6 +1570,18 @@ function onDbLoaded() {
       operators: ['equal', 'not_equal', 'begins_with', "not_begins_with",
         "contains", "not_contains", "ends_with", "not_ends_with", "my_regex"],
     },
+    prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators, optgroup: "gr_texts"}),
+    prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators, optgroup: "gr_texts"}),
+    prepareAutoComplete('english_translation', {
+      optgroup: "gr_texts",
+      operators: text_operators,
+    }),
+    prepareAutoComplete('swedish_translation', {
+      optgroup: "gr_texts",
+      operators: text_operators,
+    }),
+    prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
+    prepareAutoComplete('carver'),
     {
       id: 'signature_country',
       optgroup: "gr_signature",
@@ -1592,17 +1634,6 @@ function onDbLoaded() {
     prepareIntegerField('year_from'),
     prepareIntegerField('year_to'),
     prepareAutoComplete('material'),
-    prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators, optgroup: "gr_texts"}),
-    prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators, optgroup: "gr_texts"}),
-    prepareAutoComplete('english_translation', {
-      optgroup: "gr_texts",
-      operators: text_operators,
-    }),
-    prepareAutoComplete('swedish_translation', {
-      optgroup: "gr_texts",
-      operators: text_operators,
-    }),
-    prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('style'),
     prepareAutoComplete('reference'),
     prepareAutoComplete('additional'),
@@ -1679,6 +1710,16 @@ function onDbLoaded() {
     materialTypeFilter,
     prepareBooleanRule({'r':'ornamental', 'l':'Is pure ornamental?', 'v': 1}),
   ];
+
+  // sort into groups
+  queryBuilderFilters = $.fn.queryBuilder.constructor.utils.groupSort(queryBuilderFilters, 'optgroup')
+  // sort within groups
+  queryBuilderFilters = sortFilters(queryBuilderFilters);
+
+  // swap two first filters, so that signature is on the first place!
+  const tmp = queryBuilderFilters[0];
+  queryBuilderFilters[0] = queryBuilderFilters[1];
+  queryBuilderFilters[1] = tmp;
 
   // Fix for Selectize
   $('#builder').on('afterCreateRuleInput.queryBuilder', function(e, rule) {
@@ -1766,7 +1807,7 @@ function onDbLoaded() {
     },
 
     filters: queryBuilderFilters,
-    sort_filters: true,
+    sort_filters: false,
     templates: {
       group: gBuilderCustomGroup,
     },
