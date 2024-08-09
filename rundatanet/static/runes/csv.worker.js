@@ -1,22 +1,38 @@
-// e.data is a dictionary with fields:
-// inscriptions - gDbAsMap for selected signatures
-// rows - JSON of selected inscrptions. Use field id.
-// columns - columns to include
+// This function prepares data for export
+// Despite the name (csv) it returns data as javascript arrays.
+//
+// Input: e.data is a dictionary with fields:
+//   inscriptions - gDbAsMap for selected signatures
+//   rows - JSON of selected inscrptions. Use field id.
+//   columns - columns to include
+//
+// Returns:
+// posts a message with an object with two fields:
+//   rows - array of arrays with data
+//   columns - array of column names
+//
 onmessage = function(e) {
-  var csv = [];
-  var inscriptions = e.data.inscriptions;
-  var columns = e.data.columns;
-  var rows = e.data.rows;
-  var csvSeparator = ',';
-  var newline = '\r\n';
+  let csv = [];
+  let inscriptions = e.data.inscriptions;
+  let columns = e.data.columns;
+  let rows = e.data.rows;
 
-  for (var i = 0; i < rows.length; i++) {
-    var inscriptionId = rows[i].id;
-    var row = inscriptions[inscriptionId];
-    var rowData = [];
-    for (var j = 0; j < columns.length; j++) {
-      var columnName = columns[j];
-      var colData = row[columnName];
+  // check if columns contains 'signature_text' and add 'aliases' (right after 'signature_text') if needed
+  if (columns.includes('signature_text') && !columns.includes('aliases')) {
+    const signatureIndex = columns.indexOf('signature_text');
+    columns.splice(signatureIndex + 1, 0, 'aliases');
+  }
+
+  for (let i = 0; i < rows.length; i++) {
+    let inscriptionId = rows[i].id;
+    let row = inscriptions[inscriptionId];
+    let rowData = [];
+    for (let j = 0; j < columns.length; j++) {
+      let columnName = columns[j];
+      let colData = row[columnName];
+      if (colData === null) {
+        colData = '';
+      }
 
       if (columnName == 'signature_text') {
         colData = row['signature_text_raw'];
@@ -25,9 +41,9 @@ onmessage = function(e) {
       if (columnName == 'crosses') {
         colData = [];
         let crossesObj = row[columnName];
-        for (var cId = 0; cId < crossesObj.length; cId++) {
-          var crossObj = crossesObj[cId];
-          var oneCross = [];
+        for (let cId = 0; cId < crossesObj.length; cId++) {
+          let crossObj = crossesObj[cId];
+          let oneCross = [];
 
           if (crossObj[0].length > 0) {
             // this cross has something in group 0, thus it must not
@@ -36,16 +52,16 @@ onmessage = function(e) {
             continue;
           }
 
-          for (var gId = 1; gId < crossObj.length; gId++) {
-            var groupItems = crossObj[gId];
+          for (let gId = 1; gId < crossObj.length; gId++) {
+            let groupItems = crossObj[gId];
             if (groupItems.length == 0) {
               oneCross.push('');
               continue;
             }
 
-            var oneGroup = [];
-            for (var fId = 0; fId < groupItems.length; fId++) {
-              var crossForm = groupItems[fId];
+            let oneGroup = [];
+            for (let fId = 0; fId < groupItems.length; fId++) {
+              let crossForm = groupItems[fId];
               if (crossForm.isCertain) {
                 oneGroup.push(crossForm.name);
               } else {
@@ -67,13 +83,10 @@ onmessage = function(e) {
         colData = colData.replace(/"/g, '""');
       }
 
-      rowData.push('"' + colData + '"');
-      if (columnName == 'signature_text') {
-        rowData.push('"' + row['aliases'] + '"');
-      }
+      rowData.push(colData);
     }
-    csv.push(rowData.join(csvSeparator));
+    csv.push(rowData);
   }
 
-  postMessage({csv: csv.join(newline), columns: columns});
+  postMessage({rows: csv, columns: columns});
 }

@@ -535,6 +535,7 @@ if (ieVersion !== false && ieVersion <= 12) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.3/papaparse.min.js" integrity="sha512-AHuRHNDvzJWmGpGhswFB+Akkr1IwuqumT1Po40zlwgjBP1RnoCf3cP/EHBF/3ilfdYaocNQrUrCkE7q8RpN0fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="{% static 'runes/leaflet.fullscreen/Leaflet.fullscreen.min.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.js" integrity="sha256-43FlkezpyRF326OVLB4hJ2nwWATdloa0VVWKR727wI4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
 <script type="text/javascript">
@@ -603,6 +604,8 @@ var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\
 var gRenderBatchId = 0;
 // True while rendering of signature information is in progress.
 var gRenderInProgress = false;
+// True if export is in progress
+var gExportInProgress = false;
 // Global variable that is assigned with timer ID for displaySignatureInfo function call.
 // If it is a valid ID, then we must not execute another call to displaySignatureInfo.
 // Used to accumulate multiple jstree.changed events.
@@ -2719,6 +2722,10 @@ function humanNames() {
       value: 'normalisation_search_scandinavian',
       text: 'Normalisation to Old Scandinavian'
     },
+    {
+      value: 'aliases',
+      text: 'Alternative signatures'
+    },
   ];
   return namesMap;
 }
@@ -3095,46 +3102,63 @@ $(function() {
     displayStatistics();
   });
 
-  function onCsvWorkerMessage(e) {
-    var csvBody = e.data.csv;
-    var columns = e.data.columns;
-    var csv = '\ufeff'; // add unicode BOM
-    for (var i = 0; i < columns.length; i++) {
-      csv += humanNameForColumnName(columns[i]) + ',';
-      if (columns[i] === 'signature_text') {
-        csv += 'Alternative signatures' + ',';
-      }
-    }
-    csv = csv.slice(0, -1) + '\r\n';
-    csv += csvBody;
+  function onExportError(e) {
+    closeResultsIoModal();
+    hideLoading();
+    gExportInProgress = false;
 
-    var exportedFilename = 'rundata-net_results.csv';
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    if (navigator.msSaveBlob) { // IE 10+
-        navigator.msSaveBlob(blob, exportedFilename);
-    } else {
-      var link = document.createElement("a");
-      if (link.download !== undefined) { // feature detection
-          // Browsers that support HTML5 download attribute
-          var url = URL.createObjectURL(blob);
-          link.setAttribute("href", url);
-          link.setAttribute("download", exportedFilename);
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+    $('#alertObj').html(`Export failed. Please <a href="https://github.com/fralik/rundata-net/issues" target="_blank">report</a> this issue.
+    <br>Include the following error details in your report: "${e.message}"<br>
+    This message will disappear in one minute. <a href="#" onclick="dismissAlert(); return false;" title="Click to close this alert">Dismiss this message now!</button>
+    `);
+    $('#alertObj').show(500);
+    setTimeout(dismissAlert, 60000);
+}
+
+  function onExportWorkerMessage(e) {
+    // Export to Excel
+    closeResultsIoModal();
+    hideLoading();
+    gExportInProgress = false;
+
+    const columns = e.data.columns;
+    const rows = e.data.rows;
+
+    try {
+      let workbook = XLSX.utils.book_new();
+      let worksheetData = [columns.map(humanNameForColumnName)];
+      worksheetData.push(...rows);
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
+
+      const searchRules = $('#builder').queryBuilder('getRules');
+      if (!$.isEmptyObject(searchRules)) {
+        const rulesString = JSON.stringify(searchRules, null, 2);
+        const worksheetRules = XLSX.utils.aoa_to_sheet([['Search rules'], [rulesString]]);
+        XLSX.utils.book_append_sheet(workbook, worksheetRules, 'Search rules');
       }
+
+      XLSX.writeFile(workbook, 'rundata-net_results.xlsx');
+    } catch (e) {
+      onExportError(e);
     }
   }
 
   $('#btnExportResults').on('click', function() {
-    var myWorker = new Worker("{% static 'runes/csv.worker.js' %}");
-    myWorker.onmessage = onCsvWorkerMessage;
-    myWorker.postMessage({
+    if (gExportInProgress) {
+      return;
+    }
+    gExportInProgress = true;
+    showLoading();
+
+    var exportWorker = new Worker("{% static 'runes/csv.worker.js' %}?v=0.0.3");
+    exportWorker.onmessage = onExportWorkerMessage;
+    exportWorker.postMessage({
       inscriptions: gDbAsMap,
       rows: gRootsJson,
       columns: userSelectedDisplay.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']),
     });
+    exportWorker.onerror = onExportError;
   });
 
   let dropArea = document.getElementById('drop-area');
