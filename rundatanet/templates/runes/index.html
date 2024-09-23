@@ -816,7 +816,7 @@ function displayStatistics() {
   }
 }
 
-function dbToJson(columnNames, values, rootsWithChildren = null) {
+function dbToJson(columnNames, values) {
   let lostIdx = columnNames.indexOf('lost');
   let newReadingIdx = columnNames.indexOf('new_reading');
 
@@ -1191,7 +1191,7 @@ function applyFilters() {
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
   gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
-  gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
+  gRootsJson = dbToJson(contents[0].columns, contents[0].values);
 
   return true;
 }
@@ -1448,11 +1448,11 @@ function onDbLoaded() {
   // get all root signatures (that are not aliases)
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
   var rootsWithChildren = db.exec("SELECT * FROM signatures_with_children");
-  // make a hash map for quick read access
+  // make a hash map for quick read access. This is basically a list of inscriptions (signatures.ID) that have children
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
   gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
-  gRootsJson = dbToJson(contents[0].columns, contents[0].values, rootsWithChildren);
+  gRootsJson = dbToJson(contents[0].columns, contents[0].values);
 
   ////////////////////////////////////////////////////////////////////
   // fill in gAliasByParent. Must be done before convertDbToKeyMap!
@@ -2139,12 +2139,24 @@ function makeMarkers({preserveMapArea = false} = {}) {
     let marker = '';
     let row = `${sourceObj[i].id}-showOriginal_${showOriginalLocation}`;
     let inscriptionData = gDbAsMap[sourceObj[i].id];
+    if (inscriptionData === undefined) {
+      console.log('Error: no data for ' + signatureName);
+      continue;
+    }
 
     if (row in mapMarkers) {
       marker = mapMarkers[row];
     } else {
-      let lat = parseFloat(inscriptionData.latitude);
-      let lon = parseFloat(inscriptionData.longitude);
+      let lat = 0.0;
+      let lon = 0.0;
+      try {
+        lat = parseFloat(inscriptionData.latitude);
+        lon = parseFloat(inscriptionData.longitude);
+      } catch (e) {
+        console.log('Error parsing latitude/longitude for ' + signatureName);
+        console.log(`Latitude: ${inscriptionData.latitude}, Longitude: ${inscriptionData.longitude}`);
+        console.log(`Exception: ${e}`);
+      }
       if (!showOriginalLocation) {
         if (inscriptionData.present_latitude != '0' && inscriptionData.present_longitude != '0') {
           lat = parseFloat(inscriptionData.present_latitude);
@@ -2536,7 +2548,7 @@ function inscriptions2markup() {
         continue;
       }
 
-      if (columnData == '' && showHeaders) {
+      if ((columnData == '' || columnData == null) && showHeaders) {
         columnData = '<i>Absent, not in the database.</i>';
       }
       paragraph += columnData;
@@ -2984,7 +2996,7 @@ $(function() {
   };
   initSqlJs(sqlConfig).then(function(SQL) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.5", true);
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.6", true);
     xhr.responseType = 'arraybuffer';
     xhr.addEventListener("load", function() {
       console.log('we got sql data from server');

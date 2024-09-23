@@ -26,6 +26,11 @@ Database description
     db/signature
     db/data
 
+Database editions
+-----------------
+
+* `Comparison Report 2024-09-10 <_static/comparison_report_20240910.html>`_
+
 Searching
 ---------
 
