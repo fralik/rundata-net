@@ -166,6 +166,10 @@
       .py-6 {
         padding-bottom: 9rem !important;
       }
+
+      .selectize-control {
+        min-width: 400px;
+      }
     </style>
   </head>
 <body style="">
@@ -233,7 +237,7 @@
     </div>
 
     <div class="row">
-      <div class="col-md-2" id="lblNumAvailable">6751 inscriptions.</div>
+      <div class="col-md-2" id="lblNumAvailable">6815 inscriptions.</div>
       <div class="col-md-6 col-sm-8">&nbsp;</div>
       <div class="col-md-4 col-sm-2">
       </div>
@@ -442,10 +446,11 @@
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <!-- query builder styles -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.4/css/selectize.bootstrap3.min.css" integrity="sha512-m0OaCrpn73wqb57AHrDyM1gWhG2RSnn7HQ9Sug26n/6zX9DgPHrZBdYwVZa1N9W1fpmOZAItnWQwPYltXWqFMA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css" integrity="sha512-JvHT+I28ECA8gHQ+i8UATgOt5lJBG/pp+KYe7VfILX7Q8GjSA15YdBPKbanVUG1FamvWg6WiqRIfAaxpmaGKKA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<!-- This is a known working version of selectize, versions up to 15.2 do not work as intended -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.14.0/css/selectize.bootstrap5.min.css" integrity="sha512-gPfqgXe/pl1EpOS++KmVkF5Ca6C/Kj/4K/bt+n9nt6FkkeralgnL2907thbVEmYhacdqChfgw8XTlyCh2be4+A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css" integrity="sha512-ARJR74swou2y0Q2V9k0GbzQ/5vJ2RBSoCWokg4zkfM29Fb3vZEQyv0iWBMW/yvKgyHSR/7D64pFMmU8nYmbRkg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/awesome-bootstrap-checkbox/0.3.7/awesome-bootstrap-checkbox.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@2.5.2/dist/css/query-builder.default.min.css" integrity="sha256-t0OO5vutCzErqiAiLqVcVPbR3krMH9aTnzbtbjmiFUU=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/2.7.0/css/query-builder.default.min.css" integrity="sha512-3RXOBSeNrHg76YEaO0rTrJNAk+slrOFD9NkxnNKkZ0+JQGc0iIhXS5g0UNNYEDH5nV9uuD9FSLzEt7vj3xqA/g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="{% static 'runes/jquery-ui/jquery-ui.min.css' %}" rel="stylesheet">
 <!-- end of query builder styles -->
 
@@ -514,9 +519,9 @@ if (ieVersion !== false && ieVersion <= 12) {
 
 <!-- begin of query builder js -->
 <script src="{% static 'query-builder/moment.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/selectize@0.12.4/dist/js/standalone/selectize.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js" integrity="sha512-wxLJoyhMdb3r9t00CpwvDsbgnHongW0fzpEKS2Y0X2H+ThyUd0AhHVD1/SH37RGSE2/krrzpU+71E37X7UV+4w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@2.5.2/dist/js/query-builder.standalone.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.14.0/js/selectize.min.js" integrity="sha512-VReIIr1tJEzBye8Elk8Dw/B2dAUZFRfxnV2wbpJ0qOvk57xupH+bZRVHVngdV04WVrjaMeR1HfYlMLCiFENoKw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/js/bootstrap-select.min.js" integrity="sha512-yDlE7vpGDP7o2eftkCiPZ+yuUyEcaBwoJoIhdXv71KZWugFqEphIS3PU60lEkFaz8RxaVsMpSvQxMBaKVwA5xg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/2.7.0/js/query-builder.standalone.min.js" integrity="sha512-xZdPnncEMc0dM2up7iLOoYLfjI2BIDoBA37wWo4S4iIXrHaTctpjfjGSbu/Snif+7YuF/VN6VLUIGJUAjZ4Sqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/interactjs@1.3.3/dist/interact.min.js" integrity="sha256-xDVbjmOet3n1w9fUkbwXlf9M5Kxaji3kq0vRxOOZz+A=" crossorigin="anonymous"></script>
 <script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
 <script src="{% static 'query-builder/my-templates.js' %}"></script>
@@ -1378,7 +1383,7 @@ function sqlRegexpNew(regexValue, fieldData, inscriptionId, ignoreCase, fieldNam
       gHighlights[inscriptionId][fieldName] = [];
     }
     gHighlights[inscriptionId][fieldName].push([matchStart, matchEnd]);
-    console.log(`Signature ${inscriptionId}, field ${fieldName}, match: ${matchStart}-${matchEnd}`);
+    // console.log(`Signature ${inscriptionId}, field ${fieldName}, match: ${matchStart}-${matchEnd}`);
   }
 
   return hasMatch ? 1 : -1;
@@ -1536,6 +1541,39 @@ function onDbLoaded() {
     "other": "---",
   };
 
+  const signature_text_autocomplete_cfg = {
+    minChars: 0,
+    delay: 50,
+    source: function(term, suggest) {
+      var matches = [];
+      for (i = 0; i < signaturesSelectize.length; i++) {
+        if (signaturesSelectize[i].text.startsWith(term)) {
+          matches.push(signaturesSelectize[i].text);
+          continue;
+        }
+        // do not do the search if we got a match already
+        if (signaturesSelectize[i].normalizedText.startsWith(term)) {
+          matches.push(signaturesSelectize[i].text);
+          continue;
+        }
+      }
+      suggest(matches);
+    },
+    menuClass: 'clusterize-content ',
+  };
+  const signature_text_selectize_cfg = {
+    plugins: ['remove_button'],
+    options: signaturesSelectize,
+    valueField: 'signature',
+    labelField: 'text',
+    searchField: 'normalizedText',
+    sortField: 'id',
+    create: false,
+    dropdownDirection: 'up',
+    delimiter: '|',
+    maxItems: null,
+  };
+
   var queryBuilderFilters = [
     // the order of items here defines the order of optgroups, place filters of at least each group in the order you like
     // filters within a group will be sorted alphabetically
@@ -1545,30 +1583,38 @@ function onDbLoaded() {
       field: 'signature_text',
       label: humanNameForColumnName('signature_text'),
       type: 'string',
-      plugin: 'autoComplete',
-      plugin_config: {
-        minChars: 0,
-        delay: 50,
-        source: function(term, suggest) {
-          var matches = [];
-          for (i = 0; i < signaturesSelectize.length; i++) {
-            if (signaturesSelectize[i].text.startsWith(term)) {
-              matches.push(signaturesSelectize[i].text);
-              continue;
-            }
-            // do not do the search if we got a match already
-            if (signaturesSelectize[i].normalizedText.startsWith(term)) {
-              matches.push(signaturesSelectize[i].text);
-              continue;
-            }
-          }
-          suggest(matches);
-        },
-        menuClass: 'clusterize-content ',
-      },
+      plugin: 'selectize',
+      plugin_config: signature_text_selectize_cfg,
       size: 40,
-      operators: ['equal', 'not_equal', 'begins_with', "not_begins_with",
+      multiple: true,
+      operators: ['in', 'begins_with', "not_begins_with",
         "contains", "not_contains", "ends_with", "not_ends_with", "my_regex"],
+      valueSetter: function (rule, value) {
+        let $input = rule.$el.find('.rule-value-container input');
+        if (rule.operator.type === 'in') {
+          if ($input.hasClass('autocomplete')) {
+            $input.autoComplete('destroy');
+          }
+          if (!$input.hasClass('selectized')) {
+            $input.selectize(signature_text_selectize_cfg);
+          }
+          $input[0].selectize.setValue(value);
+        } else {
+          if ($input.hasClass('selectized')) {
+            $input[0].selectize.destroy();
+          }
+          if (!$input.hasClass('autocomplete')) {
+            $input.autoComplete(signature_text_autocomplete_cfg);
+          }
+          // Ensure autoComplete is initialized before setting the value
+          if ($input[0].autoComplete) {
+            $input[0].autoComplete.setValue(value);
+          } else {
+            $input.val(value);
+          }
+          // $input[0].autoComplete.setValue(value);
+        }
+      },
     },
     prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators, optgroup: "gr_texts"}),
     prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators, optgroup: "gr_texts"}),
@@ -1721,14 +1767,6 @@ function onDbLoaded() {
   queryBuilderFilters[0] = queryBuilderFilters[1];
   queryBuilderFilters[1] = tmp;
 
-  // Fix for Selectize
-  $('#builder').on('afterCreateRuleInput.queryBuilder', function(e, rule) {
-    if (rule.filter.plugin == 'selectize') {
-      rule.$el.find('.rule-value-container').css('min-width', '200px')
-        .find('.selectize-control').removeClass('form-control');
-    }
-  });
-
   $('#builder').queryBuilder({
     display_empty_filter: false,
     select_placeholder: '!!! Click here to choose search parameter !!!',
@@ -1809,8 +1847,8 @@ function onDbLoaded() {
     filters: queryBuilderFilters,
     sort_filters: false,
     templates: {
-      group: gBuilderCustomGroup,
-    },
+      group: gQueryBuilderCustomGroup,
+  },
     optgroups: optGroups,
   })
   // SQL export (second half)
@@ -1856,6 +1894,13 @@ function onDbLoaded() {
           sqlValue = values.join('|');
         }
       }
+      if (rule.operator === 'in') {
+        // sqlValue contains ' and ' for some reason, like "'1,2'"
+        const integerValues = sqlValue.slice(1, -1).split('|').map(v => `'${v}'`);
+
+        e.value = `signature_id IN (SELECT id FROM signatures WHERE ${rule.field} IN(${integerValues.join(',')}))`;
+        return;
+      }
       e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
       + rule.field + ' ' + sqlOperator(sqlValue) + '))';
     }
@@ -1875,6 +1920,28 @@ function onDbLoaded() {
     }
   })
   ;
+
+  $('#builder').on('afterCreateRuleInput.queryBuilder afterUpdateRuleOperator.queryBuilder', function(e, rule) {
+    if (rule.filter.id === 'signature_text') {
+      let $input = rule.$el.find('.rule-value-container input');
+
+      if (rule.operator.type === 'in') {
+        if (!$input.hasClass('selectized')) {
+          if ($input.hasClass('autocomplete')) {
+            $input.autoComplete('destroy');
+          }
+          $input.selectize(signature_text_selectize_cfg);
+        }
+      } else {
+        if ($input.hasClass('selectized')) {
+          $input[0].selectize.destroy();
+        }
+        if (!$input.hasClass('autocomplete')) {
+          $input.autoComplete(signature_text_autocomplete_cfg);
+        }
+      }
+    }
+  });
 
   // if (!window.Selectize.prototype.positionDropdownOriginal) {
   //   window.Selectize.prototype.positionDropdownOriginal = window.Selectize.prototype.positionDropdown;
@@ -2896,6 +2963,19 @@ function importSignaturesHandler(fileContent) {
   let numEntries = 0;
   let values = [];
 
+  if (numLines == 2) {
+    // check if csvData.data[1] is a string or array
+    if (typeof csvData.data[1] === 'string') {
+      if (csvData.data[1].trim().length == 0) {
+        numLines = 1;
+      }
+    } else {
+      if (csvData.data[1][0].trim().length == 0) {
+        numLines = 1;
+      }
+    }
+  }
+
   if (numLines > 1) {
     let signatureCandidate = csvData.data[0].findIndex(item => 'signature' === item.toLowerCase());
     if (signatureCandidate != -1) {
@@ -2906,14 +2986,20 @@ function importSignaturesHandler(fileContent) {
     numEntries = csvData.data.length;
     for (var i = firstDataRow; i < numEntries; i++) {
       // iterate over rows
-      values.push(csvData.data[i][signatureColumn]);
+      if (!csvData.data[i][signatureColumn] || csvData.data[i][signatureColumn].trim().length == 0) {
+        continue;
+      }
+      values.push(csvData.data[i][signatureColumn].trim());
     }
   } else {
     // single line, treat every value as a signature
     numEntries = csvData.data[0].length;
     for (var i = 0; i < numEntries; i++) {
       // iterate over columns
-      values.push(csvData.data[0][i]);
+      if (!csvData.data[0][i] || csvData.data[0][i].trim().length == 0) {
+        continue;
+      }
+      values.push(csvData.data[0][i].trim());
     }
   }
 
@@ -2922,8 +3008,9 @@ function importSignaturesHandler(fileContent) {
     field: "signature_text",
     type: "string",
     input: "text",
-    operator: "my_regex",
-    value: values.join('$|') + '$',
+    operator: "in",
+    value: values,
+    ignoreCase: false,
   }];
 
   var allRules = {
@@ -3134,8 +3221,29 @@ $(function() {
     }
   });
 
+  function modifySignatureTextRules(rules) {
+  /* In order to handle both in and other operators for signature text,
+   * we may need to modify the rules on the fly. We need value to be array for selectize and
+   * a string for autoComplete.
+  */
+    if (Array.isArray(rules.rules)) {
+      rules.rules.forEach(rule => {
+        if (rule.id === 'signature_text' && rule.operator === 'in') {
+          if (typeof rule.value === 'string') {
+            rule.value = rule.value.split('|');
+          }
+        }
+        // Recursively handle nested rules
+        if (rule.rules) {
+          modifySignatureTextRules(rule);
+        }
+      });
+    }
+  }
+
   $('#btnRulesImport').on('click', function() {
     var rules = JSON.parse($('#ruleIo').val());
+    modifySignatureTextRules(rules);
     $('#builder').queryBuilder('setRules', rules, true);
   });
 
