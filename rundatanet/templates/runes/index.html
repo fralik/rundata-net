@@ -1587,7 +1587,7 @@ function onDbLoaded() {
       plugin_config: signature_text_selectize_cfg,
       size: 40,
       multiple: true,
-      operators: ['in', 'begins_with', "not_begins_with",
+      operators: ['in', 'my_in_list', 'begins_with', "not_begins_with",
         "contains", "not_contains", "ends_with", "not_ends_with", "my_regex"],
       valueSetter: function (rule, value) {
         let $input = rule.$el.find('.rule-value-container input');
@@ -1789,6 +1789,7 @@ function onDbLoaded() {
       { type: 'my_not_ends_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'my_equal', nb_inputs: 1, multiple: false, apply_to: ['string'] },
       { type: 'my_not_equal', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+      { type: 'my_in_list', nb_inputs: 1, multiple: false, apply_to: ['string'] },
     ]),
 
     lang: {
@@ -1810,6 +1811,7 @@ function onDbLoaded() {
         my_not_begins_with: "doesn't begin with",
         my_equal: "equal",
         my_not_equal: "not equal",
+        my_in_list: "is in |-separated list",
       },
       add_rule: 'Add search parameter',
       add_group: 'Add search group',
@@ -1835,6 +1837,7 @@ function onDbLoaded() {
       my_not_ends_with: { op: 'not regexp_new ?', mod: '{0}$'},
       my_equal: { op: 'regexp_new ?', mod: '^{0}$'},
       my_not_equal: { op: 'not regexp_new ?', mod: '^{0}$'},
+      my_in_list: { op: 'IN', mod: '{0}'},
     },
     plugins: {
       'bt-tooltip-errors': null,
@@ -1894,11 +1897,11 @@ function onDbLoaded() {
           sqlValue = values.join('|');
         }
       }
-      if (rule.operator === 'in') {
+      if (rule.operator === 'in' || rule.operator === 'my_in_list') {
         // sqlValue contains ' and ' for some reason, like "'1,2'"
-        const integerValues = sqlValue.slice(1, -1).split('|').map(v => `'${v}'`);
+        const values = sqlValue.slice(1, -1).split('|').map(v => `'${v}'`);
 
-        e.value = `signature_id IN (SELECT id FROM signatures WHERE ${rule.field} IN(${integerValues.join(',')}))`;
+        e.value = `signature_id IN (SELECT id FROM signatures WHERE ${rule.field} IN(${values.join(',')}))`;
         return;
       }
       e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
