@@ -1122,7 +1122,8 @@ function doSqlFilterSearch() {
     signature_text LIKE ('Hs %') OR signature_text LIKE ('M %') OR signature_text LIKE ('Ån %') OR \
     signature_text LIKE ('D %') OR signature_text LIKE ('Hr %') OR signature_text LIKE ('J %') OR \
     signature_text LIKE ('Lp %') OR signature_text LIKE ('Ds %') OR signature_text LIKE ('Bo %') OR \
-    signature_text LIKE ('G %') OR signature_text LIKE ('SE %')");
+    signature_text LIKE ('G %') OR signature_text LIKE ('SE %') OR signature_text LIKE ('Bo %') OR \
+    district LIKE ('Skåne%') OR district LIKE ('%Halland%') OR district LIKE ('%Blekinge%')");
 
   console.log('Got SQL: ' + query.sql);
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + query.sql);
