@@ -713,7 +713,7 @@ $.fn.queryBuilder.define('case-rule', function(options) {
       $h.find($.fn.queryBuilder.constructor.selectors.rule_actions).prepend(
           '<button type="button" class="btn btn-xs btn-default" active data-case="rule">' +
           '<i class="' + options.icon_checked + '"></i> ' +
-          '<span class="case-rule-text">' + self.translate('Search with case') + '</span>' +
+          '<span class="case-rule-text">' + self.translate('Match case') + '</span>' +
           '</button>'
       );
       h.value = $h.prop('outerHTML');
@@ -757,7 +757,7 @@ $.fn.queryBuilder.extend({
   updateRuleCaseIgnore: function(rule) {
       console.log(`updateRuleCaseIgnore: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
       rule.$el.find(cssSelectorPluginCaseRule + "> .case-rule-text")
-          .text(this.translate(rule.ignoreCase ? 'Ignore case' : 'Search with case'));
+          .text(this.translate(rule.ignoreCase ? 'Ignore case' : 'Match case'));
           //.find('i').attr('class', rule.ignoreCase ? options.icon_checked : options.icon_unchecked);
 
       /**
@@ -1101,18 +1101,21 @@ function resetSearchStats() {
   gWordVariants = 0;
 }
 
-// Applies user-defined filters in order to obtain valid IDs
-// Returns true on success, false on any failure.
-//
-function applyFilters() {
-  var result = $('#builder').queryBuilder('getSQL', false);
-  if (!result || !result.sql.length) {
-    return false;
+// Take user-defined filters and apply them to the database to obtain inscription IDs
+// Returns object with keys: status, columns, values. Status is either true or false.
+function doSqlFilterSearch() {
+  let results = {
+    status: false,
+    columns: [],
+    values: [],
+  };
+
+  var query = $('#builder').queryBuilder('getSQL', false);
+  if (!query || !query.sql.length) {
+    return results;
   }
 
-  resetSearchStats();
-
-  result.sql = result.sql.replace("signature_text LIKE ('all_sweden%')", "signature_text LIKE ('Öl %') OR \
+  query.sql = query.sql.replace("signature_text LIKE ('all_sweden%')", "signature_text LIKE ('Öl %') OR \
     signature_text LIKE ('Ög %') OR signature_text LIKE ('Sö %') OR signature_text LIKE ('Sm %') OR \
     signature_text LIKE ('Vg %') OR signature_text LIKE ('U %') OR signature_text LIKE ('Vs %') OR \
     signature_text LIKE ('Nä %') OR signature_text LIKE ('Vr %') OR signature_text LIKE ('Gs %') OR \
@@ -1121,19 +1124,42 @@ function applyFilters() {
     signature_text LIKE ('Lp %') OR signature_text LIKE ('Ds %') OR signature_text LIKE ('Bo %') OR \
     signature_text LIKE ('G %') OR signature_text LIKE ('SE %')");
 
-  console.log('Got SQL: ' + result.sql);
-  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + result.sql);
+  console.log('Got SQL: ' + query.sql);
+  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + query.sql);
+  results.status = true;
+
   if (contents.length == 0) {
+    // search successful, but no results
+    return results;
+  }
+
+  results.columns = contents[0].columns;
+  results.values = contents[0].values;
+  return results;
+}
+
+// Applies user-defined filters in order to obtain valid IDs
+// Returns true on success, false on any failure.
+//
+function applyFilters() {
+  const searchResults = doSqlFilterSearch();
+  if (!searchResults.status) {
+    return false;
+  }
+
+  resetSearchStats();
+
+  if (searchResults.columns.length == 0) {
     // no results
     gRootsJson = [];
     return true;
   }
 
-  let signatureIdIdx = contents[0].columns.indexOf('signature_id');
-  let normalisationScandinavianIdx = contents[0].columns.indexOf('normalisation_scandinavian');
+  let signatureIdIdx = searchResults.columns.indexOf('signature_id');
+  let normalisationScandinavianIdx = searchResults.columns.indexOf('normalisation_scandinavian');
 
   if (Object.keys(gWordIndices).length != 0) {
-    contents[0].values = contents[0].values.filter(function checkIds(row) {
+    searchResults.values = searchResults.values.filter(function checkIds(row) {
       id = row[signatureIdIdx];
       normalizedText = row[normalisationScandinavianIdx];
 
@@ -1195,8 +1221,8 @@ function applyFilters() {
   // make a hash map for quick read access
   rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
-  gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
-  gRootsJson = dbToJson(contents[0].columns, contents[0].values);
+  gRootIds = new Map(searchResults.values.map((v, i) => [v[0], i]));
+  gRootsJson = dbToJson(searchResults.columns, searchResults.values);
 
   return true;
 }
@@ -1440,6 +1466,27 @@ function sqlWordRegexp(regexValue, fieldData, id, fieldName) {
 
   return -1;
 }
+
+function modifySignatureTextRules(rules) {
+/* In order to handle both in and other operators for signature text,
+ * we may need to modify the rules on the fly. We need value to be array for selectize and
+ * a string for autoComplete.
+*/
+  if (Array.isArray(rules.rules)) {
+    rules.rules.forEach(rule => {
+      if (rule.id === 'signature_text' && rule.operator === 'in') {
+        if (typeof rule.value === 'string') {
+          rule.value = rule.value.split('|');
+        }
+      }
+      // Recursively handle nested rules
+      if (rule.rules) {
+        modifySignatureTextRules(rule);
+      }
+    });
+  }
+}
+
 
 function onDbLoaded() {
   // add support for regexp searches
@@ -1981,11 +2028,22 @@ function onDbLoaded() {
 
   // seems that the data has been loaded. Do not need this timer any more.
   clearTimeout(gLoadingTimer);
+{% if search_data %}
+  // render search results
+  var shared_rules = JSON.parse(`{{ search_data | safe }}`);
+  modifySignatureTextRules(shared_rules);
+  $('#builder').queryBuilder('setRules', shared_rules, true);
+  doSearch();
+{% endif %}
 }
 
-function dismissAlert() {
-  if ($('#alertObj').is(":visible")) {
-    $('#alertObj').hide(500);
+function dismissAlert(alertId) {
+  if (alertId === undefined) {
+    alertId = '#alertObj';
+  }
+
+  if ($(alertId).is(":visible")) {
+    $(alertId).hide(500);
   }
 }
 // Data provider for jsTree.
@@ -3223,26 +3281,6 @@ $(function() {
       $('#ruleIo').val(JSON.stringify(result, null, 2));
     }
   });
-
-  function modifySignatureTextRules(rules) {
-  /* In order to handle both in and other operators for signature text,
-   * we may need to modify the rules on the fly. We need value to be array for selectize and
-   * a string for autoComplete.
-  */
-    if (Array.isArray(rules.rules)) {
-      rules.rules.forEach(rule => {
-        if (rule.id === 'signature_text' && rule.operator === 'in') {
-          if (typeof rule.value === 'string') {
-            rule.value = rule.value.split('|');
-          }
-        }
-        // Recursively handle nested rules
-        if (rule.rules) {
-          modifySignatureTextRules(rule);
-        }
-      });
-    }
-  }
 
   $('#btnRulesImport').on('click', function() {
     var rules = JSON.parse($('#ruleIo').val());

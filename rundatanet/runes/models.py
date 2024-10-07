@@ -311,3 +311,14 @@ class TranslationSwedish(TextModel):
         indexes = [
             models.Index(fields=["search_value"]),
         ]
+
+
+class MetaWithCrossesTextual(models.Model):
+    # This is a view in the DB
+
+    meta_id = models.IntegerField(primary_key=True)
+    crosses_textual = models.TextField()
+
+    class Meta:
+        managed = False  # No migrations will be created for this model
+        db_table = "meta_with_crosses_textual"
