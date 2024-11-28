@@ -17,5 +17,6 @@ urlpatterns = [
     # path('master', views.master),
     path("about/", TemplateView.as_view(template_name="runes/about.html"), name="about"),
     path("references/", TemplateView.as_view(template_name="runes/references.html"), name="references"),
+    path("eda/", TemplateView.as_view(template_name="runes/eda.html"), name="eda"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
 ]

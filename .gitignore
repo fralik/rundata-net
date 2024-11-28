@@ -274,7 +274,7 @@ pyvenv.cfg
 pip-selfcheck.json
 
 rundatanet/media/
-rundatanet/static/
+# rundatanet/static/
 
 # do not put environment file under version control!
 .env

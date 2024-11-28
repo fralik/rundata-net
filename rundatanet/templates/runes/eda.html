@@ -1,0 +1,723 @@
+{% load static %}
+{% load settings %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rundata-net: EDA</title>
+  {% get_from_settings 'USE_GA' as use_ga %}
+  {% if use_ga %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6M319VSZGS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6M319VSZGS');
+  </script>
+  {% endif %}
+
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+  <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#2b5797">
+  <meta name="theme-color" content="#ffffff">
+
+  <style>
+    .rundata-navbar {
+      background-color: #f8f8f8;
+      border-bottom: 1px solid #e7e7e7;
+    }
+    .transliteration {
+      font-weight: bold;
+    }
+    .normalization {
+      font-style: italic;
+      font-weight: normal;
+    }
+    .highlight {
+      color: red;
+      font-weight: bold;
+    }
+    .inscription-section {
+      border-bottom: 2px solid #999;
+    }
+
+    /*body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #aaa;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    .result {
+      margin-top: 20px;
+    }
+    .input-group {
+      margin-bottom: 10px;
+    }
+    .radio-group {
+      margin-bottom: 10px;
+    }
+    .radio-group label {
+      margin-right: 15px;
+    }
+    #searchResults {
+      margin-top: 20px;
+    }
+    #wordRelations {
+      margin-top: 40px;
+    }
+    #resultsContainer {
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }*/
+  </style>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body class="m-0">
+  <nav class="navbar navbar-expand-lg rundata-navbar container-fluid">
+    <div class="container">
+      <a class="navbar-brand" href="#">Rundata-net</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+        <ul class="nav">
+          <li class="nav-item"><a href="{% url 'runes:about' %}" target="_blank" class="nav-link active">About</a></li>
+          <li class="nav-item"><a href="http://rundata-net.rtfd.io/" target="_blank" class="nav-link active">Help</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="my-3 mx-5">
+    <h1>Exploratory Data Analysis Tool</h1>
+    <div class="">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchDirection" value="norseToTransliteration" id="norseToTransliterationInput" checked>
+        <label class="form-check-label" for="norseToTransliterationInput">Normalisation Norse to Transliteration</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchDirection" value="scandinavianToTransliteration" id="scandinavianToTransliterationInput">
+        <label class="form-check-label" for="scandinavianToTransliterationInput">Normalisation Scandinavian to Transliteration</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchDirection" value="transliterationToNorse" id="transliterationToNorseInput">
+        <label class="form-check-label" for="transliterationToNorseInput">Transliteration to Normalisation Norse</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchDirection" value="transliterationToScandinavian" id="transliterationToScandinavianInput">
+        <label class="form-check-label" for="transliterationToScandinavianInput">Transliteration to Normalisation Scandinavian</label>
+      </div>
+    </div>
+
+    <div class="input-group mb-3 pt-2">
+      <span class="input-group-text" id="normalisation-input-span">Normalisation</span>
+      <input type="text" id="normalisationInput" class="form-control" placeholder="" aria-label="Normalisation" aria-describedby="normalisation-input-span">
+
+      <!--<label for="normalisationInput">Normalisation:</label>
+      <input type="text" id="normalisationInput" placeholder="Enter normalisation search term">-->
+    </div>
+
+    <div class="input-group">
+      <span class="input-group-text" id="transliteration-input-span">Transliteration</span>
+      <input type="text" id="transliterationInput" class="form-control" placeholder="" aria-label="Transliteration" aria-describedby="transliteration-input-span">
+
+      <!--<label for="transliterationInput">Transliteration:</label>
+      <input type="text" id="transliterationInput" placeholder="Enter transliteration search term">-->
+    </div>
+
+    <div id="navigation" class="bg-info-subtle my-3">
+      <h2 class="mt-3">Results Navigation</h2>
+      <a href="#wordRelations">Jump to Word Relations</a></li>
+      <div class="mt-4">Jump to signatures:</div>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-auto" id="signaturesCol1"></div>
+          <div class="col-md-auto" id="signaturesCol2"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultsContainer" class="my-3">
+      <div id="searchStatisticsDiv" class="mt-3">
+        <div class=""><strong>Number of signatures found:</strong> <span id="outNumSignaturesFound">0</span></div>
+        <div class=""><strong>Number of words found:</strong> <span id="outNumWords">0</span></div>
+        <div class=""><strong>Number of personal names:</strong> <span id="outNumFoundNames">0</span></div>
+      </div>
+      <div class="results mt-3" id="searchResults"></div>
+      <div class="word-relations mt-3" id="wordRelations"></div>
+    </div>
+  </main>
+
+<script src="{% static 'runes/eda_scripts.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js" integrity="sha512-KMs6GZJsWI3DXBlu2QMbVdaHJbFrzVDYeccH/Ipuvtg3IOHnABXwUZbIhr5ybFSNYL6Bde1dCQ37xtszsBZcSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<script>
+// Globals
+let db = null;
+let dbAsJson = null;
+// Global variable to store search results
+let gSearchResults = null;
+
+// references to HTML elements
+const normalisationInput = document.getElementById('normalisationInput');
+const transliterationInput = document.getElementById('transliterationInput');
+const searchResultsDiv = document.getElementById('searchResults');
+const wordRelationsDiv = document.getElementById('wordRelations');
+const outNumSignaturesFoundSpan = document.getElementById('outNumSignaturesFound');
+const outNumWordsSpan = document.getElementById('outNumWords');
+const outNumFoundNamesSpan = document.getElementById('outNumFoundNames');
+const radioButtons = document.getElementsByName('searchDirection');
+
+function isPersonalName(word) {
+  return word.startsWith('"') || word.startsWith("&quot;");
+}
+
+function performSearch() {
+  const normalisationQuery = normalisationInput.value.trim();
+  const transliterationQuery = transliterationInput.value.trim();
+  const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
+
+  // do nothing if no input
+  //if (!normalisationQuery && !transliterationQuery) {
+    //return;
+  //}
+
+  // Determine which normalisation field to use
+  let normalisationField;
+  if (searchDirection.includes('norse')) {
+    normalisationField = 'normalisation_norse';
+  } else {
+    normalisationField = 'normalisation_scandinavian';
+  }
+
+  // Clear previous results
+  searchResultsDiv.innerHTML = '';
+  wordRelationsDiv.innerHTML = '';
+
+  // do the search and return signatures with one additional field 'matchedWords'
+  // which contains the indices of the words that matched the search query
+  const results = dbAsJson.map(entry => {
+    const normalWords = entry[`${normalisationField}_words`];
+    const normalisationText = entry[normalisationField];
+    const transliterationWords = entry['transliteration_words'];
+    const transliterationText = entry['transliteration'];
+
+    let matchFound = false;
+    let matchedWords = [];
+    let numFoundNames = 0;
+
+    if (normalisationQuery && transliterationQuery) {
+      for (let i = 0; i < Math.min(normalWords.length, transliterationWords.length); i++) {
+        if (normalWords[i].includes(normalisationQuery) && transliterationWords[i].includes(transliterationQuery)) {
+          matchFound = true;
+          matchedWords.push(i);
+          if (isPersonalName(normalWords[i])) {
+            numFoundNames++;
+          }
+          break;
+        }
+      }
+    } else {
+      if (normalisationQuery) {
+        normalWords.forEach((word, i) => {
+          if (word.includes(normalisationQuery)) {
+            matchFound = true;
+            matchedWords.push(i);
+            if (isPersonalName(word)) {
+              numFoundNames++;
+            }
+          }
+        });
+      }
+      if (transliterationQuery) {
+        transliterationWords.forEach((word, i) => {
+          if (word.includes(transliterationQuery)) {
+            matchFound = true;
+            matchedWords.push(i);
+
+            // transliterated words do not contain personal name annotation, use normalised word instead
+            if ((i < normalWords.length) && isPersonalName(normalWords[i])) {
+              numFoundNames++;
+            }
+          }
+        });
+      }
+    }
+
+    if (matchFound) {
+      // Create a shallow copy of the entry and add search results
+      return { ...entry, matchedWords, numFoundNames };
+    }
+
+    return null;
+  }).filter(result => result !== null);
+
+  outputStatistics(results);
+  displaySignaturesNavigation(results);
+  displayResults(results, normalisationField);
+  displayWordRelations(results);
+}
+
+function outputStatistics(results) {
+  let totalSignatures = results.length;
+  let totalWordMatches = 0;
+  let totalPersonalNames = 0;
+
+  results.forEach(entry => {
+    totalWordMatches += entry.matchedWords.length;
+    totalPersonalNames += entry.numFoundNames;
+  });
+  outNumSignaturesFoundSpan.textContent = totalSignatures;
+  outNumWordsSpan.textContent = totalWordMatches;
+  outNumFoundNamesSpan.textContent = totalPersonalNames;
+}
+
+function displaySignaturesNavigation(results) {
+  const htmlCol1 = document.getElementById('signaturesCol1');
+  const htmlCol2 = document.getElementById('signaturesCol2');
+
+  htmlCol1.innerHTML = "";
+  htmlCol2.innerHTML = "";
+
+  let signatures = new Set();
+
+  // Extract signature IDs from results
+  results.forEach(entry => {
+    const signatureId = entry.signature_text.split(" ")[0];
+    signatures.add(signatureId);
+  });
+
+  const signatureArray = Array.from(signatures);
+  const half = Math.ceil(signatureArray.length / 2);
+
+  const col1Signatures = signatureArray.slice(0, half);
+  const col2Signatures = signatureArray.slice(half);
+
+  // Output signatures in two columns
+  col1Signatures.forEach(signature => {
+    htmlCol1.innerHTML += `<a href="#${signature}">${signature}</a><br/>`;
+  });
+
+  col2Signatures.forEach(signature => {
+    htmlCol2.innerHTML += `<a href="#${signature}">${signature}</a><br/>`;
+  });
+}
+
+function displayResults(results, normalisationField) {
+  if (results.length === 0) {
+    searchResultsDiv.innerHTML = '';
+    return;
+  }
+
+  const paragraphSymbol = '§';
+  let html = '';
+  let lastSignatureCode = '';
+  const columnInfo = {
+    signature_text: {
+      displayName: 'Signature',
+      css: '',
+    },
+    transliteration: {
+      displayName: 'Transliterated runic text',
+      css: 'transliteration',
+    },
+    normalisation_norse: {
+      displayName: 'Normalization to Old West Norse',
+      css: 'normalization',
+    },
+    normalisation_scandinavian: {
+      displayName: 'Normalization to Old Scandinavian',
+      css: 'normalization',
+    },
+  };
+  const userSelectedDisplay = ['transliteration', 'normalisation_norse', 'normalisation_scandinavian'];
+
+  results.forEach(entry => {
+    const signatureId = entry.signature_id;
+    const signatureCode = entry.signature_text.split(" ")[0];
+    const signatureName = entry.signature_text;
+    let paragraph = "";
+    if (lastSignatureCode !== signatureCode) {
+      paragraph = `<article signature="${signatureName}" id="${signatureCode}" data-rundata-id="${signatureId}" class="inscription-section my-2 py-2">`;
+      lastSignatureCode = signatureCode;
+    } else {
+      paragraph = `<article signature="${signatureName}" id="${signatureName}" data-rundata-id="${signatureId}" class="inscription-section my-2 py-2">`;
+    }
+    paragraph += `<h3>${signatureName}</h3>`;
+
+    for (let j = 0; j < userSelectedDisplay.length; j++) {
+      const field = userSelectedDisplay[j];
+      const humanName = columnInfo[field]['displayName'];
+      const cssStyle = columnInfo[field]['css'];
+      paragraph += '<h4>' + humanName + '</h4>';
+
+      let text = entry[`${field}_html`];
+      let entryWordBoundaries = entry[`${field}_word_boundaries`];
+      const matchedWords = entry.matchedWords;
+      const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
+      const highlightedText = highlightWordsFromWordBoundaries(text, matchedWordBoundaries);
+
+      if (~highlightedText.indexOf(paragraphSymbol)) {
+        const parts = highlightedText.split(paragraphSymbol);
+        paragraph += 'Sides or/and reading variants:';
+        paragraph += '<ul>';
+        parts.forEach(part => {
+          if (!part.trim()) {
+            return;
+          }
+          paragraph += `<li><span class="${cssStyle}">${part}</span></li>`;
+        });
+        paragraph += '</ul>';
+      } else {
+        // no parts in the data
+        paragraph += `<span class="${cssStyle}">${highlightedText}</span>`;
+      }
+
+      //paragraph += `<p><strong>${getFieldDisplayName(field)}:</strong> ${entry[field]}</p>`;
+    }
+    paragraph += '</article>';
+    html += paragraph;
+
+    /*html += `<h3>${entry.signature_text}</h3>`;
+
+    let normalText = entry[`${normalisationField}_html`];
+    let normalWordBoundaries = entry[`${normalisationField}_word_boundaries`];
+
+    let translitText = entry.transliteration_html;
+    const translitWordBoundaries = entry.transliteration_word_boundaries;
+
+    const matchedWords = entry.matchedWords;
+
+    // filter normalWordBoundaries and translitWordBoundaries based on matchedWords
+    const matchedNormalWordBoundaries = normalWordBoundaries.filter((_, i) => matchedWords.includes(i));
+    const matchedTranslitWordBoundaries = translitWordBoundaries.filter((_, i) => matchedWords.includes(i));
+
+    const highlightedNormalisedText = highlightWordsFromWordBoundaries(normalText, matchedNormalWordBoundaries);
+    const highlightedTransliteratedText = highlightWordsFromWordBoundaries(translitText, matchedTranslitWordBoundaries);
+
+    // do html escaping for the text
+
+
+    html += `<p><strong>${getFieldDisplayName(normalisationField)}:</strong><pre>${highlightedNormalisedText}</pre></p>`;
+    html += `<p><strong>${getFieldDisplayName('transliteration')}:</strong><pre>${highlightedTransliteratedText}</pre></p>`;*/
+  });
+
+  searchResultsDiv.innerHTML = html;
+}
+
+// Displays the word relations table
+function displayWordRelations(results) {
+  const wordMap = {};
+
+  // determine search direction and first and second column names of word relations table
+  let fromField, toField;
+  const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
+  if (searchDirection.includes('ToTrans')) {
+    toField = 'transliteration';
+    if (searchDirection.includes('Norse')) {
+      fromField = 'normalisation_norse';
+    } else {
+      fromField = 'normalisation_scandinavian';
+    }
+  } else {
+    fromField = 'transliteration';
+    if (searchDirection.includes('Norse')) {
+      toField = 'normalisation_norse';
+    } else {
+      toField = 'normalisation_scandinavian';
+    }
+  }
+
+  // populate wordMap
+  results.forEach(entry => {
+    // indices of words that matched the search query
+    const matchedWords = entry.matchedWords;
+    const fromWords = entry[`${fromField}_words`];
+    const toWords = entry[`${toField}_words`];
+    const signature = entry.signature_text;
+    for (let i = 0; i < matchedWords.length; i++) {
+      // get word text from 'fromField' of the entity
+      const fromWordText = fromWords[matchedWords[i]];
+      const toWordText = toWords[matchedWords[i]];
+
+      if (!wordMap[fromWordText]) {
+        wordMap[fromWordText] = {};
+      }
+      if (!wordMap[fromWordText][toWordText]) {
+        wordMap[fromWordText][toWordText] = { frequency: 0, signatures: new Set() };
+      }
+      wordMap[fromWordText][toWordText].frequency += 1;
+      wordMap[fromWordText][toWordText].signatures.add(signature);
+    }
+  });
+
+  generateWordRelationsTable(wordMap, fromField, toField);
+}
+
+// Generates the word relations table HTML
+function generateWordRelationsTable(wordMap, fromField, toField) {
+  let html = '<h2>Word Relations</h2>';
+  html += '<table class="table">';
+  html += `<tr><th>${getFieldDisplayName(fromField)} Word</th><th>Corresponding ${getFieldDisplayName(toField)} Words</th></tr>`;
+
+  for (const [fromWord, toWordsObj] of Object.entries(wordMap)) {
+    const toWords = Object.keys(toWordsObj);
+    let rowSpan = toWords.length;
+
+    let firstRow = true;
+    for (const [toWord, info] of Object.entries(toWordsObj)) {
+      const freq = info.frequency;
+      const signatures = Array.from(info.signatures).join(', ');
+
+      if (firstRow) {
+        html += `<tr><td rowspan="${rowSpan}">${fromWord}</td>`;
+        firstRow = false;
+      } else {
+        html += '<tr>';
+      }
+
+      html += `<td>${toWord} (Frequency: ${freq}, Signatures: ${signatures})</td></tr>`;
+    }
+  }
+
+  html += '</table>';
+  wordRelationsDiv.innerHTML = html;
+}
+
+// Initialize database and pre-process data
+function onDbLoaded() {
+  const results = db.exec("SELECT signature_id, signature_text, transliteration, search_transliteration, normalisation_norse, normalisation_scandinavian FROM all_data");
+  const columnNames = results[0].columns;
+  const values = results[0].values;
+
+  const allButNames = /[\$\[\]\{\}\(\)\?<>\^`´\|¬°·:×¤\+÷']|¶+,\./g;
+  const punctuation = /[\.,;]/g;
+
+  // Two tables below are true for DB 20240910. Assembled manually.
+  const normalisationWordsToSkip = {
+    'U 166': [3, 7],
+    'Sm 1': [24, 28],
+    'U 637': [10, 12],
+    'U 1036': [14, 16],
+    'M 11': [16, 35],
+    'G 280': [5, 7],
+    'GR 56': [8],
+    'N KJ72': [22],
+    'N B625': [69],
+    'N B311': [4],
+    'N B265': [25],
+    'N B259': [1],
+    'N B255': [20],
+    'N B27': [3],
+    'N A197': [3],
+    'N A5': [1],
+    'N A144': [1],
+    'N 603': [5],
+    'N 362': [2],
+    'N 208': [8],
+    'N 171': [13],
+    'N 124': [2],
+    'N 114': [3],
+    'N 26': [8],
+    'N 19': [12],
+    'DR NOR2004;7': [18],
+    'DR NOR1999;21': [47],
+    "G 306": [3],
+    "G 129": [11],
+    "G 119": [24],
+    "Gs 8": [7],
+    "Vs 27": [10],
+    "Vs 22": [6],
+    "Vs 3": [15],
+    "U THS10;58": [15],
+    "U NOR1998;25": [19],
+    "U Fv1976;104": [3],
+    "U Fv1953;263": [18],
+    "U Fv1948;168": [16],
+    "U 1168": [6],
+    "U 1162": [11],
+    "U 1158": [10],
+    "U 1132": [13],
+    "U 1111": [11],
+    "U 1097": [3],
+    "U 1060": [5],
+    "U 1042": [10],
+    "U 1005": [12],
+    "U 968": [3],
+    "U 952": [16],
+    "U 917": [3],
+    "U 896": [10],
+    "U 805": [40],
+    "U 662": [1],
+    "U 618": [12],
+    "U 545": [24],
+    "U 459": [11],
+    "U 423": [11],
+    "U 351": [14],
+    "Vg 219": [13],
+    "Vg 67": [25],
+    "Sö Fv1986;218": [8],
+    "Sö 344": [3],
+    "Sö 320": [5],
+    "Sö 256": [10],
+    "Sö 205": [3],
+    "Sö 130": [20],
+    "Sö 109": [13],
+    "Sö 105": [5],
+    "Sö 82": [9],
+    "Sö 46": [19],
+    "Sö 21": [6],
+    "Ög 180": [4],
+
+  };
+  const transliterationWordsToSkip = {
+    "IS IR;166": [12],
+    'N 157': [4],
+    "DR NOR2002;7": [9],
+    "G 325": [8],
+    "Nä 20": [6],
+    "U Sl115": [1],
+    "U Fv1992;156": [7],
+    "U Fv1986;84": [1, 14],
+    "U 775": [13],
+    "U 558": [6],
+    "U 431": [12],
+    "U 29": [29],
+    "Sö 196": [34],
+    "Ög 51": [4],
+  };
+
+  let numDiffers = 0;
+  dbAsJson = values.map(row => {
+    const obj = {};
+
+    columnNames.forEach((name, i) => {
+      obj[name] = row[i];
+
+      // Pre-split words and store arrays
+      if (['transliteration', 'normalisation_norse', 'normalisation_scandinavian'].includes(name)) {
+        obj[`${name}_html`] = escapeHtml(row[i]);
+        obj[`${name}_word_boundaries`] = getWordBoundaries(obj[`${name}_html`], true);
+      }
+    });
+
+    // special treatment for "Sö 145"
+    if (obj.signature_text === "Sö 145") {
+      // treat `ata i` as a single word
+      obj['transliteration_html'] = escapeHtml(obj.transliteration.replace(": ata i ::", ": ata_i ::"));
+      obj['transliteration_word_boundaries'] = getWordBoundaries(obj['transliteration_html'], true);
+      // replace it back
+      obj['transliteration_word_boundaries'][22].text = 'ata i';
+    }
+
+    if (normalisationWordsToSkip.hasOwnProperty(obj.signature_text)) {
+      const wordsToSkip = normalisationWordsToSkip[obj.signature_text];
+      obj.normalisation_norse_word_boundaries = obj.normalisation_norse_word_boundaries.filter((_, i) => !wordsToSkip.includes(i));
+      obj.normalisation_scandinavian_word_boundaries = obj.normalisation_scandinavian_word_boundaries.filter((_, i) => !wordsToSkip.includes(i));
+    }
+    if (transliterationWordsToSkip.hasOwnProperty(obj.signature_text)) {
+      const wordsToSkip = transliterationWordsToSkip[obj.signature_text];
+      obj.transliteration_word_boundaries = obj.transliteration_word_boundaries.filter((_, i) => !wordsToSkip.includes(i));
+    }
+
+    if (obj.transliteration_word_boundaries.length == 0 && obj.normalisation_norse_word_boundaries.length == 1) {
+      if (obj.normalisation_norse_word_boundaries[0].text == '...') {
+        // reset the normalisation_norse_word_boundaries
+        obj.normalisation_norse_word_boundaries = [];
+        obj.normalisation_scandinavian_word_boundaries = [];
+      }
+    }
+
+    ['transliteration', 'normalisation_norse', 'normalisation_scandinavian'].forEach(name => {
+      // `${name}_word_boundaries` is a list of objects with keys: start, end, text
+      // create a new array out of it with only the text
+      obj[`${name}_words`] = obj[`${name}_word_boundaries`].map(boundary => {
+        return boundary.text;
+      });
+    });
+
+    numDiffers += obj.transliteration_word_boundaries.length !== obj.normalisation_norse_word_boundaries.length ? 1 : 0;
+    return obj;
+  });
+  console.log(`Number of signatures with different word boundaries: ${numDiffers}`);
+
+  // Compare word boundaries lengths and output report if they are not equal
+  /*let differenceStats = {};
+  let info = '';
+  dbAsJson.forEach((entry, i) => {
+    const transliterationWordBoundaries = entry.transliteration_word_boundaries;
+    const normalisationNorseWordBoundaries = entry.normalisation_norse_word_boundaries;
+
+    if (transliterationWordBoundaries.length !== normalisationNorseWordBoundaries.length) {
+      console.log(`Signature: ${entry.signature_text}, index: ${i}`);
+      console.log(`Transliteration words: ${transliterationWordBoundaries.length}`);
+      console.log(`Normalisation Norse words: ${normalisationNorseWordBoundaries.length}`);
+      console.log(entry);
+
+      console.log('  ');
+
+      const difference = Math.abs(transliterationWordBoundaries.length - normalisationNorseWordBoundaries.length);
+      if (difference == 2) {
+        info += `Signature: ${entry.signature_text}, index: ${i}\n`;
+      }
+
+      if (!differenceStats[difference]) {
+        differenceStats[difference] = 0;
+      }
+      differenceStats[difference]++;
+    }
+  });
+  console.log('Difference statistics:', differenceStats);
+  console.log('Info:', info);*/
+
+  performSearch();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sqlConfig = {
+    locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
+  };
+  initSqlJs(sqlConfig).then(function(SQL) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.6", true);
+    xhr.responseType = 'arraybuffer';
+    xhr.addEventListener("load", function() {
+      console.log('we got sql data from server');
+
+      var uInt8Array = new Uint8Array(this.response);
+      db = new SQL.Database(uInt8Array);
+      onDbLoaded();
+    });
+    xhr.send();
+  }).catch(function (reason) {
+    console.log(`Failed to init SQL: ${reason}`);
+  });
+
+  // Event listeners for input fields
+  normalisationInput.addEventListener('input', performSearch);
+  transliterationInput.addEventListener('input', performSearch);
+  radioButtons.forEach(radio => {
+    radio.addEventListener('change', performSearch);
+  });
+
+});
+
+</script>
+</body>
+</html>
