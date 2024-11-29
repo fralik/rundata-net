@@ -1,8 +1,28 @@
+/**
+ * Checks if a given word is a personal name.
+ * @param {string} word - The word to check.
+  * @returns {boolean} - True if the word is a personal name, false otherwise.
+  *
+  */
+function isPersonalName(word) {
+  return word.startsWith('"') || word.startsWith("&quot;")
+    || word.includes('/"') || word.includes('/&quot;');
+}
+
+// Debounce function
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
 // Extracts word boundaries from inscription texts. These texts
 // have multiple separators (whitespaces, punctuation) that often
 // go together, i.e. space,punctuation,space
 // returns array of objects. Each object:
-// {start: num, end: num, text: string}
+// {start: num, end: num, text: string, isPersonal: 0|1}
 // Arguments:
 //   str - search string
 function getWordBoundaries(str, sourceIsEscaped = false) {
@@ -50,9 +70,7 @@ function getWordBoundaries(str, sourceIsEscaped = false) {
     };
 
     // Check if the word is personal
-    if (wordText.startsWith('"') || wordText.startsWith('&quot;')) {
-      oneWord.isPersonal = 1;
-    }
+    oneWord.isPersonal = isPersonalName(wordText) ? 1 : 0;
 
     return oneWord;
   }

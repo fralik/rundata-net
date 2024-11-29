@@ -184,19 +184,10 @@ const outNumWordsSpan = document.getElementById('outNumWords');
 const outNumFoundNamesSpan = document.getElementById('outNumFoundNames');
 const radioButtons = document.getElementsByName('searchDirection');
 
-function isPersonalName(word) {
-  return word.startsWith('"') || word.startsWith("&quot;");
-}
-
 function performSearch() {
   const normalisationQuery = normalisationInput.value.trim();
   const transliterationQuery = transliterationInput.value.trim();
   const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
-
-  // do nothing if no input
-  //if (!normalisationQuery && !transliterationQuery) {
-    //return;
-  //}
 
   // Determine which normalisation field to use
   let normalisationField;
@@ -270,7 +261,7 @@ function performSearch() {
 
   outputStatistics(results);
   displaySignaturesNavigation(results);
-  displayResults(results, normalisationField);
+  displayResults(results);
   displayWordRelations(results);
 }
 
@@ -319,7 +310,7 @@ function displaySignaturesNavigation(results) {
   });
 }
 
-function displayResults(results, normalisationField) {
+function displayResults(results) {
   if (results.length === 0) {
     searchResultsDiv.innerHTML = '';
     return;
@@ -393,29 +384,6 @@ function displayResults(results, normalisationField) {
     }
     paragraph += '</article>';
     html += paragraph;
-
-    /*html += `<h3>${entry.signature_text}</h3>`;
-
-    let normalText = entry[`${normalisationField}_html`];
-    let normalWordBoundaries = entry[`${normalisationField}_word_boundaries`];
-
-    let translitText = entry.transliteration_html;
-    const translitWordBoundaries = entry.transliteration_word_boundaries;
-
-    const matchedWords = entry.matchedWords;
-
-    // filter normalWordBoundaries and translitWordBoundaries based on matchedWords
-    const matchedNormalWordBoundaries = normalWordBoundaries.filter((_, i) => matchedWords.includes(i));
-    const matchedTranslitWordBoundaries = translitWordBoundaries.filter((_, i) => matchedWords.includes(i));
-
-    const highlightedNormalisedText = highlightWordsFromWordBoundaries(normalText, matchedNormalWordBoundaries);
-    const highlightedTransliteratedText = highlightWordsFromWordBoundaries(translitText, matchedTranslitWordBoundaries);
-
-    // do html escaping for the text
-
-
-    html += `<p><strong>${getFieldDisplayName(normalisationField)}:</strong><pre>${highlightedNormalisedText}</pre></p>`;
-    html += `<p><strong>${getFieldDisplayName('transliteration')}:</strong><pre>${highlightedTransliteratedText}</pre></p>`;*/
   });
 
   searchResultsDiv.innerHTML = html;
@@ -480,13 +448,16 @@ function generateWordRelationsTable(wordMap, fromField, toField) {
     const toWords = Object.keys(toWordsObj);
     let rowSpan = toWords.length;
 
+    // total frequency = sum of frequencies of all toWords
+    const totalFrequency = toWords.reduce((acc, toWord) => acc + toWordsObj[toWord].frequency, 0);
+
     let firstRow = true;
     for (const [toWord, info] of Object.entries(toWordsObj)) {
       const freq = info.frequency;
       const signatures = Array.from(info.signatures).join(', ');
 
       if (firstRow) {
-        html += `<tr><td rowspan="${rowSpan}">${fromWord}</td>`;
+        html += `<tr><td rowspan="${rowSpan}">${fromWord} (${totalFrequency})</td>`;
         firstRow = false;
       } else {
         html += '<tr>';
@@ -685,8 +656,6 @@ function onDbLoaded() {
   });
   console.log('Difference statistics:', differenceStats);
   console.log('Info:', info);*/
-
-  performSearch();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -703,15 +672,19 @@ document.addEventListener('DOMContentLoaded', function() {
       var uInt8Array = new Uint8Array(this.response);
       db = new SQL.Database(uInt8Array);
       onDbLoaded();
+      performSearch();
     });
     xhr.send();
   }).catch(function (reason) {
     console.log(`Failed to init SQL: ${reason}`);
   });
 
+  // Debounce the performSearch function
+  const debouncedPerformSearch = debounce(performSearch, 200);
+
   // Event listeners for input fields
-  normalisationInput.addEventListener('input', performSearch);
-  transliterationInput.addEventListener('input', performSearch);
+  normalisationInput.addEventListener('input', debouncedPerformSearch);
+  transliterationInput.addEventListener('input', debouncedPerformSearch);
   radioButtons.forEach(radio => {
     radio.addEventListener('change', performSearch);
   });
