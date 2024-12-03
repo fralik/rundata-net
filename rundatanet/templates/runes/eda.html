@@ -127,17 +127,30 @@
     <div class="input-group mb-3 pt-2">
       <span class="input-group-text" id="normalisation-input-span">Normalisation</span>
       <input type="text" id="normalisationInput" class="form-control" placeholder="" aria-label="Normalisation" aria-describedby="normalisation-input-span">
-
-      <!--<label for="normalisationInput">Normalisation:</label>
-      <input type="text" id="normalisationInput" placeholder="Enter normalisation search term">-->
     </div>
 
     <div class="input-group">
       <span class="input-group-text" id="transliteration-input-span">Transliteration</span>
       <input type="text" id="transliterationInput" class="form-control" placeholder="" aria-label="Transliteration" aria-describedby="transliteration-input-span">
+    </div>
 
-      <!--<label for="transliterationInput">Transliteration:</label>
-      <input type="text" id="transliterationInput" placeholder="Enter transliteration search term">-->
+    <div class="mb-3 pt-2">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchMode" value="contains" id="containsInput" checked>
+        <label class="form-check-label" for="containsInput">contains</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchMode" value="exact" id="exactInput">
+        <label class="form-check-label" for="exactInput">exact match</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchMode" value="beginsWith" id="beginsWithInput">
+        <label class="form-check-label" for="beginsWithInput">begins with</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchMode" value="endsWith" id="endsWithInput">
+        <label class="form-check-label" for="endsWithInput">ends with</label>
+      </div>
     </div>
 
     <div id="navigation" class="bg-info-subtle my-3">
@@ -171,8 +184,6 @@
 // Globals
 let db = null;
 let dbAsJson = null;
-// Global variable to store search results
-let gSearchResults = null;
 
 // references to HTML elements
 const normalisationInput = document.getElementById('normalisationInput');
@@ -182,12 +193,25 @@ const wordRelationsDiv = document.getElementById('wordRelations');
 const outNumSignaturesFoundSpan = document.getElementById('outNumSignaturesFound');
 const outNumWordsSpan = document.getElementById('outNumWords');
 const outNumFoundNamesSpan = document.getElementById('outNumFoundNames');
-const radioButtons = document.getElementsByName('searchDirection');
+
+function getSearchFunction(searchMode) {
+  if (searchMode === 'exact') {
+    return (word, query) => word === query;
+  } else if (searchMode === 'beginsWith') {
+    return (word, query) => word.startsWith(query);
+  } else if (searchMode === 'endsWith') {
+    return (word, query) => word.endsWith(query);
+  } else {
+    return (word, query) => word.includes(query);
+  }
+}
 
 function performSearch() {
   const normalisationQuery = normalisationInput.value.trim();
   const transliterationQuery = transliterationInput.value.trim();
   const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
+  const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
+  const isAHit = getSearchFunction(searchMode);
 
   // Determine which normalisation field to use
   let normalisationField;
@@ -215,19 +239,18 @@ function performSearch() {
 
     if (normalisationQuery && transliterationQuery) {
       for (let i = 0; i < Math.min(normalWords.length, transliterationWords.length); i++) {
-        if (normalWords[i].includes(normalisationQuery) && transliterationWords[i].includes(transliterationQuery)) {
+        if (isAHit(normalWords[i], normalisationQuery) && isAHit(transliterationWords[i], transliterationQuery)) {
           matchFound = true;
           matchedWords.push(i);
           if (isPersonalName(normalWords[i])) {
             numFoundNames++;
           }
-          break;
         }
       }
     } else {
       if (normalisationQuery) {
         normalWords.forEach((word, i) => {
-          if (word.includes(normalisationQuery)) {
+          if (isAHit(word, normalisationQuery)) {
             matchFound = true;
             matchedWords.push(i);
             if (isPersonalName(word)) {
@@ -238,7 +261,7 @@ function performSearch() {
       }
       if (transliterationQuery) {
         transliterationWords.forEach((word, i) => {
-          if (word.includes(transliterationQuery)) {
+          if (isAHit(word, transliterationQuery)) {
             matchFound = true;
             matchedWords.push(i);
 
@@ -286,27 +309,31 @@ function displaySignaturesNavigation(results) {
   htmlCol1.innerHTML = "";
   htmlCol2.innerHTML = "";
 
-  let signatures = new Set();
+  let signatureFrequency = {};
 
   // Extract signature IDs from results
   results.forEach(entry => {
     const signatureId = entry.signature_text.split(" ")[0];
-    signatures.add(signatureId);
+    if (signatureFrequency.hasOwnProperty(signatureId)) {
+      signatureFrequency[signatureId] += 1;
+    } else {
+      signatureFrequency[signatureId] = 1;
+    }
   });
 
-  const signatureArray = Array.from(signatures);
-  const half = Math.ceil(signatureArray.length / 2);
+  const signatureIds = Object.keys(signatureFrequency);
+  const half = Math.ceil(signatureIds.length / 2);
 
-  const col1Signatures = signatureArray.slice(0, half);
-  const col2Signatures = signatureArray.slice(half);
+  const col1Signatures = signatureIds.slice(0, half);
+  const col2Signatures = signatureIds.slice(half);
 
   // Output signatures in two columns
   col1Signatures.forEach(signature => {
-    htmlCol1.innerHTML += `<a href="#${signature}">${signature}</a><br/>`;
+    htmlCol1.innerHTML += `<a href="#${signature}">${signature}</a> (${signatureFrequency[signature]})<br/>`;
   });
 
   col2Signatures.forEach(signature => {
-    htmlCol2.innerHTML += `<a href="#${signature}">${signature}</a><br/>`;
+    htmlCol2.innerHTML += `<a href="#${signature}">${signature}</a> (${signatureFrequency[signature]})<br/>`;
   });
 }
 
@@ -685,9 +712,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Event listeners for input fields
   normalisationInput.addEventListener('input', debouncedPerformSearch);
   transliterationInput.addEventListener('input', debouncedPerformSearch);
-  radioButtons.forEach(radio => {
+  document.getElementsByName('searchDirection').forEach(radio => {
     radio.addEventListener('change', performSearch);
   });
+  /*document.getElementsByName('searchMode').forEach(radio => {
+    radio.addEventListener('change', performSearch);
+  });*/
 
 });
 
