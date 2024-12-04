@@ -134,14 +134,14 @@
       <input type="text" id="transliterationInput" class="form-control" placeholder="" aria-label="Transliteration" aria-describedby="transliteration-input-span">
     </div>
 
-    <div class="mb-3 pt-2">
+    <div class="pt-2">
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="searchMode" value="contains" id="containsInput" checked>
         <label class="form-check-label" for="containsInput">contains</label>
       </div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="searchMode" value="exact" id="exactInput">
-        <label class="form-check-label" for="exactInput">exact match</label>
+        <label class="form-check-label" for="exactInput">matches exactly</label>
       </div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="searchMode" value="beginsWith" id="beginsWithInput">
@@ -150,6 +150,25 @@
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="searchMode" value="endsWith" id="endsWithInput">
         <label class="form-check-label" for="endsWithInput">ends with</label>
+      </div>
+      <!--<div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="searchMode" value="regex" id="regexInput">
+        <label class="form-check-label" for="regexInput">matches regular expression</label>
+      </div>-->
+    </div>
+
+    <div class="mb-3 pt-2">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="personalNamesMode" value="includeAll" id="includeAddInput" checked>
+        <label class="form-check-label" for="includeAddInput">Include personal names</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="personalNamesMode" value="excludeNames" id="excludeNamesInput">
+        <label class="form-check-label" for="excludeNamesInput">Exclude personal names</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="personalNamesMode" value="namesOnly" id="namesOnlyInput">
+        <label class="form-check-label" for="namesOnlyInput">Personal names only</label>
       </div>
     </div>
 
@@ -201,6 +220,8 @@ function getSearchFunction(searchMode) {
     return (word, query) => word.startsWith(query);
   } else if (searchMode === 'endsWith') {
     return (word, query) => word.endsWith(query);
+  } else if (searchMode === 'regex') {
+    return (word, query) => new RegExp(query).test(word);
   } else {
     return (word, query) => word.includes(query);
   }
@@ -212,6 +233,7 @@ function performSearch() {
   const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
   const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
   const isAHit = getSearchFunction(searchMode);
+  const namesMode = document.querySelector('input[name="personalNamesMode"]:checked').value;
 
   // Determine which normalisation field to use
   let normalisationField;
@@ -236,13 +258,22 @@ function performSearch() {
     let matchFound = false;
     let matchedWords = [];
     let numFoundNames = 0;
+    let personalNamePresent = false;
 
     if (normalisationQuery && transliterationQuery) {
       for (let i = 0; i < Math.min(normalWords.length, transliterationWords.length); i++) {
         if (isAHit(normalWords[i], normalisationQuery) && isAHit(transliterationWords[i], transliterationQuery)) {
+          personalNamePresent = isPersonalName(normalWords[i]);
+          if (namesMode === 'excludeNames' && personalNamePresent) {
+            continue;
+          }
+          if (namesMode === 'namesOnly' && !personalNamePresent) {
+            continue;
+          }
+
           matchFound = true;
           matchedWords.push(i);
-          if (isPersonalName(normalWords[i])) {
+          if (personalNamePresent) {
             numFoundNames++;
           }
         }
@@ -251,9 +282,17 @@ function performSearch() {
       if (normalisationQuery) {
         normalWords.forEach((word, i) => {
           if (isAHit(word, normalisationQuery)) {
+            personalNamePresent = isPersonalName(word);
+            if (namesMode === 'excludeNames' && personalNamePresent) {
+              return;
+            }
+            if (namesMode === 'namesOnly' && !personalNamePresent) {
+              return;
+            }
+
             matchFound = true;
             matchedWords.push(i);
-            if (isPersonalName(word)) {
+            if (personalNamePresent) {
               numFoundNames++;
             }
           }
@@ -262,13 +301,18 @@ function performSearch() {
       if (transliterationQuery) {
         transliterationWords.forEach((word, i) => {
           if (isAHit(word, transliterationQuery)) {
+            // transliterated words do not contain personal name annotation, use normalised word instead
+            personalNamePresent = true ? (i < normalWords.length) && isPersonalName(normalWords[i]) : false;
+
+            if (namesMode == 'excludeNames' && personalNamePresent) {
+              return;
+            }
+            if (namesMode == 'namesOnly' && !personalNamePresent) {
+              return;
+            }
             matchFound = true;
             matchedWords.push(i);
-
-            // transliterated words do not contain personal name annotation, use normalised word instead
-            if ((i < normalWords.length) && isPersonalName(normalWords[i])) {
-              numFoundNames++;
-            }
+            numFoundNames += int(personalNamePresent);
           }
         });
       }
@@ -715,9 +759,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementsByName('searchDirection').forEach(radio => {
     radio.addEventListener('change', performSearch);
   });
-  /*document.getElementsByName('searchMode').forEach(radio => {
+  document.getElementsByName('searchMode').forEach(radio => {
     radio.addEventListener('change', performSearch);
-  });*/
+  });
+  document.getElementsByName('personalNamesMode').forEach(radio => {
+    radio.addEventListener('change', performSearch);
+  });
 
 });
 
