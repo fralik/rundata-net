@@ -312,7 +312,9 @@ function performSearch() {
             }
             matchFound = true;
             matchedWords.push(i);
-            numFoundNames += int(personalNamePresent);
+            if (personalNamePresent) {
+              numFoundNames++;
+            }
           }
         });
       }
