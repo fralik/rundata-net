@@ -1,0 +1,28 @@
+{
+  "name": "rundata-net-github",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "uvu rundatanet/tests/js",
+    "dev": "npx rollup -c"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Vadim Frolov",
+  "license": "GPLv3",
+  "description": "",
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "better-sqlite3": "^11.6.0",
+    "rollup": "^4.28.1",
+    "uvu": "^0.5.6"
+  },
+  "devDependenciesComments": {
+    "better-sqlite3": "for testing using a local database",
+    "uvu": "for testing",
+    "rollup": "for combining multiple js files into one"
+  }
+}

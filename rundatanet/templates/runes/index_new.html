@@ -1,0 +1,859 @@
+﻿{% load static %}
+{% load settings %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rundata.info is a web version of ​​​Scandinavian Runic-text Data Base.">
+    <title>Rundata-net</title>
+    {% get_from_settings 'USE_GA' as use_ga %}
+    {% if use_ga %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6M319VSZGS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-6M319VSZGS');
+    </script>
+    {% endif %}
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+    <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
+
+    <!--<style type="text/css">
+      .my-fixed-height {
+        max-height: 500px;
+        min-height: 500px;
+        height: 500px;
+        margin-bottom: 15px;
+      }
+      .jstree-scrollable {
+        overflow-y: scroll;
+        max-height: 100%;
+        height: 100% !important;
+        width: 100%;
+        min-width: 100%;
+        border-width: 0px;
+      }
+      option:hover {
+        background-color: #f0f0f0;
+      }
+      .border-1 {
+        border: 1px solid #ccc;
+      }
+      .group-full-height {
+        max-height: 100%;
+        min-height: 100%;
+        height: 100%;
+      }
+      .border-left-bottom {
+        border-left: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      .border-bottom-right {
+        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      .border-bottom {
+        border-bottom: 1px solid #ccc;
+      }
+      body {
+        font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', Verdana, Helvetica, sans-serif;
+      }
+      .transliteration {
+        font-weight: bold;
+      }
+      .normalization {
+        font-style: italic;
+        font-weight: normal;
+      }
+      th {
+        text-align: center;
+      }
+      span.null {
+        font-weight: bold;
+        color: #CCCCCC;
+      }
+      .white-text {
+        color:#fff!important;
+      }
+      .navbar-static-top {
+        margin-bottom: 0px;
+      }
+
+      .vertical-align {
+        display: flex;
+        align-items: center;
+      }
+      .inscription-section {
+        border-bottom: 2px solid #999;
+      }
+      .zero-padding-left {
+        padding-left: 0px;
+      }
+      .highlighted {
+        color: red;
+      }
+      .top-margin {
+        margin-top: 5px;
+      }
+      /**********************************
+       * drop area styles
+       **********************************/
+      #drop-area {
+        border: 2px dashed #dcc896;
+        border-radius: 20px;
+        /*margin: auto;*/
+        margin-bottom: 20px;
+        padding: 20px;
+      }
+      #drop-area.highlight {
+        border-color: green;
+      }
+      .my-form {
+        margin-bottom: 10px;
+      }
+      .my-form p {
+        margin-top: 0;
+      }
+      .my-form .button {
+        display: inline-block;
+        padding: 10px;
+        background: #fff;
+        cursor: pointer;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .my-form .button:hover {
+        background: #ddd;
+      }
+      #fileElem {
+        display: none;
+      }
+      #alertObj {
+        display: none;
+      }
+      /********************************
+       * drop area styles end
+       */
+       .row {
+        /*border: 1px solid #ccc;*/
+       }
+      .pt-3,
+      .py-3 {
+        padding-top: 1rem !important;
+      }
+      .pb-3,
+      .py-3 {
+        padding-bottom: 1rem !important;
+      }
+      .pb-5,
+      .py-5 {
+        padding-bottom: 3rem !important;
+      }
+      .pb-6,
+      .py-6 {
+        padding-bottom: 9rem !important;
+      }
+
+      .selectize-control {
+        min-width: 400px;
+      }
+    </style>-->
+    <style>
+      .rundata-navbar {
+        border-bottom: 1px solid #e7e7e7;
+      }
+      #alertObj {
+        display: none;
+      }
+      .my-fixed-height {
+        max-height: 500px;
+        min-height: 500px;
+        height: 500px;
+        margin-bottom: 15px;
+      }
+      .jstree-scrollable {
+        overflow-y: scroll;
+        max-height: 100%;
+        height: 100%;
+      }
+      .btn-primary-outline {
+        background-color: transparent;
+        border-color: #ccc;
+      }
+      .btn-default {
+        color: #333;
+        background-color: #fff;
+        border-color: #ccc;        
+      }
+      .btn-default:hover {
+        background-color: #e6e6e6;
+        border-color: #adadad;
+      }
+      /* Used in display options dialog */
+      .btn-block+.btn-block {
+        margin-top: 5px;
+      }
+      .btn-no-hover {
+        &:hover {
+          background-color: var(--bs-btn-bg);
+          color: var(--bs-btn-color);
+        }
+        &:focus {
+          background-color: var(--bs-btn-bg);
+          color: var(--bs-btn-color);
+        }
+        &.active {
+          &:hover {
+            background-color: var(--bs-btn-active-bg);
+            color: var(--bs-btn-active-color);
+          }
+          &:focus {
+            background-color: var(--bs-btn-active-bg);
+            color: var(--bs-btn-active-color);
+          }
+        }
+      }
+      
+      .inscription-section {
+        border-bottom: 2px solid #999;
+      }
+    </style>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
+    crossorigin="">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@3.0.2/Control.FullScreen.css"
+    integrity="sha384-PALxxXbG28eiE9bT7yKmsbjd4Ta3qKMLlzsrp6G+05f4Nltt4ktlg1l7e4RPeNEa"
+    crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.82.0/dist/L.Control.Locate.min.css" integrity="sha256-3PXa1eIJsM3owBQDkWnv+w0ikd9zv9OJOOy2asvgGfA=" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css" integrity="sha512-A5OJVuNqxRragmJeYTW19bnw9M2WyxoshScX/rGTgZYj5hRXuqwZ+1AVn2d6wYTZPzPXxDeAGlae0XwTQdXjQA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+<body>
+  <nav class="navbar navbar-expand-md bg-body-tertiary rundata-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Rundata-net</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Map
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" id="mHideMap">Hide Map</a></li>
+              <li>
+                <div class="dropdown-item">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
+                    <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div class="dropdown-item"><div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="chkShowOriginalLocation" aria-label="Checkbox for showing original location">
+                  <label class="form-check-label" for="chkShowOriginalLocation">Show inscriptions based on original location</label>
+                </div></div>
+              </li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Import/Export
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Search parameters</a></li>
+              <li><a class="dropdown-item" href="#">Results</a></li>
+            </ul>
+          </li>
+        </ul>
+        <form class="d-flex" role="about">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="{% url 'runes:about' %}" target="_blank">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+          </ul>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <!--<nav class="navbar navbar-expand-md rundata-navbar">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Rundata-net</a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Map <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#" id="mHideMap">Hide map</a></li>
+              <li><a href="#"><div class="checkbox">
+                <input type="checkbox" id="chkShowSelectedInscriptions">
+                <label for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
+              </div></a></li>
+              <li><a href="#"><div class="checkbox">
+                <input type="checkbox" id="chkShowOriginalLocation">
+                <label for="chkShowOriginalLocation">Show inscriptions based on original location</label>
+              </div></a></li>
+            </ul>
+          </li>
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Import/Export <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#" data-toggle="modal" data-target="#containerRuleIo">Search parameters</a></li>
+              <li><a href="#" data-toggle="modal" data-target="#modalResultsIo">Results</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li class=""><a href="{% url 'runes:about' %}" target="_blank">About</a></li>
+          <li class=""><a href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
+          <li class=""><a href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+        </ul>
+      </div> 
+    </div>
+  </nav>-->
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col alert alert-danger" role="alert" id="alertObj"></div>
+    </div>
+
+    <div class="row border border-1">
+      <div class="col-md-2 p-0 bg-warning">f</div>
+      <div class="col-md-6 p-0 bg-light">f</div>
+      <div class="col-md-4 p-0 bg-success">f</div>
+    </div>
+
+    <div class="row">
+      <div id="leftPanel" class="col-md-2 col-sm-2 p-0 d-flex flex-column my-fixed-height">
+        <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
+        <div id="jstree" class="overflow-scroll h-100"></div>
+        <input type="text" class="form-control" id="searchInscriptions" placeholder="Quick inscription seletion">
+      </div>
+
+      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+
+      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-2" id="lblNumAvailable">6815 inscriptions.</div>
+      <div class="col-md-6 col-sm-8">&nbsp;</div>
+      <div class="col-md-4 col-sm-2">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">&nbsp;</div>
+    </div>
+
+    <form class="row pb-1 vertical-align" role="group">
+      <div class="col-md-2">
+        Control buttons:
+      </div>
+      <div class="col" aria-label="">
+        <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#divFormatDialog">Choose what to show about each inscription</button>
+      </div>
+    </form>
+
+    <section role="group" class="row vertical-align">
+      <div class="col-md-2">Copy symbols to clipboard:</div>
+      <div class="col-md-4 btn-group" role="group">
+        <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
+        <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
+        <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
+        <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
+        <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
+        <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
+        <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
+        <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
+        <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
+        <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
+        <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
+        <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
+        <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
+        <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
+        <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
+        <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
+        <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
+        <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+      </div>
+    </section>
+
+    <div class="row py-3" role="group" aria-label="">
+      <div class="offset-md-2 col-md-3">
+        <button type="button" class="col-md-12 btn btn-success" id="btnSearch">Search</button>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="col-md-12 btn btn-default" id="btnResetSearch">Reset search</button>
+      </div>
+      <button type="button" class="btn btn-default col-md-2" id="btnClearRules">Clear search parameters</button>
+    </div>
+
+    <div class="row pb-6">
+      <div id="builder" class="col-xs-12"></div>
+    </div>
+
+  </div>
+
+  <div id="divFormatDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="divFormatDialogLabel">Configure inscription display</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="padding-top: 1em; padding-left: 1em; padding-right: 1em;">
+          <div class="row" style="padding-left: 1em; padding-right: 1em;">
+            <p class="col alert alert-danger hidden" role="alert" id="formatDialogAlertObj"></p>
+          </div>
+          <div class="row" style="padding-left: 1em; padding-right: 1em;">
+            <div class="col"><p>Here you can select which properties are shown on the main display when an inscription is selected. List on the left contains properties available for selection.
+            List on the right contains properties selected for display.</p>
+            <p>Check <em>Display headers</em> checkbox if you want to see property name as long as it's value. If unchecked, only the value is displayed.</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-5">
+              <select name="from[]" id="multiselect" class="form-control" size="8" multiple="multiple"></select>
+              <div class="row">
+                <form role="form" class="col-sm-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkDisplayHeaders" checked>
+                    <label class="form-check-label" for="chkDisplayHeaders">Display headers</label>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="col-sm-2">
+              <button type="button" id="multiselect_rightAll" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-double-right"></i></button>
+              <button type="button" id="multiselect_rightSelected" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-right"></i></button>
+              <button type="button" id="multiselect_leftSelected" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-left"></i></button>
+              <button type="button" id="multiselect_leftAll" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-double-left"></i></button>
+            </div>
+
+            <div class="col-sm-5">
+              <select name="to[]" id="multiselect_to" class="form-control" size="8" multiple="multiple"></select>
+              <div class="row mt-2">
+                <div class="col-sm-6">
+                  <button type="button" id="multiselect_move_up" class="btn btn-secondary btn-block w-100"><i class="bi bi-chevron-up"></i></button>
+                </div>
+                <div class="col-sm-6">
+                  <button type="button" id="multiselect_move_down" class="btn btn-secondary btn-block w-100"><i class="bi bi-chevron-down"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal" id="btnDismissDisplayFormat">Close</button>
+          <button type="button" class="btn btn-primary" id="btnApplyDisplayFormat">Apply changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="containerRuleIo" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="containerRuleIoLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h4>
+        </div>
+
+        <div class="modal-body">
+          <div class="row">
+            <p class="col-xs-12">
+              Use the tool below to preserve your search rules between sessions. Clicking <em>Export</em> will give you search rules in text format. You can copy text and save it elsewhere. Next time you load work with Rundata-net you can import that text.
+            </p>
+          </div>
+
+          <div class="row py-3">
+            <div class="col-xs-12 btn-group" role="group" aria-label="">
+              <button type="button" class="btn btn-default" id="btnRulesImport">Import</button>
+              <button type="button" class="btn btn-default" id="btnRulesExport">Export</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12">
+              <textarea id="ruleIo" rows="15" style="width: 100%;"></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <section role="dialog" class="modal fade" id="modalResultsIo" tabindex="-1" role="dialog" arial-labelledby="divResultsIoLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="divResultsIoLabel">Export search results, import signatures</h4>
+        </div>
+
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-xs-offset-1 col-xs-10">
+              <p>Export search results in Excel format by clicking <em>Export</em> button bellow.<br>Read more about exporting <a href="https://rundata-net.readthedocs.io/en/latest/getting-started/user_guide.html#importing-and-exporting-results">in the documentation</a>.</p>
+              <button type="button" class="col-xs-3 btn btn-default" id="btnExportResults"><b>Export search results</b></button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12"><hr></div>
+          </div>
+
+          <div class="row">
+            <div id="drop-area" class="col-xs-10 col-xs-offset-1">
+              <form class="my-form" id="form-signature-import">
+                <div class="form-group">
+                  <p>Import file with signatures by dragging and dropping it in highlighted area or by selecting it. Read more about the possible file formats <a href="https://rundata-net.readthedocs.io/en/latest/getting-started/user_guide.html#importing-and-exporting-results">in the documentation</a>.</p>
+                  <label for="fileElem" class="button">Select a file</label>
+                  <input type="file" id="fileElem">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+  </section>
+
+  <aside id="loading" class="loading-screen" style="position:fixed; top:0; right:0; bottom:0; left:0; z-index:9999; background-color: #000; opacity: 0.6;">
+    <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4" style="position:absolute; top:50%; margin-top:-7em">
+      <div class="page-header">
+        <i class="text-primary fa fa-spin fa-fw pull-left fa-spinner fa-2x" style="text-shadow: 0px 0px 0ex;"></i>
+        <hgroup class="" style="text-shadow: 0px 0px 0ex;">
+          <h4 ng-switch-default="" class="white-text" id="loading-main-text">
+            Loading<br>
+            <small class="white-text" id="loading-sub-text">It can take up to a minute.</small>
+          </h4>
+        </hgroup>
+      </div>
+    </div>
+  </aside>
+
+<script>
+function isSafari() {
+  return (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1);
+}
+</script>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js" integrity="sha512-KMs6GZJsWI3DXBlu2QMbVdaHJbFrzVDYeccH/Ipuvtg3IOHnABXwUZbIhr5ybFSNYL6Bde1dCQ37xtszsBZcSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.fullscreen@3.0.2/Control.FullScreen.js" integrity="sha384-l0YxV5zMlsDoa/OatH90j4WDu9eFcFTMBjn1+AZN39VXC/k+uKAu3RTciIg3Te2t" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.82.0/dist/L.Control.Locate.min.js" integrity="sha256-CRW6hVaCmkqNXZE7/pJBwnC+JxxqttfPC0wvNu/HxUc=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster-src.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/jstree.min.js" integrity="sha512-Rzhxh2sskKwa+96nRopp/hvGexBzEPG6mnFI6uRy059FZfksJJFYmqDFn050KUDhivXLsT6SvoaEf5iSp2SHjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="{% static 'runes/multiselect.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'runes/index.min.js' %}"></script>
+<script type="text/javascript">
+let gSqlDb = null;
+let gJsTreeInscriptions = [];
+let gDbMap = {}; // Map object. Key - inscription ID, value - inscription object.
+let gActiveInscriptions = [];  // Array of active inscription IDs. Active meaning visible on the left panel.
+let gAllMarkers = null; // Mapping of all leaflet markers. Key - inscription ID, value - object with keys 'found', 'present'.
+let gMyMap = null;
+let gMarkersLayer = null;
+
+$('#loading').hide();
+
+function onDbLoaded() {
+  gDbMap = convertDbToKeyMap(gSqlDb);
+  gActiveInscriptions = Array.from(gDbMap.keys());
+  gAllMarkers = inscriptions2markers(gDbMap, L);
+  //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
+  // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
+
+  // populate jstree with data
+  $('#jstree').jstree(true).refresh();
+}
+
+/**
+ * Data provider for jsTree
+ * @param {Object} obj - an object being loaded
+ * @param {Function} cb - callback function to call with the children for that node
+ */
+function fetchTreeData(obj, cb) {
+  if (obj.id === "#") {
+    // root node
+    if (gSqlDb === null) {
+      // we need to load the database first
+      return;
+    }
+    const activeInscriptions = gActiveInscriptions.map(id => gDbMap.get(id));
+    cb.call(this, inscriptions2treeNodes(activeInscriptions));
+  }
+}
+
+function inscriptions2makup() {
+  // get selected inscriptions from multiselect `inpInscriptions`
+  /*const selectedOptions = Array.from(document.getElementById('inpInscriptions').selectedOptions);
+  if (selectedOptions.length === 0) {
+    return [];
+  }
+  const showHeaders = $('#chkDisplayHeaders').is(":checked");*/
+}
+
+function showMarkers({preserveMapArea = false} = {}) {
+  const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
+  const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
+  const inscriptionIds = showSelected ? $('#jstree').jstree('get_selected').map(node => parseInt(node, 10)) : gActiveInscriptions;
+
+  showMarkersInternal({
+    preserveMapArea,
+    showOriginalLocation,
+    inscriptionIds,
+    allMarkers: gAllMarkers,
+    mapObject: gMyMap,
+    markersLayer: gMarkersLayer,
+  });
+}
+
+function showMarkersInternal({
+  preserveMapArea = false,
+  showOriginalLocation = false,
+  inscriptionIds = [],
+  allMarkers = new Map(),
+  mapObject = null,
+  markersLayer = null,
+} = {}) {
+  // array of all marker's lat/lon. Used to calculate new bounds.
+  let markersLatLon = [];
+  
+  if (!markersLayer || !mapObject) {
+    console.log('No markers layer or map object provided');
+    return;
+  }
+
+  // clear any markers from the map
+  markersLayer.clearLayers();
+
+  for (let i = 0; i < inscriptionIds.length; i++) {
+    const key = inscriptionIds[i];
+    if (!allMarkers.has(key)) {
+      continue;
+    }
+    const inscriptionMarkers = allMarkers.get(key);
+    const markerToShow = showOriginalLocation ? inscriptionMarkers.found : inscriptionMarkers.present;
+    markersLayer.addLayers(markerToShow);
+    markersLatLon.push(markerToShow.getLatLng());
+  }
+
+  if (markersLatLon.length > 0 && !preserveMapArea) {
+    const markersBounds = L.latLngBounds(markersLatLon);
+    mapObject.fitBounds(markersBounds);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialization happens in 3 steps:
+  // 1. code here on page load
+  // 2. after db was loaded
+  // 3. after js-tree was populated, on 'ready.jstree'
+
+  const sqlConfig = {
+    locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
+  };
+  initSqlJs(sqlConfig).then(function(SQL) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.6", true);
+    xhr.responseType = 'arraybuffer';
+    xhr.addEventListener("load", function() {
+      console.log('we got sql data from server');
+
+      gSqlDb = new SQL.Database(new Uint8Array(this.response));
+      onDbLoaded();
+    });
+    xhr.send();
+  }).catch(function (reason) {
+    console.log(`Failed to init SQL: ${reason}`);
+  });
+
+  initMultiselect();
+
+  $('#multiselect').on('displayUpdated', () => {
+    console.log('Display updated');
+  });
+
+  initClipboardButtons();
+  ({ map: gMyMap, markers: gMarkersLayer } = initMap("mapDisplay"));
+  document.getElementById('mHideMap').addEventListener('click', function() {
+    onHideMapClicked('mapDisplay', 'mHideMap');
+  });
+
+  /*document.getElementById('inpInscriptions').addEventListener('change', event => {
+    const selectedOptions = Array.from(event.target.selectedOptions);
+    const selectedValues = selectedOptions.map(option => option.value);
+    console.log('Selected inscriptions:', selectedValues);
+    // Add your logic to handle the selected inscriptions here
+    selectedValues.forEach(v => {
+      const key = parseInt(v, 10);
+      console.log('Inscription ID:', key);
+      console.log(`Key type: ${typeof key}`);
+      console.log(gDbMap.get(key));
+    });
+    displaySignatureInfo();
+  });
+  */
+  
+  // configure jsTree even before we have the data
+  $("#jstree")
+  .on('ready.jstree', function() {
+    showMarkers();
+  })
+  .on('refresh.jstree', function() {
+    $('#jstree').scrollTop(0);
+    selectFirstSignature();
+  })
+  .on('changed.jstree', (node, eventObj) => {
+    if (eventObj.action == 'select_node') {
+      if ($('#chkShowSelectedInscriptions').is(':checked')) {
+        showMarkers();
+      }
+      displaySignatureInfo();
+    }
+  })
+  .jstree({
+    'core': {
+      'animation': 0,
+      'data': fetchTreeData,
+      'multiple': true,
+    }
+  });
+
+  // Button handlers
+  $('#chkShowSelectedInscriptions').on('change', function() {
+    showMarkers({preserveMapArea: true});
+  });
+  $('#chkShowOriginalLocation').on('change', function() {
+    showMarkers({preserveMapArea: true});
+  });
+
+});
+</script>
+
+<!--<script type="module">
+import { convertDbToKeyMap, inscriptions2treeNodes } from "{% static 'runes/index_scripts.js' %}";
+import { getUserSelectedDisplay, saveUserSelectedDisplay } from "{% static 'runes/index_multiselect.js' %}";
+
+let gSqlDb = null;
+let gJsTreeInscriptions = [];
+
+$('#loading').hide();
+
+function onDbLoaded() {
+  const dbJson = convertDbToKeyMap(gSqlDb);
+  gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
+
+  $('#jstree').jstree(true).refresh();
+}
+
+/**
+ * Data provider for jsTree
+ * @param {Object} obj - an object being loaded
+ * @param {Function} cb - callback function to call with the children for that node
+ */
+function fetchTreeData(obj, cb) {
+  if (obj.id === "#") {
+    // root node
+    if (gSqlDb === null) {
+      // we need to load the database first
+      return;
+    }
+    cb.call(this, gJsTreeInscriptions);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sqlConfig = {
+    locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
+  };
+  initSqlJs(sqlConfig).then(function(SQL) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.6", true);
+    xhr.responseType = 'arraybuffer';
+    xhr.addEventListener("load", function() {
+      console.log('we got sql data from server');
+
+      gSqlDb = new SQL.Database(new Uint8Array(this.response));
+      onDbLoaded();
+    });
+    xhr.send();
+  }).catch(function (reason) {
+    console.log(`Failed to init SQL: ${reason}`);
+  });
+
+  // configure jsTree even before we have the data
+  $("#jstree")
+  .on('ready.jstree', function() {
+    console.log('jstree ready');
+  })
+  .on('refresh.jstree', function() {
+    $('#jstree').scrollTop(0);
+    console.log('jstree refresh');
+  })
+  .jstree({
+    'core': {
+      'animation': 0,
+      'data': fetchTreeData,
+      'multiple': true,
+    }
+  });
+});
+
+// 90 sec timeout
+/*var gLoadingTimer = setTimeout(function() {
+  if ($('#loading').is(':visible')) {
+    $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
+    alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
+  }
+}, 90000);*/
+
+</script>-->
+
+</body>
+</html>
