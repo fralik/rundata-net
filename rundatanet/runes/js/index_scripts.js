@@ -442,6 +442,23 @@ function renderSignatures() {
   }
 }
 
+function escapeHtml(string) {
+  const entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;'
+  };
+
+  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+    return entityMap[s];
+  });
+}
+
 export function inscriptions2markup() {
   // array of selected inscription IDs
   const selectedSignatureIds = $('#jstree').jstree(true).get_selected();
@@ -497,6 +514,55 @@ export function inscriptions2markup() {
         paragraph += '<i>Absent, not in the database.</i>';
         continue;
       }
+
+      if (columnName === "crosses") {
+        if (inscriptionData['num_crosses'] == 0) {
+          paragraph += '<i>No crosses.</i>';
+          continue;
+        }
+
+        paragraph += '<table class="crosses" border="1">';
+        paragraph += '<thead><tr>';
+        paragraph += '<th>A</th>';
+        paragraph += '<th>B</th>';
+        paragraph += '<th>C</th>';
+        paragraph += '<th>D</th>';
+        paragraph += '<th>E</th>';
+        paragraph += '<th>F</th>';
+        paragraph += '<th>G</th>';
+        paragraph += '</th></thead>';
+        paragraph += '<tbody>';
+
+        const allCrosses = inscriptionData['crosses'];
+        for (let k = 0; k < allCrosses.length; k++) {
+          if (allCrosses[k][0].length > 0) {
+            // this is a cross from an undefined group
+            paragraph += '<tr><td colspan="7">' + allCrosses[k][0][0].name + '</td></tr>';
+            continue;
+          }
+          paragraph += '<tr>';
+          // we have 8 groups in total, 0 being free-text and not a real group
+          for (let gr = 1; gr < 8; gr++) {
+            if (allCrosses[k][gr].length == 0) {
+              paragraph += '<td><span class="null">&#8709;</span></td>';
+              continue;
+            }
+            paragraph += '<td>';
+            paragraph += allCrosses[k][gr].map(function (v, i) {
+              let res = '<img src="' + getCrossUrl(v.name) + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
+              if (v.isCerain == 0) {
+                res += '?';
+              }
+              return res;
+            }).join(', ');
+            paragraph += '</td>';
+          }
+        }
+        paragraph += '</tbody></table>';
+        continue;
+      }
+
+      columnData = escapeHtml(columnData);
 
       if (columnData.indexOf(paragraphSymbol) !== -1) {
         const parts = columnData.split(paragraphSymbol);

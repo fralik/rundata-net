@@ -113,6 +113,50 @@ export function inscriptions2markers(dbMap, leaflet=L) {
   return mapMarkers;
 }
 
-export function clearMarkers() {
-  markers.clearLayers();
+
+/**
+ * Displays markers on the map based on the provided parameters.
+ *
+ * @param {Object} options - The options for displaying markers.
+ * @param {boolean} [options.preserveMapArea=false] - If true, the map area will not be adjusted to fit the markers.
+ * @param {boolean} [options.showOriginalLocation=false] - If true, markers will be shown for the original (found) location of inscriptions, otherwise for the present location.
+ * @param {Array<string>} [options.inscriptionIds=[]] - An array of inscription IDs to display markers for.
+ * @param {Map<string, Object>} [options.allMarkers=new Map()] - A map containing all markers, keyed by inscription ID.
+ * @param {Object} [options.mapObject=null] - The Leaflet map object.
+ * @param {Object} [options.markersLayer=null] - The Leaflet layer group to which markers will be added.
+ */
+export function showMarkers({
+  preserveMapArea = false,
+  showOriginalLocation = false,
+  inscriptionIds = [],
+  allMarkers = new Map(),
+  mapObject = null,
+  markersLayer = null,
+} = {}) {
+  // array of all marker's lat/lon. Used to calculate new bounds.
+  let markersLatLon = [];
+  
+  if (!markersLayer || !mapObject) {
+    console.log('No markers layer or map object provided');
+    return;
+  }
+
+  // clear any markers from the map
+  markersLayer.clearLayers();
+
+  for (let i = 0; i < inscriptionIds.length; i++) {
+    const key = inscriptionIds[i];
+    if (!allMarkers.has(key)) {
+      continue;
+    }
+    const inscriptionMarkers = allMarkers.get(key);
+    const markerToShow = showOriginalLocation ? inscriptionMarkers.found : inscriptionMarkers.present;
+    markersLayer.addLayers(markerToShow);
+    markersLatLon.push(markerToShow.getLatLng());
+  }
+
+  if (markersLatLon.length > 0 && !preserveMapArea) {
+    mapObject.fitBounds(markersLatLon);
+  }
 }
+

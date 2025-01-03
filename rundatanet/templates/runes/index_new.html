@@ -226,6 +226,34 @@
       .inscription-section {
         border-bottom: 2px solid #999;
       }
+
+      table.crosses {
+	      text-align: center;
+	      border-collapse: collapse;
+        margin-left: 1.5em;
+      }
+
+      table.crossforms th:first-child {
+        border-left: none;
+        text-align: right;
+      }
+      table.crosses tbody>tr {
+        border-top: solid 1px #999999;
+      }
+      table.crosses tbody:only-child>tr {
+        border-top: none;
+      }
+      table.crosses tbody td,
+      table.crosses thead th {
+        border-left: solid 1px #999999;
+        padding: 0.25em;
+      }
+      span.null {
+        font-weight: bold;
+        color: #CCCCCC;
+      }
+
+      
     </style>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -599,6 +627,13 @@ let gAllMarkers = null; // Mapping of all leaflet markers. Key - inscription ID,
 let gMyMap = null;
 let gMarkersLayer = null;
 
+function getCrossUrl(crossName) {
+  // It is important that staticBase is written in a file that is processed by the back-end.
+  // Otherwise front-end will not able to make correct URL.
+  const staticBase = "{% static 'runes/images/cross_forms/' %}";
+  return staticBase + crossName + '.png';
+}
+
 $('#loading').hide();
 
 function onDbLoaded() {
@@ -638,12 +673,12 @@ function inscriptions2makup() {
   const showHeaders = $('#chkDisplayHeaders').is(":checked");*/
 }
 
-function showMarkers({preserveMapArea = false} = {}) {
+function showMarkersWrapper({preserveMapArea = false} = {}) {
   const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
   const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
   const inscriptionIds = showSelected ? $('#jstree').jstree('get_selected').map(node => parseInt(node, 10)) : gActiveInscriptions;
 
-  showMarkersInternal({
+  showMarkers({
     preserveMapArea,
     showOriginalLocation,
     inscriptionIds,
@@ -651,42 +686,6 @@ function showMarkers({preserveMapArea = false} = {}) {
     mapObject: gMyMap,
     markersLayer: gMarkersLayer,
   });
-}
-
-function showMarkersInternal({
-  preserveMapArea = false,
-  showOriginalLocation = false,
-  inscriptionIds = [],
-  allMarkers = new Map(),
-  mapObject = null,
-  markersLayer = null,
-} = {}) {
-  // array of all marker's lat/lon. Used to calculate new bounds.
-  let markersLatLon = [];
-  
-  if (!markersLayer || !mapObject) {
-    console.log('No markers layer or map object provided');
-    return;
-  }
-
-  // clear any markers from the map
-  markersLayer.clearLayers();
-
-  for (let i = 0; i < inscriptionIds.length; i++) {
-    const key = inscriptionIds[i];
-    if (!allMarkers.has(key)) {
-      continue;
-    }
-    const inscriptionMarkers = allMarkers.get(key);
-    const markerToShow = showOriginalLocation ? inscriptionMarkers.found : inscriptionMarkers.present;
-    markersLayer.addLayers(markerToShow);
-    markersLatLon.push(markerToShow.getLatLng());
-  }
-
-  if (markersLatLon.length > 0 && !preserveMapArea) {
-    const markersBounds = L.latLngBounds(markersLatLon);
-    mapObject.fitBounds(markersBounds);
-  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -716,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initMultiselect();
 
   $('#multiselect').on('displayUpdated', () => {
-    console.log('Display updated');
+    displaySignatureInfo();
   });
 
   initClipboardButtons();
@@ -743,7 +742,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // configure jsTree even before we have the data
   $("#jstree")
   .on('ready.jstree', function() {
-    showMarkers();
+    showMarkersWrapper();
   })
   .on('refresh.jstree', function() {
     $('#jstree').scrollTop(0);
@@ -752,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .on('changed.jstree', (node, eventObj) => {
     if (eventObj.action == 'select_node') {
       if ($('#chkShowSelectedInscriptions').is(':checked')) {
-        showMarkers();
+        showMarkersWrapper();
       }
       displaySignatureInfo();
     }
@@ -767,10 +766,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Button handlers
   $('#chkShowSelectedInscriptions').on('change', function() {
-    showMarkers({preserveMapArea: true});
+    showMarkersWrapper({preserveMapArea: true});
   });
   $('#chkShowOriginalLocation').on('change', function() {
-    showMarkers({preserveMapArea: true});
+    showMarkersWrapper({preserveMapArea: true});
   });
 
 });
