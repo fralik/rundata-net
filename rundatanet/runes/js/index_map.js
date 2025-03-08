@@ -1,4 +1,4 @@
-// This script assummes that you reference leaflet.js and leaflet.css in your HTML file.
+// This script assumes that you reference leaflet.js and leaflet.css in your HTML file.
 
 // Initialize the map on the user-provided div with a given center and zoom level
 // Default center is [56.607512, 16.439838] and default zoom is 8.
