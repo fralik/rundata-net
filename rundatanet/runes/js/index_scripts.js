@@ -168,6 +168,21 @@ export const schemaFieldsInfo = [
 
 let gRenderInProgress = false;
 
+/**
+ * Retrieves a human-readable name for a schema field in the specified language.
+ * 
+ * @param {string} schemaName - The machine name of the schema field.
+ * @param {string} [lang='en'] - The language code to get the translation for (defaults to 'en').
+ * @returns {string} The translated human-readable name if available, otherwise returns the schemaName.
+ */
+export function getHumanName(schemaName, lang = 'en') {
+  const field = schemaFieldsInfo.find(field => field.schemaName === schemaName);
+  if (!field) {
+    return schemaName; // Return the schemaName as is if not found
+  }
+  return field.text[lang] || schemaName; // Return the human name or schemaName if translation is missing
+}
+
 
 /**
  * Convert a database object to a key map.

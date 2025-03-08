@@ -455,58 +455,8 @@
 <!-- end of query builder styles -->
 
 <script>
-/**
- * detect IE
- * returns version of IE or false, if browser is not Internet Explorer
- */
-function detectIE() {
-  var ua = window.navigator.userAgent;
-
-  // Test values; Uncomment to check result …
-
-  // IE 10
-  // ua = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)';
-
-  // IE 11
-  // ua = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
-
-  // Edge 12 (Spartan)
-  // ua = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0';
-
-  // Edge 13
-  // ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586';
-
-  var msie = ua.indexOf('MSIE ');
-  if (msie > 0) {
-    // IE 10 or older => return version number
-    return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
-  }
-
-  var trident = ua.indexOf('Trident/');
-  if (trident > 0) {
-    // IE 11 => return version number
-    var rv = ua.indexOf('rv:');
-    return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
-  }
-
-  var edge = ua.indexOf('Edge/');
-  if (edge > 0) {
-    // Edge (IE 12+) => return version number
-    return parseInt(ua.substring(edge + 5, ua.indexOf('.', edge)), 10);
-  }
-
-  // other browser
-  return false;
-}
-
 function isSafari() {
   return (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1);
-}
-
-var ieVersion = detectIE();
-if (ieVersion !== false && ieVersion <= 12) {
-  alert('This version of Internet Explorer is not supported. Please update or use a different browser. Will redirect to About page.');
-  window.location.href = "{% url 'runes:about' %}#browser-support";
 }
 </script>
 
@@ -570,7 +520,6 @@ var gOriginalData = [];
 var gOriginalIds = [];
 var gRootIds = []; // Map of parent/root inscription IDs
 var gRootsJson = []; // JSON representation for gRootIds
-var signatureNames = []; // names of all signatures in the DB
 var signaturesSelectize = [];
 var formatDialog = [];
 var userSelectedDisplay = []; // list of user selected fields for display per inscription
@@ -578,8 +527,6 @@ var myMap = null; // Global handle to map object
 var mapMarkers = {}; // Collection of created map markers. This is used in order to create
   // markers only once.
 var markers = []; // Leaflet markers group
-// Number of signatures selected by user
-var gNumSelectedSignatures = [];
 var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
 let gRegExpMap = {}; // Object of all regex expressions
 var gRegExpMapG = {}; // Object of all regex expressions with global flag
@@ -602,11 +549,6 @@ var gWordSearchRegexEsc = new RegExp(escapeHtml("((\\s+|^(·|:|×|¤|'|\\+|÷|¶
 var gWordPunctuationRegex = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+");
 var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+"));
 
-// Whenever we need to render a batch of inscriptions, we identify each batch with gRenderBatchId. This can be
-// used in situation when we need to render a batch when another batch is still in rendering process.
-// I.e. we have batch 1 which is currently rendering. We have batch 2 that shall be rendered. In this case,
-// batch 1 must be cancelled.
-var gRenderBatchId = 0;
 // True while rendering of signature information is in progress.
 var gRenderInProgress = false;
 // True if export is in progress
@@ -623,6 +565,7 @@ var gAliasByParent = {};
 // This is a key-value representation of all inscriptions in the database.
 // Key is signature (i.e. 'Öl 1'), value is an object where each property is
 // one of the displayFields() and value is it's corresponding value.
+// used in makeMarkers, inscriptions2markup, exportResults
 var gDbAsMap = {};
 
 // Clusterize.js object for main isncription display
@@ -635,8 +578,6 @@ var gMainClusterize = null;
   seekFactor: integer
 */
 var gClusterizeParams = {};
-// Indicates if we are in a state 'after user clicked reset'
-var gAfterReset = false;
 var gMainScrollArea = document.getElementById('mainDisplay');
 
 // Key in the local storage under which users display options are saved.
@@ -649,13 +590,10 @@ userSelectedDisplay = getUserSelectedDisplay();
 /////////////////////////////////////
 // variables used for rendering. Have it here for speed.
 /////////////////////////////////////
-var staticBase = "{% static 'runes/images/cross_forms/' %}";
 let highlightColumns = ['transliteration', 'normalisation_scandinavian', 'normalisation_norse'];
 let customColumns = new Array(...highlightColumns);
 customColumns.push('english_translation');
 const paragraphSymbol = '§';
-const sidesMarker = '§A';
-const readingMarker = '§P';
 
 // An extension of Leaflet marker that provides information about inscription
 MarkerWithData = L.Marker.extend({
@@ -1500,9 +1438,6 @@ function onDbLoaded() {
 
   // get all root signatures (that are not aliases)
   var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
-  var rootsWithChildren = db.exec("SELECT * FROM signatures_with_children");
-  // make a hash map for quick read access. This is basically a list of inscriptions (signatures.ID) that have children
-  rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
 
   gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
   gRootsJson = dbToJson(contents[0].columns, contents[0].values);
@@ -1529,9 +1464,6 @@ function onDbLoaded() {
   gOriginalData = gRootsJson;
   gOriginalIds = gRootIds;
   gDbAsMap = convertDbToKeyMap();
-
-  contents = db.exec("SELECT signature_text FROM signatures");
-  signatureNames = contents[0].values.map((v, i) => v[0]);
 
   contents = db.exec("SELECT id, signature_text FROM signatures");
   signaturesSelectize = dbToJson(contents[0].columns, contents[0].values);
@@ -1899,7 +1831,7 @@ function onDbLoaded() {
     sort_filters: false,
     templates: {
       group: gQueryBuilderCustomGroup,
-  },
+    },
     optgroups: optGroups,
   })
   // SQL export (second half)
@@ -2084,6 +2016,7 @@ function renderSignatures() {
   mainDisplayDom.innerHTML = html;
   gRenderInProgress = false;
 }
+
 
 /* Once db is loaded convert all content to key-value object
 */
@@ -2663,7 +2596,7 @@ function inscriptions2markup() {
             }
             paragraph += '<td>';
             paragraph += allCrosses[k][gr].map(function (v, i) {
-              let url = staticBase + v.name + '.png';
+              let url = "{% static 'runes/images/cross_forms/' %}" + v.name + '.png';
               let res = '<img src="' + url + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
               if (v.isCerain == 0) {
                 res += '?';
