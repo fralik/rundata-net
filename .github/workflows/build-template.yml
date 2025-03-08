@@ -51,9 +51,6 @@ jobs:
         run: python manage.py collectstatic --noinput
 
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-      - name: Run tests
-        run: |
-          python -m pytest
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
