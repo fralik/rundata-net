@@ -47,6 +47,7 @@ Development and technical information
 
     dev/docker
     dev/install
+    dev/local_tests
 
 Indices and tables
 ------------------
