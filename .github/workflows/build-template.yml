@@ -1,0 +1,59 @@
+name: Build Template
+
+on:
+  workflow_call:
+    outputs:
+      artifact_name:
+        description: "The name of the uploaded artifact"
+        value: python-app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'requirements/production.txt'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip wheel build setuptools
+          pip install -r requirements/production.txt
+
+      # Add Node.js setup
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      # Install npm dependencies
+      - name: Install npm dependencies
+        run: |
+          npm ci
+        
+      # Build the frontend
+      - name: Build frontend assets
+        run: |
+          npm run dev
+
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+
+      - name: Zip artifact for deployment
+        run: zip release.zip manage.py config/ requirements/ rundatanet/ -r
+
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/

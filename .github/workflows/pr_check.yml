@@ -1,0 +1,11 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  call-build:
+    name: Build and Test
+    uses: ./.github/workflows/build-template.yml

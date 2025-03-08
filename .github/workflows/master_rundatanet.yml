@@ -12,60 +12,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python version
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-      
-      - name: Install latest version of uv package manager
-        run: |
-          pip install --upgrade pip wheel build setuptools
-          pip install uv
-      
-      - name: Install dependencies
-        run: pip install -r requirements/production.txt
-
-      # Add Node.js setup
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      
-      # Install npm dependencies
-      - name: Install npm dependencies
-        run: |
-          npm ci
-        
-      # Build the frontend
-      - name: Build frontend assets
-        run: |
-          npm run dev
-
-      - name: Collect static files
-        run: python manage.py collectstatic --noinput
-
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
-      - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-app
-          path: |
-            release.zip
-            !venv/
+    name: Build
+    uses: ./.github/workflows/build-template.yml
 
   deploy:
     runs-on: ubuntu-latest
@@ -82,7 +30,6 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-
       
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
