@@ -280,6 +280,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@3.0.0/dist/css/query-builder.default.min.css">
     <!-- end querybuilder-related css -->
+
+    <!-- modifications for query builder to make it responsive -->
+    <style>
+      @media (max-width: 768px) {
+        .query-builder .rule-container .rule-filter-container,
+        .query-builder .rule-container .rule-operator-container,
+        .query-builder .rule-container .rule-value-container {
+          display: block;
+          width: 100%;
+          margin: 5px 0;
+        }
+        
+        .query-builder .rule-container .rule-value-container {
+          border-left: none;
+          padding-left: 0;
+          border-top: 1px solid #DDD;
+          padding-top: 5px;
+        }
+        
+        .query-builder .form-control {
+          width: 100%;
+        }
+          
+        .query-builder .rule-container {
+          padding: 10px;
+          display: block !important;
+        }
+          
+        .query-builder .rule-header {
+          margin-bottom: 5px;
+        }
+      }
+    </style>
   </head>
 <body>
   <nav class="navbar navbar-expand-md bg-body-tertiary rundata-navbar">

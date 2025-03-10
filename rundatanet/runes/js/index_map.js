@@ -1,4 +1,7 @@
-// This script assumes that you reference leaflet.js and leaflet.css in your HTML file.
+/*
+ This script assumes that you reference leaflet.js and leaflet.css in your HTML file.
+ It allows relies on defined `isSafari` function.
+*/
 
 // Initialize the map on the user-provided div with a given center and zoom level
 // Default center is [56.607512, 16.439838] and default zoom is 8.
@@ -50,6 +53,20 @@ function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   } catch (e) {
     return false;
+  }
+}
+
+function getGeoIntentURL(lat, lng) {
+  if (typeof isSafari !== 'function') {
+    console.error('isSafari function is not defined');
+    throw new Error('isSafari function is not defined');
+  }
+  
+  if (isSafari()) {
+    return `http://maps.apple.com/?daddr=${lat},${lng}`;
+  }
+  else {
+    return `geo:${lat},${lng}?q=${lat},${lng}`;
   }
 }
 
