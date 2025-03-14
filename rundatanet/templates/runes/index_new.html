@@ -687,6 +687,7 @@ let gActiveInscriptions = [];  // Array of active inscription IDs. Active meanin
 let gAllMarkers = null; // Mapping of all leaflet markers. Key - inscription ID, value - object with keys 'found', 'present'.
 let gMyMap = null;
 let gMarkersLayer = null;
+let inpQueryBuilder = "builder";
 
 function getCrossUrl(crossName) {
   // It is important that staticBase is written in a file that is processed by the back-end.
@@ -703,7 +704,7 @@ function onDbLoaded() {
   gAllMarkers = inscriptions2markers(gDbMap, L);
   //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
   // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
-  initQueryBuilder("builder", gDbMap, getHumanName);
+  initQueryBuilder(inpQueryBuilder, gDbMap, getHumanName);
 
   // populate jstree with data
   $('#jstree').jstree(true).refresh();
@@ -832,6 +833,22 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   $('#chkShowOriginalLocation').on('change', function() {
     showMarkersWrapper({preserveMapArea: true});
+  });
+
+  document.getElementById('btnSearch').addEventListener('click', function() {
+    const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    const results = doSearch(rules, gDbMap.values());
+    console.log(`Got ${results.length} results`);
+    console.log(results);
+    console.log('Done');
+
+    gActiveInscriptions = results.map(result => result.id);
+    $('#jstree').jstree(true).refresh(false, true);
+  });
+
+  document.getElementById('btnResetSearch').addEventListener('click', function() {
+    gActiveInscriptions = Array.from(gDbMap.keys());
+    $('#jstree').jstree(true).refresh(false, true);
   });
 
 });
