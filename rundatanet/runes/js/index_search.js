@@ -15,27 +15,27 @@ export class QueryBuilderParser {
   constructor(customSearchFunctions = {}) {
     // Dictionary mapping operator names to functions
     this.operators = {
-      equal: (a, b) => a == b,
-      not_equal: (a, b) => a != b,
-      in: (a, b) => b.includes(a),
-      not_in: (a, b) => !b.includes(a),
-      less: (a, b) => a < b,
-      less_or_equal: (a, b) => a <= b,
-      greater: (a, b) => a > b,
-      greater_or_equal: (a, b) => a >= b,
-      between: (a, b) => b[0] <= a && a <= b[1],
-      not_between: (a, b) => !(b[0] <= a && a <= b[1]),
-      begins_with: (a, b) => String(a).startsWith(String(b)),
-      not_begins_with: (a, b) => !String(a).startsWith(String(b)),
-      contains: (a, b) => String(a).includes(String(b)),
-      not_contains: (a, b) => !String(a).includes(String(b)),
-      ends_with: (a, b) => String(a).endsWith(String(b)),
-      not_ends_with: (a, b) => !String(a).endsWith(String(b)),
-      is_empty: (a) => a === '' || a === null || a === undefined || (Array.isArray(a) && a.length === 0),
-      is_not_empty: (a) => a !== '' && a !== null && a !== undefined && (!Array.isArray(a) || a.length > 0),
-      is_null: (a) => a === null || a === undefined,
-      is_not_null: (a) => a !== null && a !== undefined,
-      in_separated_list: (a, b) => { return false;},
+      equal: (a, b) => ({ match: a == b }),
+      not_equal: (a, b) => ({ match: a != b }),
+      in: (a, b) => ({ match: b.includes(a) }),
+      not_in: (a, b) => ({ match: !b.includes(a) }),
+      less: (a, b) => ({ match: a < b }),
+      less_or_equal: (a, b) => ({ match: a <= b }),
+      greater: (a, b) => ({ match: a > b }),
+      greater_or_equal: (a, b) => ({ match: a >= b }),
+      between: (a, b) => ({ match: b[0] <= a && a <= b[1] }),
+      not_between: (a, b) => ({ match: !(b[0] <= a && a <= b[1]) }),
+      begins_with: (a, b) => ({ match: String(a).startsWith(String(b)) }),
+      not_begins_with: (a, b) => ({ match: !String(a).startsWith(String(b)) }),
+      contains: (a, b) => ({ match: String(a).includes(String(b)) }),
+      not_contains: (a, b) => ({ match: !String(a).includes(String(b)) }),
+      ends_with: (a, b) => ({ match: String(a).endsWith(String(b)) }),
+      not_ends_with: (a, b) => ({ match: !String(a).endsWith(String(b)) }),
+      is_empty: (a) => ({ match: a === '' || a === null || a === undefined || (Array.isArray(a) && a.length === 0) }),
+      is_not_empty: (a) => ({ match: a !== '' && a !== null && a !== undefined && (!Array.isArray(a) || a.length > 0) }),
+      is_null: (a) => ({ match: a === null || a === undefined }),
+      is_not_null: (a) => ({ match: a !== null && a !== undefined }),
+      in_separated_list: (a, b) => ({ match: false }),
     };
     this.customSearchFunctions = customSearchFunctions;
   
@@ -75,7 +75,7 @@ export class QueryBuilderParser {
    *
    * @param {Object} rules - Rules object from jQuery QueryBuilder's getRules() method
    * @param {Array} data - Array of objects (records) to filter
-   * @returns {Array} Filtered list of records that match the rules
+   * @returns {Array} Filtered list of records with match details
    */
   parseRules(rules, data) {
     if (!rules || !data) {
@@ -87,53 +87,69 @@ export class QueryBuilderParser {
       return [];
     }
 
-  const result = [];
-  // If data is an array, use filter directly
-  if (Array.isArray(data)) {
-    return data.filter((item) => this._evaluateGroup(rules, item));
-  } 
-  // If data is any iterable (e.g. a generator, Set, etc.)
-  else if (typeof data[Symbol.iterator] === 'function') {
-    for (const item of data) {
-      if (this._evaluateGroup(rules, item)) {
-        result.push(item);
+    const result = [];
+    // If data is an array, process each item
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        const resultWithDetails = this._evaluateGroup(rules, item);
+        if (resultWithDetails.match) {
+          result.push({
+            record: item,
+            matchDetails: resultWithDetails.details || null
+          });
+        }
+      });
+    } 
+    // If data is any iterable (e.g. a generator, Set, etc.)
+    else if (typeof data[Symbol.iterator] === 'function') {
+      for (const item of data) {
+        const resultWithDetails = this._evaluateGroup(rules, item);
+        if (resultWithDetails.match) {
+          result.push({
+            record: item,
+            matchDetails: resultWithDetails.details || null
+          });
+        }
       }
-    }
-  } 
-  // Fallback: if data implements the iterator protocol (has a next() method)
-  else if (typeof data.next === 'function') {
-    let nextItem = data.next();
-    while (!nextItem.done) {
-      if (this._evaluateGroup(rules, nextItem.value)) {
-        result.push(nextItem.value);
+    } 
+    // Fallback: if data implements the iterator protocol (has a next() method)
+    else if (typeof data.next === 'function') {
+      let nextItem = data.next();
+      while (!nextItem.done) {
+        const resultWithDetails = this._evaluateGroup(rules, nextItem.value);
+        if (resultWithDetails.match) {
+          result.push({
+            record: nextItem.value,
+            matchDetails: resultWithDetails.details || null
+          });
+        }
+        nextItem = data.next();
       }
-      nextItem = data.next();
+    } else {
+      throw new Error('Data is not iterable. It must be an array or implement the iterator protocol.');
     }
-  } else {
-    throw new Error('Data is not iterable. It must be an array or implement the iterator protocol.');
-  }
 
-  return result;
-}
+    return result;
+  }
   
   /**
    * Recursively evaluate a group of rules.
    *
    * @param {Object} group - Group object with condition and rules
    * @param {Object} record - Data record to evaluate against
-   * @returns {boolean} True if record matches group conditions, False otherwise
+   * @returns {Object} Object with match (boolean) and details (object) properties
    * @private
    */
   _evaluateGroup(group, record) {
     if (!group.condition || !group.rules) {
-      return false;
+      return { match: false };
     }
 
     const condition = group.condition.toUpperCase();
     const rules = group.rules;
 
     if (!rules || !rules.length) {
-      return true;
+      return { match: true };
     }
 
     const results = rules.map(rule => {
@@ -145,13 +161,40 @@ export class QueryBuilderParser {
       else if (rule.id && rule.operator) {
         return this._evaluateRule(rule, record);
       }
-      return false;
+      return { match: false };
     });
 
+    // Combine the results based on the condition
     if (condition === 'AND') {
-      return results.every(result => result);
+      const isMatch = results.every(result => result.match);
+      // For AND condition, we collect all details
+      const combinedDetails = isMatch ? 
+        results.reduce((acc, result) => {
+          if (result.details) {
+            Object.entries(result.details).forEach(([field, details]) => {
+              if (!acc[field]) acc[field] = details;
+              else if (Array.isArray(acc[field]) && Array.isArray(details)) {
+                // Merge arrays and remove duplicates
+                acc[field] = [...new Set([...acc[field], ...details])];
+              }
+            });
+          }
+          return acc;
+        }, {}) : null;
+      
+      return { 
+        match: isMatch,
+        details: combinedDetails
+      };
     } else if (condition === 'OR') {
-      return results.some(result => result);
+      const matchingResults = results.filter(result => result.match);
+      const isMatch = matchingResults.length > 0;
+      
+      // For OR condition, we take the first matching details
+      return {
+        match: isMatch,
+        details: isMatch ? matchingResults[0].details : null
+      };
     } else {
       throw new Error(`Unknown condition: ${condition}`);
     }
@@ -162,17 +205,17 @@ export class QueryBuilderParser {
    *
    * @param {Object} rule - Rule object with id, operator, and value
    * @param {Object} record - Data record to check against
-   * @returns {boolean} True if the record matches the rule, False otherwise
+   * @returns {Object} Object with match (boolean) and details (object) properties
    * @private
    */
   _evaluateRule(rule, record) {
     const field = rule.field || rule.id;
     // Check if this is a special multi-field rule
-    const isMultiFieldRule = rule.data.multiField === true;
+    const isMultiFieldRule = rule.data && rule.data.multiField === true;
 
     // For standard single-field rules, verify the field exists
     if (!isMultiFieldRule && !(field in record)) {
-      return false;
+      return { match: false };
     }
 
     const operatorName = rule.operator;
@@ -186,13 +229,17 @@ export class QueryBuilderParser {
 
     // Handle special operators that don't need a value
     if (['is_empty', 'is_not_empty', 'is_null', 'is_not_null'].includes(operatorName)) {
-      return this.operators[operatorName](fieldValue);
+      const result = this.operators[operatorName](fieldValue);
+      return {
+        match: result.match,
+        details: result.match && !isMultiFieldRule ? { [field]: true } : null
+      };
     }
 
     // Get the rule value
     const ruleValue = rule.value;
     if (ruleValue === null || ruleValue === undefined) {
-      return false;
+      return { match: false };
     }
 
     // For multi-field rules, skip type conversion as it would be
@@ -215,7 +262,7 @@ export class QueryBuilderParser {
             convertedFieldValue = converter(fieldValue);
           }
         } catch (e) {
-          return false;
+          return { match: false };
         }
       }
     }
@@ -223,27 +270,33 @@ export class QueryBuilderParser {
     // If a custom search function exists for this rule id and operator, call it.
     if (
       rule.id &&
-      customSearchFunctions[rule.id] &&
-      typeof customSearchFunctions[rule.id][operatorName] === "function"
+      this.customSearchFunctions[rule.id] &&
+      typeof this.customSearchFunctions[rule.id][operatorName] === "function"
     ) {
-      return customSearchFunctions[rule.id][operatorName](convertedFieldValue, convertedRuleValue);
+      const result = this.customSearchFunctions[rule.id][operatorName](convertedFieldValue, convertedRuleValue);
+      return typeof result === 'object' && 'match' in result ? 
+        result : 
+        { match: Boolean(result) };
     }
 
     // For multi-field rules without a custom function, return false
     // as we don't know how to handle them with standard operators
     if (isMultiFieldRule) {
-      return false;
+      return { match: false };
     }
 
     // Apply the operator
-    return this.operators[operatorName](convertedFieldValue, convertedRuleValue);
+    const result = this.operators[operatorName](convertedFieldValue, convertedRuleValue);
+    return typeof result === 'object' && 'match' in result ? 
+      { ...result, details: result.match ? { [field]: true } : null } : 
+      { match: Boolean(result) };
   }
   
   /**
    * Add a custom operator function.
    *
    * @param {string} name - Name of the operator
-   * @param {Function} func - Function that takes two arguments (fieldValue, ruleValue) and returns boolean
+   * @param {Function} func - Function that takes two arguments (fieldValue, ruleValue) and returns an object with match and details properties
    */
   addOperator(name, func) {
     this.operators[name] = func;
@@ -260,9 +313,11 @@ export class QueryBuilderParser {
   }
 }
 
+// Custom search functions using the new interface
 const searchViaList = (fieldValue, ruleValue) => {
   const items = ruleValue.split('|');
-  return items.some(item => item === fieldValue);
+  const match = items.some(item => item === fieldValue);
+  return { match };
 };
 
 const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
@@ -349,7 +404,13 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
     }
   }
 
-  return matchFound;
+  return {
+    match: matchFound,
+    details: matchFound ? {
+      wordIndices: matchedWords,
+      numPersonalNames: numFoundNames
+    } : null
+  };
 };
 
 const customSearchFunctions = {
@@ -410,8 +471,43 @@ export function getWordSearchFunction(searchMode, options = {}) {
 }
 
 
+/**
+ * Perform a search using QueryBuilder rules
+ * @param {Object} rules - Rules object from jQuery QueryBuilder's getRules() method
+ * @param {Array|Iterable} dbMap - Data to search through
+ * @returns {Array} Array of objects that match search rules. Each item includes record data from
+ *                  dbMap and matchDetails property with details of the match.
+ */
 export function doSearch(rules, dbMap) {
   const parser = new QueryBuilderParser(customSearchFunctions);
-  const results = parser.parseRules(rules, dbMap);
+  const resultsRaw = parser.parseRules(rules, dbMap);
+  const results = resultsRaw.map(({ record, matchDetails }) => ({
+    ...record,
+    matchDetails
+  }));
+
   return results;
+}
+
+export function calcWordsAndPersonalNames(dbMap) {
+  let totalWordMatches = 0;
+  let totalPersonalNames = 0;
+  let totalSignatures = 0;
+
+  dbMap.forEach(entry => {
+    if (entry.matchDetails && entry.matchDetails.wordIndices) {
+      totalWordMatches += entry.matchDetails.wordIndices.length;
+      totalPersonalNames += entry.matchDetails.numPersonalNames;  
+    } else {
+      totalWordMatches += entry.normalisation_norse_word_boundaries.length;
+      entry.normalisation_norse_word_boundaries.forEach(boundary => {
+        totalPersonalNames += boundary.isPersonal;
+      });
+    }
+    totalSignatures++;
+  });
+
+  $(document).trigger('updateSignatureCount', { count: totalSignatures });
+  $(document).trigger('updateWordCount', { count: totalWordMatches });
+  $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames });
 }

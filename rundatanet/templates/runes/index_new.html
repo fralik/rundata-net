@@ -437,10 +437,9 @@
     </div>
 
     <div class="row">
-      <div class="col-md-2" id="lblNumAvailable">6815 inscriptions.</div>
-      <div class="col-md-6 col-sm-8">&nbsp;</div>
-      <div class="col-md-4 col-sm-2">
-      </div>
+      <div class="col-md-auto">Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
+      <div class="col-md-auto">Number of words: <span id="outNumWords">0</span></div>
+      <div class="col-md-auto">Number of personal names: <span id="outNumFoundNames">0</span></div>
     </div>
     <div class="row">
       <div class="col-xs-12">&nbsp;</div>
@@ -705,9 +704,10 @@ function onDbLoaded() {
   //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
   // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
   initQueryBuilder(inpQueryBuilder, gDbMap, getHumanName);
+  calcWordsAndPersonalNames(gDbMap.values());
 
   // populate jstree with data
-  $('#jstree').jstree(true).refresh();
+  $('#jstree').jstree(true).refresh();  
 }
 
 /**
@@ -842,13 +842,28 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log(results);
     console.log('Done');
 
+    calcWordsAndPersonalNames(results);
     gActiveInscriptions = results.map(result => result.id);
     $('#jstree').jstree(true).refresh(false, true);
+    showMarkersWrapper();
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
     gActiveInscriptions = Array.from(gDbMap.keys());
     $('#jstree').jstree(true).refresh(false, true);
+    calcWordsAndPersonalNames(gDbMap.values());
+    showMarkersWrapper();
+  });
+
+  // Search statistics updates:
+  $(document).on('updateSignatureCount', function(event, data) {
+    document.getElementById('outNumSignaturesFound').textContent = data.count;
+  });
+  $(document).on('updateWordCount', function(event, data) {
+    document.getElementById('outNumWords').textContent = data.count;
+  });
+  $(document).on('updatePersonalNameCount', function(event, data) {
+    document.getElementById('outNumFoundNames').textContent = data.count;
   });
 
 });
