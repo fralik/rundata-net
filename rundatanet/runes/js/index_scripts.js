@@ -166,6 +166,104 @@ export const schemaFieldsInfo = [
   },
 ];
 
+const allButNames = /[\$\[\]\{\}\(\)\?<>\^`´\|¬°·:×¤\+÷']|¶+,\./g;
+const punctuation = /[\.,;]/g;
+
+// Two tables below are true for DB 20240910. Assembled manually.
+const normalizationWordsToSkip = {
+  'U 166': [3, 7],
+  'Sm 1': [24, 28],
+  'U 637': [10, 12],
+  'U 1036': [14, 16],
+  'M 11': [16, 35],
+  'G 280': [5, 7],
+  'GR 56': [8],
+  'N KJ72': [22],
+  'N B625': [69],
+  'N B311': [4],
+  'N B265': [25],
+  'N B259': [1],
+  'N B255': [20],
+  'N B27': [3],
+  'N A197': [3],
+  'N A5': [1],
+  'N A144': [1],
+  'N 603': [5],
+  'N 362': [2],
+  'N 208': [8],
+  'N 171': [13],
+  'N 124': [2],
+  'N 114': [3],
+  'N 26': [8],
+  'N 19': [12],
+  'DR NOR2004;7': [18],
+  'DR NOR1999;21': [47],
+  "G 306": [3],
+  "G 129": [11],
+  "G 119": [24],
+  "Gs 8": [7],
+  "Vs 27": [10],
+  "Vs 22": [6],
+  "Vs 3": [15],
+  "U THS10;58": [15],
+  "U NOR1998;25": [19],
+  "U Fv1976;104": [3],
+  "U Fv1953;263": [18],
+  "U Fv1948;168": [16],
+  "U 1168": [6],
+  "U 1162": [11],
+  "U 1158": [10],
+  "U 1132": [13],
+  "U 1111": [11],
+  "U 1097": [3],
+  "U 1060": [5],
+  "U 1042": [10],
+  "U 1005": [12],
+  "U 968": [3],
+  "U 952": [16],
+  "U 917": [3],
+  "U 896": [10],
+  "U 805": [40],
+  "U 662": [1],
+  "U 618": [12],
+  "U 545": [24],
+  "U 459": [11],
+  "U 423": [11],
+  "U 351": [14],
+  "Vg 219": [13],
+  "Vg 67": [25],
+  "Sö Fv1986;218": [8],
+  "Sö 344": [3],
+  "Sö 320": [5],
+  "Sö 256": [10],
+  "Sö 205": [3],
+  "Sö 130": [20],
+  "Sö 109": [13],
+  "Sö 105": [5],
+  "Sö 82": [9],
+  "Sö 46": [19],
+  "Sö 21": [6],
+  "Ög 180": [4],
+
+};
+const transliterationWordsToSkip = {
+  "IS IR;166": [12],
+  'N 157': [4],
+  "DR NOR2002;7": [9],
+  "G 325": [8],
+  "Nä 20": [6],
+  "U Sl115": [1],
+  "U Fv1992;156": [7],
+  "U Fv1986;84": [1, 14],
+  "U 775": [13],
+  "U 558": [6],
+  "U 431": [12],
+  "U 29": [29],
+  "Sö 196": [34],
+  "Ög 51": [4],
+};
+
+
 let gRenderInProgress = false;
 
 /**
@@ -183,6 +281,97 @@ export function getHumanName(schemaName, lang = 'en') {
   return field.text[lang] || schemaName; // Return the human name or schemaName if translation is missing
 }
 
+/**
+ * Checks if a given word is a personal name.
+ * @param {string} word - The word to check.
+ * @returns {boolean} - True if the word is a personal name, false otherwise.
+ */
+export function isPersonalName(word) {
+  return word.startsWith('"') || word.startsWith("&quot;")
+    || word.includes('/"') || word.includes('/&quot;');
+}
+
+
+// Extracts word boundaries from inscription texts. These texts
+// have multiple separators (whitespaces, punctuation) that often
+// go together, i.e. space,punctuation,space
+// returns array of objects. Each object:
+// {start: num, end: num, text: string, isPersonal: 0|1}
+// Arguments:
+//   str - search string
+function getWordBoundaries(str, sourceIsEscaped = false) {
+  // regex used to detect word boundaries
+  const wordBoundariesSource = "((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)";
+  // the reason it is written so complex via | is because we can do html escaping on that string
+  const punctuationSource = "(·|:|×|¤|'|\\||\\+|÷|¶|\\(|\\)|\\[|\\])+"
+  //const punctuationSource = "([·|:×¤'+÷¶()|[\]\\])+";
+  const reg = new RegExp(sourceIsEscaped ? escapeHtml(wordBoundariesSource) : wordBoundariesSource, 'g');
+  // regex used to check if detected word is pure punctuation
+  const purePunctuation = new RegExp(sourceIsEscaped ? escapeHtml(punctuationSource) : punctuationSource);
+
+  const words = [];
+  let wordBegin = 0;
+
+  function processWord(wordBegin, wordEnd) {
+    const wordText = str.slice(wordBegin, wordEnd);
+
+    // Skip double sides character
+    if (str.slice(wordBegin, wordBegin + 2) === '¶¶') {
+      return null;
+    }
+    // skip {÷
+    if (str.slice(wordBegin, wordBegin+2) === "{÷") {
+      return null;
+    }
+
+    // Check if the word is pure punctuation
+    const punctuationCheck = purePunctuation.exec(wordText);
+    if (punctuationCheck && punctuationCheck[0].length === wordText.length) {
+      return null;
+    }
+
+    // skip ^
+    if (wordText == "^") {
+      return null;
+    }
+
+
+    const oneWord = {
+      start: wordBegin,
+      end: wordEnd,
+      text: wordText,
+      isPersonal: 0,
+    };
+
+    // Check if the word is personal
+    oneWord.isPersonal = isPersonalName(wordText) ? 1 : 0;
+
+    return oneWord;
+  }
+
+  let arr;
+  while ((arr = reg.exec(str)) !== null) {
+    if (wordBegin === arr.index) {
+      wordBegin += arr[0].length;
+      continue;
+    }
+    const oneWord = processWord(wordBegin, arr.index);
+    if (oneWord) {
+      words.push(oneWord);
+    }
+    wordBegin = arr.index + arr[0].length;
+  }
+
+  // Process any remaining text after the last regex match
+  if (wordBegin < str.length) {
+    const oneWord = processWord(wordBegin, str.length);
+    if (oneWord) {
+      words.push(oneWord);
+    }
+  }
+
+  return words;
+}
 
 /**
  * Convert a database object to a key map.
@@ -200,19 +389,72 @@ export function convertDbToKeyMap(db) {
   const presentLatitudeColumn = columns.indexOf('present_latitude');
   const presentLongitudeColumn = columns.indexOf('present_longitude');
   const metaColumn = columns.indexOf('id');
+  const wordColumns = ['transliteration', 'normalisation_norse', 'normalisation_scandinavian'];
   
   const allDbImages = fetchAllImages(db);
+  let numDiffers = 0;
 
   const dbArray = allRows.map(row => {
     let objSignature = {};
     const metaId = row[metaColumn];
     for (let j = 0; j < row.length; j++) {
-      objSignature[columns[j]] = row[j];
+      const columnName = columns[j];
+      
+      objSignature[columnName] = row[j];
       // handle NULL values
       if (row[j] === null) {
-        objSignature[columns[j]] = "";
+        objSignature[columnName] = "";
+      }
+
+      /////////////////////////////////////
+      // pre-split words and store arrays
+      if (wordColumns.includes(columnName)) {
+        objSignature[`${columnName}_html`] = escapeHtml(row[j]);
+        objSignature[`${columnName}_word_boundaries`] = getWordBoundaries(objSignature[`${columnName}_html`], true);
       }
     }
+
+    /////////////////////////////////////////
+    // Handle exceptions for word searches
+
+    // special treatment for "Sö 145"
+    if (objSignature.signature_text === "Sö 145") {
+      // treat `ata i` as a single word
+      objSignature['transliteration_html'] = escapeHtml(objSignature.transliteration.replace(": ata i ::", ": ata_i ::"));
+      objSignature['transliteration_word_boundaries'] = getWordBoundaries(objSignature['transliteration_html'], true);
+      // replace it back
+      objSignature['transliteration_word_boundaries'][22].text = 'ata i';
+    }
+    if (normalizationWordsToSkip.hasOwnProperty(objSignature.signature_text)) {
+      const wordsToSkip = normalizationWordsToSkip[objSignature.signature_text];
+      objSignature.normalisation_norse_word_boundaries = objSignature.normalisation_norse_word_boundaries.filter((_, i) => !wordsToSkip.includes(i));
+      objSignature.normalisation_scandinavian_word_boundaries = objSignature.normalisation_scandinavian_word_boundaries.filter((_, i) => !wordsToSkip.includes(i));
+    }
+    if (transliterationWordsToSkip.hasOwnProperty(objSignature.signature_text)) {
+      const wordsToSkip = transliterationWordsToSkip[objSignature.signature_text];
+      objSignature.transliteration_word_boundaries = objSignature.transliteration_word_boundaries.filter((_, i) => !wordsToSkip.includes(i));
+    }
+    // End of exception handling
+    /////////////////////////////////////
+
+    // Adjust small mismatches
+    if (objSignature.transliteration_word_boundaries.length == 0 && objSignature.normalisation_norse_word_boundaries.length == 1) {
+      if (objSignature.normalisation_norse_word_boundaries[0].text == '...') {
+        // reset the normalisation_norse_word_boundaries
+        objSignature.normalisation_norse_word_boundaries = [];
+        objSignature.normalisation_scandinavian_word_boundaries = [];
+      }
+    }
+
+    wordColumns.forEach(name => {
+      // `${name}_word_boundaries` is a list of objects with keys: start, end, text
+      // create a new array out of it with only the text
+      objSignature[`${name}_words`] = objSignature[`${name}_word_boundaries`].map(boundary => {
+        return boundary.text;
+      });
+    });
+    numDiffers += objSignature.transliteration_word_boundaries.length !== objSignature.normalisation_norse_word_boundaries.length ? 1 : 0;
+
     objSignature["signature_display"] = prepareSignumForDisplay(objSignature);
     if (objSignature["aliases"]) {
       objSignature["signature_header"] = objSignature["signature_text"] + " (" + objSignature["aliases"] + ")";
@@ -239,12 +481,15 @@ export function convertDbToKeyMap(db) {
     } else {
       objSignature['crosses'] = [];
     }
+
     return objSignature;
   });
   const dbAsJson = new Map();
   dbArray.forEach(inscription => {
     dbAsJson.set(inscription.id, inscription);
   });
+
+  console.log(`Number of signatures with different word boundaries (it should be 0): ${numDiffers}`);
   
   return dbAsJson;
 }

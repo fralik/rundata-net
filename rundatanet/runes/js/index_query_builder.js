@@ -3,6 +3,7 @@ This file contains code to work with jquery query builder. The query builder mus
 included in your code prior to using this file.
 */
 
+
 const queryBuilderPlugins = {
   'bt-tooltip-errors': null,
   'sortable': null,
@@ -12,7 +13,7 @@ const queryBuilderPlugins = {
 
 const optGroups = {
   "gr_signature": {
-    "en": "Inscription ID",
+    "en": "Inscription",
     "sv": "Signatura",
   },
   "gr_texts": "Texts",
@@ -126,38 +127,53 @@ $.fn.queryBuilder.extend({
 });
 
 
- // Function to sort filters within each optgroup
- function sortFilters(filters) {
-  var groupedFilters = {};
+export function sortGroupsByOrder(items, groupOrder) {
+  const key = 'optgroup'; // The key in items to group by
 
-  // Group filters by optgroup
-  filters.forEach(function(filter) {
-      if (!groupedFilters[filter.optgroup]) {
-          groupedFilters[filter.optgroup] = [];
-      }
-      groupedFilters[filter.optgroup].push(filter);
+  // Create priority map
+  const priorityMap = {};
+  groupOrder.forEach((group, index) => {
+    priorityMap[group] = index;
   });
-
-  // Sort filters within each optgroup
-  for (var group in groupedFilters) {
-      groupedFilters[group].sort(function(a, b) {
-          return a.label.localeCompare(b.label);
-      });
-  }
-
-  // Flatten the sorted filters back into a single array
-  var sortedFilters = [];
-  for (var group in groupedFilters) {
-      sortedFilters = sortedFilters.concat(groupedFilters[group]);
-  }
-
-  return sortedFilters;
+  
+  // Group items by their key
+  const groups = {};
+  items.forEach(item => {
+    const groupKey = item[key] || '';
+    if (!groups[groupKey]) groups[groupKey] = [];
+    groups[groupKey].push(item);
+  });
+  
+  // Sort each group alphabetically by label
+  Object.keys(groups).forEach(groupKey => {
+    groups[groupKey].sort((a, b) => {
+      const labelA = a.label || '';
+      const labelB = b.label || '';
+      return labelA.localeCompare(labelB);
+    });
+  });
+  
+  // Create result array by concatenating groups in specified order
+  let result = [];
+  groupOrder.forEach(groupKey => {
+    if (groups[groupKey]) {
+      result = result.concat(groups[groupKey]);
+      delete groups[groupKey];
+    }
+  });
+  
+  // Add any remaining groups not specified in groupOrder
+  Object.values(groups).forEach(group => {
+    result = result.concat(group);
+  });
+  
+  return result;
 }
 
 
 function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelect = false) {
   // Get all unique values from dbMap for the specified fieldName
-  const allValues = [];
+  let allValues = [];
   const uniqueTracker = new Set();
   let nextArtificialId = 20000; // Starting ID for aliases
 
@@ -299,6 +315,12 @@ function adjustTomSelectAndAutoComplete(rule, tomSelectConfig = {}, autoComplete
   }
 }
 
+export const rundataOperators = [
+  { type: 'texts_contains', nb_inputs: 2, multiple: false, apply_to: ['string'] },
+  { type: 'texts_equal', nb_inputs: 2, multiple: false, apply_to: ['string'] },
+  { type: 'texts_begins_with', nb_inputs: 2, multiple: false, apply_to: ['string'] },
+  { type: 'texts_ends_with', nb_inputs: 2, multiple: false, apply_to: ['string'] },
+];
 
 export function initQueryBuilder(containerId, dbMap, getHumanName) {
   const queryBuilder = $(`#${containerId}`);
@@ -408,6 +430,7 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
       plugin_config: signature_text_tomselect_cfg,
     },
     prepareAutoComplete('carver', dbMap, getHumanName),
+    prepareAutoComplete('normalisation_norse', dbMap, getHumanName, {fieldId: 'normalisation_search_norse', optgroup: "gr_texts"}),
     {
       id: 'signature_country',
       optgroup: "gr_signature",
@@ -451,7 +474,59 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
         // maxItems: null,
       },
     },
-    prepareAutoComplete('normalisation_norse', dbMap, getHumanName, {fieldId: 'normalisation_search_norse', optgroup: "gr_texts"}),
+    {
+      id: 'normalization_norse_to_transliteration',
+      field: 'normalization_norse',
+      label: 'Normalization Norse to Transliteration',
+      type: 'string',
+      optgroup: 'gr_texts',
+      data: {
+        multiField: true,
+      },
+      input: function(rule, name) {
+        return `
+          <div class="form-group">
+            <div class="input-group mb-3 pt-2">
+              <span class="input-group-text" id="${name}_normalization_input_span">Normalization</span>
+              <input type="text" id="${name}_normalizationInput" class="form-control" placeholder="" aria-label="Normalization" aria-describedby="${name}_normalization_input_span">
+            </div>
+            <div class="input-group">
+              <span class="input-group-text" id="${name}_transliteration_input_span">Transliteration</span>
+              <input type="text" id="${name}_transliterationInput" class="form-control" placeholder="" aria-label="Transliteration" aria-describedby="${name}_transliteration_input_span">
+            </div>
+            <div class="mt-2">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="includeAll" id="${name}_includeAddInput" checked>
+                <label class="form-check-label" for="${name}_includeAddInput">Include personal names</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="excludeNames" id="${name}_excludeNamesInput">
+                <label class="form-check-label" for="${name}_excludeNamesInput">Exclude personal names</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="namesOnly" id="${name}_namesOnlyInput">
+                <label class="form-check-label" for="${name}_namesOnlyInput">Personal names only</label>
+              </div>
+            </div>
+          </div>        
+        `;               
+      },
+      operators: ['contains', 'equal', 'begins_with', 'ends_with'],
+      valueGetter: function(rule) {
+        var $container = rule.$el.find('.rule-value-container');
+        return {
+          normalization: $container.find('[id$=_normalizationInput]').val(),
+          transliteration: $container.find('[id$=_transliterationInput]').val(),
+          names_mode: $container.find('[name$=_personalNamesMode]:checked').val()
+        };
+      },
+      valueSetter: function(rule, value) {
+        var $container = rule.$el.find('.rule-value-container');
+        $container.find('[id$=_normalizationInput]').val(value.normalization);
+        $container.find('[id$=_transliterationInput]').val(value.transliteration);
+        $container.find('[name$=_personalNamesMode][value="' + value.names_mode + '"]').prop('checked', true);
+      }      
+    },
   ];
 
   const my_rule_template = ({ rule_id, icons, settings, translate, builder }) => {
@@ -475,10 +550,8 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
   </div>`;
   };
 
-  // sort into groups
-  queryBuilderFilters = $.fn.queryBuilder.constructor.utils.groupSort(queryBuilderFilters, 'optgroup')
-  // sort within groups
-  queryBuilderFilters = sortFilters(queryBuilderFilters);
+  // sort groups
+  queryBuilderFilters = sortGroupsByOrder(queryBuilderFilters, Object.keys(optGroups));
 
   // swap two first filters, so that signature is on the first place!
   const tmp = queryBuilderFilters[0];
@@ -487,6 +560,7 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
 
   queryBuilder.queryBuilder({
     display_empty_filter: false,
+    operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat(rundataOperators),
 
     plugins: queryBuilderPlugins,
     filters: queryBuilderFilters,
