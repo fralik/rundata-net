@@ -255,6 +255,11 @@
       .select2-results__option[aria-selected=true] {
         display: none;
       }
+      .highlight {
+        color: red;
+        font-weight: bold;
+      }
+
     </style>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -682,11 +687,11 @@ function isSafari() {
 let gSqlDb = null;
 let gJsTreeInscriptions = [];
 let gDbMap = {}; // Map object. Key - inscription ID, value - inscription object.
-let gActiveInscriptions = [];  // Array of active inscription IDs. Active meaning visible on the left panel.
 let gAllMarkers = null; // Mapping of all leaflet markers. Key - inscription ID, value - object with keys 'found', 'present'.
 let gMyMap = null;
 let gMarkersLayer = null;
 let inpQueryBuilder = "builder";
+let gViewModel = null; // Global view model for the runic inscriptions
 
 function getCrossUrl(crossName) {
   // It is important that staticBase is written in a file that is processed by the back-end.
@@ -699,7 +704,7 @@ $('#loading').hide();
 
 function onDbLoaded() {
   gDbMap = convertDbToKeyMap(gSqlDb);
-  gActiveInscriptions = Array.from(gDbMap.keys());
+  gViewModel = new RunicViewModel(gDbMap);
   gAllMarkers = inscriptions2markers(gDbMap, L);
   //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
   // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
@@ -722,8 +727,7 @@ function fetchTreeData(obj, cb) {
       // we need to load the database first
       return;
     }
-    const activeInscriptions = gActiveInscriptions.map(id => gDbMap.get(id));
-    cb.call(this, inscriptions2treeNodes(activeInscriptions));
+    cb.call(this, inscriptions2treeNodes(gViewModel.getActiveInscriptions()));
   }
 }
 
@@ -739,7 +743,7 @@ function inscriptions2makup() {
 function showMarkersWrapper({preserveMapArea = false} = {}) {
   const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
   const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
-  const inscriptionIds = showSelected ? $('#jstree').jstree('get_selected').map(node => parseInt(node, 10)) : gActiveInscriptions;
+  const inscriptionIds = showSelected ? $('#jstree').jstree('get_selected').map(node => parseInt(node, 10)) : gViewModel.getActiveInscriptionIds();
 
   showMarkers({
     preserveMapArea,
@@ -839,20 +843,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
     const results = doSearch(rules, gDbMap.values());
     console.log(`Got ${results.length} results`);
-    console.log(results);
-    console.log('Done');
+    gViewModel.setSearchResults(results);
 
-    calcWordsAndPersonalNames(results);
-    gActiveInscriptions = results.map(result => result.id);
-    $('#jstree').jstree(true).refresh(false, true);
-    showMarkersWrapper();
+    calcWordsAndPersonalNames(results);    
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
-    gActiveInscriptions = Array.from(gDbMap.keys());
-    $('#jstree').jstree(true).refresh(false, true);
+    gViewModel.clearSearchResults();
     calcWordsAndPersonalNames(gDbMap.values());
-    showMarkersWrapper();
   });
 
   // Search statistics updates:
@@ -865,88 +863,13 @@ document.addEventListener('DOMContentLoaded', function() {
   $(document).on('updatePersonalNameCount', function(event, data) {
     document.getElementById('outNumFoundNames').textContent = data.count;
   });
+  $(document).on('viewModelUpdated', function(event, data) {
+    $('#jstree').jstree(true).refresh(false, true);
+    showMarkersWrapper();
+  });
 
 });
 </script>
-
-<!--<script type="module">
-import { convertDbToKeyMap, inscriptions2treeNodes } from "{% static 'runes/index_scripts.js' %}";
-import { getUserSelectedDisplay, saveUserSelectedDisplay } from "{% static 'runes/index_multiselect.js' %}";
-
-let gSqlDb = null;
-let gJsTreeInscriptions = [];
-
-$('#loading').hide();
-
-function onDbLoaded() {
-  const dbJson = convertDbToKeyMap(gSqlDb);
-  gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
-
-  $('#jstree').jstree(true).refresh();
-}
-
-/**
- * Data provider for jsTree
- * @param {Object} obj - an object being loaded
- * @param {Function} cb - callback function to call with the children for that node
- */
-function fetchTreeData(obj, cb) {
-  if (obj.id === "#") {
-    // root node
-    if (gSqlDb === null) {
-      // we need to load the database first
-      return;
-    }
-    cb.call(this, gJsTreeInscriptions);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  const sqlConfig = {
-    locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
-  };
-  initSqlJs(sqlConfig).then(function(SQL) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.6", true);
-    xhr.responseType = 'arraybuffer';
-    xhr.addEventListener("load", function() {
-      console.log('we got sql data from server');
-
-      gSqlDb = new SQL.Database(new Uint8Array(this.response));
-      onDbLoaded();
-    });
-    xhr.send();
-  }).catch(function (reason) {
-    console.log(`Failed to init SQL: ${reason}`);
-  });
-
-  // configure jsTree even before we have the data
-  $("#jstree")
-  .on('ready.jstree', function() {
-    console.log('jstree ready');
-  })
-  .on('refresh.jstree', function() {
-    $('#jstree').scrollTop(0);
-    console.log('jstree refresh');
-  })
-  .jstree({
-    'core': {
-      'animation': 0,
-      'data': fetchTreeData,
-      'multiple': true,
-    }
-  });
-});
-
-// 90 sec timeout
-/*var gLoadingTimer = setTimeout(function() {
-  if ($('#loading').is(':visible')) {
-    $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
-    alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
-  }
-}, 90000);*/
-
-</script>-->
 
 </body>
 </html>

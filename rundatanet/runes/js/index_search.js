@@ -511,3 +511,25 @@ export function calcWordsAndPersonalNames(dbMap) {
   $(document).trigger('updateWordCount', { count: totalWordMatches });
   $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames });
 }
+
+export function highlightWordsFromWordBoundaries(str, wordBoundaries) {
+  // Sort the indices to ensure they are processed in the correct order
+  wordBoundaries.sort((a, b) => a.start - b.start);
+
+  let highlightedStr = '';
+  let lastIndex = 0;
+
+  wordBoundaries.forEach(({start, end, text}) => {
+    // Append the part of the string before the current word
+    highlightedStr += str.slice(lastIndex, start);
+    // Wrap the word in a <span> tag and append it
+    highlightedStr += `<span class="highlight">${str.slice(start, end)}</span>`;
+    // Update the lastIndex to the end of the current word
+    lastIndex = end;
+  });
+
+  // Append the remaining part of the string after the last word
+  highlightedStr += str.slice(lastIndex);
+
+  return highlightedStr;
+}
