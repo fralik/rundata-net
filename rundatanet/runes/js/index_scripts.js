@@ -119,6 +119,7 @@ export const schemaFieldsInfo = [
       en: 'Normalization to Old West Norse',
     },
     css: 'normalization',
+    highlight: true,
   },
   {
     schemaName: 'normalisation_scandinavian',
@@ -126,6 +127,7 @@ export const schemaFieldsInfo = [
       en: 'Normalisation to Old Scandinavian',
     },
     css: 'normalization',
+    highlight: true,
   },
   {
     schemaName: 'english_translation',
@@ -145,6 +147,7 @@ export const schemaFieldsInfo = [
       en: 'Transliterated runic text',
     },
     css: 'transliteration',
+    highlight: true,
   },
   {
     schemaName: 'num_crosses',
@@ -693,7 +696,10 @@ function renderSignatures() {
     return;
 
   try {
-    const html = inscriptions2markup();
+    const selectedSignatureIds = $('#jstree').jstree(true).get_selected();
+    const selectedSignatures = gViewModel.getInscriptions(selectedSignatureIds);
+
+    const html = inscriptions2markup(selectedSignatures);
     document.getElementById('mainDisplay').innerHTML = html.join('');
   } catch (e) {
     console.error(`Error rendering signatures: ${e}`);
@@ -719,9 +725,9 @@ function escapeHtml(string) {
   });
 }
 
-export function inscriptions2markup() {
+export function inscriptions2markup(inscriptions) {
   // array of selected inscription IDs
-  const selectedSignatureIds = $('#jstree').jstree(true).get_selected();
+  //const selectedSignatureIds = $('#jstree').jstree(true).get_selected();
   const lang = 'en';
   const paragraphSymbol = '§';
   const sidesHeader = "Sides or/and reading variants:"
@@ -729,10 +735,10 @@ export function inscriptions2markup() {
   const showHeaders = $('#chkDisplayHeaders').is(":checked");
   const userSelectedFields =  getUserSelectedFields();
   let markupData = [];
-  for (let i = 0; i < selectedSignatureIds.length; i++) {
-    const signatureId = parseInt(selectedSignatureIds[i], 10);
+  for (let i = 0; i < inscriptions.length; i++) {
 
-    const inscriptionData = gDbMap.get(signatureId);
+    const inscriptionData = inscriptions[i];
+    const signatureId = inscriptionData.id;
     const signatureName = inscriptionData.signature_text;
     
     let paragraph = `<article signature="${signatureName}" id="${signatureName}" rundata-db-id="${signatureId}" class="inscription-section">`;
@@ -741,6 +747,7 @@ export function inscriptions2markup() {
       const columnName = field.schemaName;
       const humanName = field.text[lang];
       const cssStyle = field.css || "";
+      const shouldHighlight = field.highlight || false;
 
       let columnData = "";
       if (columnName in inscriptionData) {
@@ -823,6 +830,14 @@ export function inscriptions2markup() {
       }
 
       columnData = escapeHtml(columnData);
+
+      if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
+        const entryWordBoundaries = inscriptionData[`${columnName}_word_boundaries`];
+        console.log(`entryWordBoundaries: ${JSON.stringify(entryWordBoundaries)}`);
+        const matchedWords = inscriptionData.matchDetails.wordIndices;
+        const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
+        columnData = highlightWordsFromWordBoundaries(columnData, matchedWordBoundaries);
+      }
 
       if (columnData.indexOf(paragraphSymbol) !== -1) {
         const parts = columnData.split(paragraphSymbol);
