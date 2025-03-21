@@ -833,7 +833,6 @@ export function inscriptions2markup(inscriptions) {
 
       if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
         const entryWordBoundaries = inscriptionData[`${columnName}_word_boundaries`];
-        console.log(`entryWordBoundaries: ${JSON.stringify(entryWordBoundaries)}`);
         const matchedWords = inscriptionData.matchDetails.wordIndices;
         const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
         columnData = highlightWordsFromWordBoundaries(columnData, matchedWordBoundaries);
