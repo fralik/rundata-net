@@ -322,9 +322,10 @@ const searchViaList = (fieldValue, ruleValue) => {
 
 const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
   const isAHit = getWordSearchFunction(searchMode);
+  // key names defined in valueGetter, e.g. normalization_norse_to_transliteration
   const normalisationQuery = ruleValue['normalization'];
   const transliterationQuery = ruleValue['transliteration'];
-  const namesMode = ruleValue['namesMode'];
+  const namesMode = ruleValue['names_mode'];
 
   // Determine which normalization field to use
   let normalizationField;
@@ -421,7 +422,16 @@ const customSearchFunctions = {
   normalization_norse_to_transliteration: {
     contains: (fieldValue, ruleValue) => {
       return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'includes');
-    }
+    },
+    equal: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'exact');
+    },
+    begins_with: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'beginsWith');
+    },
+    ends_with: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'endsWith');
+    },
   },
 };
 
@@ -440,16 +450,44 @@ export function getWordSearchFunction(searchMode, options = {}) {
   const prepareString = ignoreCase 
     ? str => String(str).toLowerCase() 
     : str => String(str);
+
+  const prepareWord = (word) => {
+    // Check if this might be a list of personal names (divided by HTML escaped / symbol)
+    if (word.includes('&#x2F;') || word.includes('/')) {
+      // Split by the HTML escaped slash or regular slash
+      const names = word.split(/&#x2F;|\//).map(name => {
+        // Trim whitespace and remove quotes (both regular and HTML escaped) from the beginning
+        return name.trim().replace(/^(&quot;|")/, '');
+      });
+      // Return the array of individual names
+      return names;
+    }
+    
+    // If it's not a list, just return the original word
+    return [word];
+  }
   
   switch (searchMode) {
     case 'exact':
-      return (word, query) => prepareString(word) === prepareString(query);
+      return (word, query) => {
+        const words = prepareWord(word);
+        // Check if any of the words match the query
+        return words.some(w => prepareString(w) === prepareString(query));
+      }
       
     case 'beginsWith':
-      return (word, query) => prepareString(word).startsWith(prepareString(query));
+      return (word, query) => {
+        const words = prepareWord(word);
+        // Check if any of the words start with the query
+        return words.some(w => prepareString(w).startsWith(prepareString(query)));
+      }
       
     case 'endsWith':
-      return (word, query) => prepareString(word).endsWith(prepareString(query));
+      return (word, query) => {
+        const words = prepareWord(word);
+        // Check if any of the words end with the query
+        return words.some(w => prepareString(w).endsWith(prepareString(query)));
+      }
       
     case 'regex': {
       return (word, query) => {
@@ -466,7 +504,11 @@ export function getWordSearchFunction(searchMode, options = {}) {
       
     case 'includes':
     default:
-      return (word, query) => prepareString(word).includes(prepareString(query));
+      return (word, query) => {
+        const words = prepareWord(word);
+        // Check if any of the words include the query
+        return words.some(w => prepareString(w).includes(prepareString(query)));
+      }
   }
 }
 

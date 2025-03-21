@@ -686,7 +686,7 @@ function isSafari() {
 <script type="text/javascript">
 let gSqlDb = null;
 let gJsTreeInscriptions = [];
-let gDbMap = {}; // Map object. Key - inscription ID, value - inscription object.
+// let gDbMap = {}; // Map object. Key - inscription ID, value - inscription object.
 let gAllMarkers = null; // Mapping of all leaflet markers. Key - inscription ID, value - object with keys 'found', 'present'.
 let gMyMap = null;
 let gMarkersLayer = null;
@@ -703,13 +703,13 @@ function getCrossUrl(crossName) {
 $('#loading').hide();
 
 function onDbLoaded() {
-  gDbMap = convertDbToKeyMap(gSqlDb);
-  gViewModel = new RunicViewModel(gDbMap);
-  gAllMarkers = inscriptions2markers(gDbMap, L);
+  const dbMap = convertDbToKeyMap(gSqlDb);
+  gViewModel = new RunicViewModel(dbMap);
+  gAllMarkers = inscriptions2markers(dbMap, L);
   //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
   // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
-  initQueryBuilder(inpQueryBuilder, gDbMap, getHumanName);
-  calcWordsAndPersonalNames(gDbMap.values());
+  initQueryBuilder(inpQueryBuilder, dbMap, getHumanName);
+  calcWordsAndPersonalNames(gViewModel.getAllInscriptions());
 
   // populate jstree with data
   $('#jstree').jstree(true).refresh();  
@@ -841,16 +841,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
-    const results = doSearch(rules, gDbMap.values());
+    const results = doSearch(rules, gViewModel.getAllInscriptions());
     console.log(`Got ${results.length} results`);
     gViewModel.setSearchResults(results);
-
-    calcWordsAndPersonalNames(results);    
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
     gViewModel.clearSearchResults();
-    calcWordsAndPersonalNames(gDbMap.values());
   });
 
   // Search statistics updates:
@@ -866,6 +863,7 @@ document.addEventListener('DOMContentLoaded', function() {
   $(document).on('viewModelUpdated', function(event, data) {
     $('#jstree').jstree(true).refresh(false, true);
     showMarkersWrapper();
+    calcWordsAndPersonalNames(data.model.getActiveInscriptions());
   });
 
 });

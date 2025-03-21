@@ -21,6 +21,14 @@ export class RunicViewModel {
     return ids.map(id => this.dbMap.get(parseInt(id, 10)));
   }
   
+  /**
+   * Retrieves all inscriptions from the database map.
+   * @returns {Iterator} An iterator over all values in the database map.
+   */
+  getAllInscriptions() {
+    return this.dbMap.values();
+  }
+
   // Get all currently active inscriptions (filtered by search if a search is active)
   getActiveInscriptions() {
     if (this.searchResults) {
@@ -56,7 +64,8 @@ export class RunicViewModel {
     // Notify subscribers that data has changed
     $(document).trigger('viewModelUpdated', { 
       source: 'search',
-      count: this.searchResults.size 
+      count: this.searchResults.size,
+      model: this
     });
   }
 
@@ -67,7 +76,8 @@ export class RunicViewModel {
     
     $(document).trigger('viewModelUpdated', { 
       source: 'reset',
-      count: this.dbMap.size 
+      count: this.dbMap.size,
+      model: this
     });
   }
   
