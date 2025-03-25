@@ -170,6 +170,72 @@ export function sortGroupsByOrder(items, groupOrder) {
   return result;
 }
 
+/**
+ * Gets the minimum and maximum values of a numerical field from a data source
+ * 
+ * @param {Map|Array} dataSource - Either a Map containing database records or an array of items
+ * @param {string} fieldName - The name of the field to analyze
+ * @returns {Object} Object containing min and max values, or null if field doesn't exist or has no numeric values
+ */
+export function getMinMaxValues(dataSource, fieldName) {
+  if (!dataSource) {
+    throw new Error("dataSource parameter is required");
+  }
+  
+  if (!fieldName || typeof fieldName !== 'string') {
+    throw new Error("fieldName parameter is required and must be a string");
+  }
+  
+  let min = null;
+  let max = null;
+  let hasValues = false;
+  
+  // Function to process each item
+  const processItem = (item) => {
+    // Skip if item doesn't have the field or value isn't numeric
+    if (!item || item[fieldName] === undefined || item[fieldName] === null) {
+      return;
+    }
+    
+    // Convert to number if it's a string
+    const value = typeof item[fieldName] === 'string' ? 
+      parseFloat(item[fieldName]) : item[fieldName];
+      
+    // Skip if not a valid number
+    if (isNaN(value)) {
+      return;
+    }
+    
+    // Initialize min/max on first valid value
+    if (!hasValues) {
+      min = value;
+      max = value;
+      hasValues = true;
+      return;
+    }
+    
+    // Update min/max
+    if (value < min) min = value;
+    if (value > max) max = value;
+  };
+  
+  // Handle different data source types
+  if (dataSource instanceof Map) {
+    // Process Map values
+    for (const item of dataSource.values()) {
+      processItem(item);
+    }
+  } else if (Array.isArray(dataSource)) {
+    // Process array items
+    for (const item of dataSource) {
+      processItem(item);
+    }
+  } else {
+    throw new Error("dataSource must be either a Map or an Array");
+  }
+  
+  return hasValues ? { min, max } : null;
+}
 
 function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelect = false) {
   // Get all unique values from dbMap for the specified fieldName
@@ -282,6 +348,75 @@ function prepareAutoComplete(ruleId, dbMap, humanNameGetter, opt = {}) {
     // operators: operators,
   }
 }
+
+/**
+ * Creates a jQuery QueryBuilder filter configuration for integer rules
+ * 
+ * @param {string} ruleId - ID for the rule/filter
+ * @param {Map} dbMap - A Map containing the database values for autocomplete.
+ * @param {Function} humanNameGetter - Function that returns a human-readable name for the given rule ID.
+ * @param {Object} opt - Optional configuration parameters
+ * @param {string} opt.fieldId - Field name in data (defaults to ruleId if not provided)
+ * @param {Array} opt.operators - Array of operators to use for this filter
+ * @param {number} opt.size - Size attribute for the input field
+ * @param {string} opt.optgroup - Group to which this filter belongs
+ * @param {number} opt.min - Minimum allowed value (optional)
+ * @param {number} opt.max - Maximum allowed value (optional)
+ * @param {number} opt.step - Step value for input (optional)
+ * @param {number} opt.default_value - Default value for the field (optional)
+ * @returns {Object} Filter configuration object for QueryBuilder
+ */
+function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
+  // Check required arguments
+  if (ruleId === undefined) {
+    throw new Error("prepareIntegerRule: 'ruleId' parameter is required");
+  }
+  if (!dbMap || !(dbMap instanceof Map)) {
+    throw new Error("prepareIntegerRule: 'dbMap' parameter is required and must be a Map");
+  }
+  if (!humanNameGetter || typeof humanNameGetter !== 'function') {
+    throw new Error("prepareIntegerRule: 'humanNameGetter' parameter is required and must be a function");
+  }
+  if (!opt) opt = {};
+  const fieldId = opt.fieldId || ruleId;
+  const operators = opt.operators || ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal', 'between', 'not_between'];
+  const size = opt.size || 10;
+  const optgroup = opt.optgroup || "other";
+  
+  let config = {
+    id: ruleId,
+    field: fieldId,
+    optgroup: optgroup,
+    label: humanNameGetter(fieldId),
+    type: 'integer',
+    size: size,
+    operators: operators,
+    input: 'number'
+  };
+  const dataLimitValues = getMinMaxValues(dbMap, fieldId);
+  opt.min = opt.min || (dataLimitValues && dataLimitValues.min);
+  opt.max = opt.max || (dataLimitValues && dataLimitValues.max);
+
+  // Add validation if any constraints are specified
+  if (opt.min !== undefined || opt.max !== undefined || opt.step !== undefined) {
+    config.validation = {
+      allow_empty_value: true
+    };
+    
+    if (opt.min !== undefined) config.validation.min = opt.min;
+    if (opt.max !== undefined) config.validation.max = opt.max;
+    if (opt.step !== undefined) config.validation.step = opt.step;
+  }
+  
+  // Add default value if provided
+  if (opt.default_value !== undefined) {
+    config.default_value = opt.default_value;
+  }
+  
+  return config;
+}
+
+
 /**
  * Adjusts the input element in a query rule by applying either TomSelect or AutoComplete plugin
  * based on the rule's operator type.
@@ -313,6 +448,76 @@ function adjustTomSelectAndAutoComplete(rule, tomSelectConfig = {}, autoComplete
   } else {
     $input.autoComplete(autoCompleteConfig);
   }
+}
+
+/**
+ * Creates a rule for word search in runic texts
+ * 
+ * @param {Object} config Configuration object
+ * @param {string} config.id Rule ID
+ * @param {string} config.field Field name in data
+ * @param {string} config.label Human-readable label
+ * @param {string} config.optgroup Option group
+ * @param {string[]} config.operators Array of supported operators
+ * @returns {Object} Configured QueryBuilder rule
+ */
+function createWordSearchRule(config) {
+  const input1Label = "Normalization";
+  const input2Label = "Transliteration";
+  return {
+    id: config.id,
+    field: config.field,
+    label: config.label,
+    type: 'string',
+    optgroup: config.optgroup || 'gr_texts',
+    data: {
+      multiField: true,
+    },
+    input: function(rule, name) {
+      return `
+        <div class="form-group">
+          <div class="input-group mb-3 pt-2">
+            <span class="input-group-text" id="${name}_normalization_input_span">${input1Label}</span>
+            <input type="text" id="${name}_normalizationInput" class="form-control" placeholder="" aria-label="${input1Label}" aria-describedby="${name}_normalization_input_span">
+          </div>
+          <div class="input-group">
+            <span class="input-group-text" id="${name}_transliteration_input_span">${input2Label}</span>
+            <input type="text" id="${name}_transliterationInput" class="form-control" placeholder="" aria-label="${input2Label}" aria-describedby="${name}_transliteration_input_span">
+          </div>
+          <div class="mt-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="includeAll" id="${name}_includeAddInput" checked>
+              <label class="form-check-label" for="${name}_includeAddInput">Include personal names</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="excludeNames" id="${name}_excludeNamesInput">
+              <label class="form-check-label" for="${name}_excludeNamesInput">Exclude personal names</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="namesOnly" id="${name}_namesOnlyInput">
+              <label class="form-check-label" for="${name}_namesOnlyInput">Personal names only</label>
+            </div>
+          </div>
+        </div>        
+      `;
+    },
+    operators: config.operators || ['contains', 'equal', 'begins_with', 'ends_with'],
+    valueGetter: function(rule) {
+      var $container = rule.$el.find('.rule-value-container');
+      return {
+        input1: $container.find('[id$=_normalizationInput]').val(),
+        input2: $container.find('[id$=_transliterationInput]').val(),
+        names_mode: $container.find('[name$=_personalNamesMode]:checked').val()
+      };
+    },
+    valueSetter: function(rule, value) {
+      const names_mode = value.names_mode || 'includeAll';
+      var $container = rule.$el.find('.rule-value-container');
+      $container.find('[id$=_normalizationInput]').val(value.input1 || '');
+      $container.find('[id$=_transliterationInput]').val(value.input2 || '');
+      $container.find('[name$=_personalNamesMode][value="' + names_mode + '"]').prop('checked', true);
+    }
+  };
 }
 
 export const rundataOperators = [
@@ -430,7 +635,6 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
       plugin_config: signature_text_tomselect_cfg,
     },
     prepareAutoComplete('carver', dbMap, getHumanName),
-    prepareAutoComplete('normalisation_norse', dbMap, getHumanName, {fieldId: 'normalisation_search_norse', optgroup: "gr_texts"}),
     {
       id: 'signature_country',
       optgroup: "gr_signature",
@@ -474,59 +678,39 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
         // maxItems: null,
       },
     },
-    {
+    createWordSearchRule({
       id: 'normalization_norse_to_transliteration',
       field: 'normalization_norse',
       label: 'Normalization Norse to Transliteration',
-      type: 'string',
       optgroup: 'gr_texts',
-      data: {
-        multiField: true,
-      },
-      input: function(rule, name) {
-        return `
-          <div class="form-group">
-            <div class="input-group mb-3 pt-2">
-              <span class="input-group-text" id="${name}_normalization_input_span">Normalization</span>
-              <input type="text" id="${name}_normalizationInput" class="form-control" placeholder="" aria-label="Normalization" aria-describedby="${name}_normalization_input_span">
-            </div>
-            <div class="input-group">
-              <span class="input-group-text" id="${name}_transliteration_input_span">Transliteration</span>
-              <input type="text" id="${name}_transliterationInput" class="form-control" placeholder="" aria-label="Transliteration" aria-describedby="${name}_transliteration_input_span">
-            </div>
-            <div class="mt-2">
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="includeAll" id="${name}_includeAddInput" checked>
-                <label class="form-check-label" for="${name}_includeAddInput">Include personal names</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="excludeNames" id="${name}_excludeNamesInput">
-                <label class="form-check-label" for="${name}_excludeNamesInput">Exclude personal names</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="namesOnly" id="${name}_namesOnlyInput">
-                <label class="form-check-label" for="${name}_namesOnlyInput">Personal names only</label>
-              </div>
-            </div>
-          </div>        
-        `;               
-      },
-      operators: ['contains', 'equal', 'begins_with', 'ends_with'],
-      valueGetter: function(rule) {
-        var $container = rule.$el.find('.rule-value-container');
-        return {
-          normalization: $container.find('[id$=_normalizationInput]').val(),
-          transliteration: $container.find('[id$=_transliterationInput]').val(),
-          names_mode: $container.find('[name$=_personalNamesMode]:checked').val()
-        };
-      },
-      valueSetter: function(rule, value) {
-        var $container = rule.$el.find('.rule-value-container');
-        $container.find('[id$=_normalizationInput]').val(value.normalization);
-        $container.find('[id$=_transliterationInput]').val(value.transliteration);
-        $container.find('[name$=_personalNamesMode][value="' + value.names_mode + '"]').prop('checked', true);
-      }      
-    },
+    }),
+    createWordSearchRule({
+      id: 'normalization_scandinavian_to_transliteration',
+      field: 'normalisation_scandinavian',
+      label: 'Normalization Scandinavian to Transliteration',
+      optgroup: 'gr_texts',
+    }),
+    prepareAutoComplete('english_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
+    prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
+
+    prepareAutoComplete('found_location', dbMap, getHumanName),
+    prepareAutoComplete('parish', dbMap, getHumanName),
+    prepareAutoComplete('district', dbMap, getHumanName),
+    prepareAutoComplete('municipality', dbMap, getHumanName),
+    prepareAutoComplete('current_location', dbMap, getHumanName),
+    prepareAutoComplete('original_site', dbMap, getHumanName),
+    prepareAutoComplete('parish_code', dbMap, getHumanName),
+    prepareAutoComplete('rune_type', dbMap, getHumanName),
+    prepareAutoComplete('dating', dbMap, getHumanName),
+    prepareIntegerRule('year_from', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
+    prepareIntegerRule('year_to', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
+    prepareAutoComplete('style', dbMap, getHumanName),
+    prepareAutoComplete('material', dbMap, getHumanName),
+    prepareAutoComplete('material_type', dbMap, getHumanName),
+    prepareAutoComplete('objectInfo', dbMap, getHumanName),
+    prepareAutoComplete('reference', dbMap, getHumanName),
+    prepareAutoComplete('additional', dbMap, getHumanName),
+    prepareIntegerRule('num_crosses', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
   ];
 
   const my_rule_template = ({ rule_id, icons, settings, translate, builder }) => {
