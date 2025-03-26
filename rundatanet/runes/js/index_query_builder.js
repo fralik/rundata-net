@@ -284,11 +284,12 @@ function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelect = fal
   
   if (isTomSelect) {
     suggest(allValues);
-    return;
+    return allValues;
   }
 
   const values = allValues.map(item => item.text);
   suggest(values);
+  return values;
 }
 
 
@@ -520,28 +521,31 @@ function createWordSearchRule(config) {
   };
 }
 
-export const rundataOperators = [
+/*export const rundataOperators = [
   { type: 'texts_contains', nb_inputs: 2, multiple: false, apply_to: ['string'] },
   { type: 'texts_equal', nb_inputs: 2, multiple: false, apply_to: ['string'] },
   { type: 'texts_begins_with', nb_inputs: 2, multiple: false, apply_to: ['string'] },
   { type: 'texts_ends_with', nb_inputs: 2, multiple: false, apply_to: ['string'] },
-];
+];*/
 
-export function initQueryBuilder(containerId, dbMap, getHumanName) {
+export function initQueryBuilder(containerId, viewModel, getHumanName) {
+  const dbMap = viewModel.getAllInscriptions();
   const queryBuilder = $(`#${containerId}`);
-
 
   const qbOperators = $.fn.queryBuilder.constructor.DEFAULTS.operators.concat([
     // Add to default operators
     { type: 'in_separated_list', nb_inputs: 1, multiple: false, apply_to: ['string'] },
+    { type: 'cross_form', nb_inputs: 1, multiple: false, apply_to: ['string'] },
   ]);
   const qbLang = {
     operators: {
       'in_separated_list': "is in |-separated list",
+      'cross_form': " ",
     }
   };
   const qbSqlOperators = {
     'in_separated_list': { 'op': 'IN', mod: '{0}' },
+    'cross_form': { 'op': 'IN' },
   };
 
   const signature_text_autocomplete_cfg = {
@@ -571,41 +575,6 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
   };  
   
   let queryBuilderFilters = [
-    // the order of items here defines the order of optgroups, place filters of at least each group in the order you like
-    // filters within a group will be sorted alphabetically
-    // {
-    //   id: 'signature_text',
-    //   optgroup: 'gr_signature',
-    //   field: 'signature_text',
-    //   label: 'Signature',
-    //   type: 'string',
-    //   input: 'select',
-    //   plugin: 'select2',
-    //   plugin_config: {
-    //     multiple: true,
-    //     data: locationSignatures,
-    //   },
-    //   //values: locationSignatures,
-    // },
-    // {
-    //   id: 'signature_text',
-    //   optgroup: 'gr_signature',
-    //   field: 'signature_text',
-    //   label: getHumanName('signature_text'),
-    //   type: 'string',
-    //   input: 'select',
-    //   multiple: true,
-    //   operators: [
-    //     'in', 'in_separated_list', 'begins_with', 'not_begins_with',
-    //     'ends_with', 'not_ends_with', 'contains', 'not_contains',
-    //   ],
-    //   plugin: 'tomSelect',
-    //   plugin_config: {
-    //     plugins: ['remove_button'],
-    //     options: allSignatures,
-    //     hideSelected: true,
-    //   },
-    // },
     {
       id: 'signature_text',
       optgroup: 'gr_signature',
@@ -623,7 +592,6 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
         if (operator === 'in' || operator === 'not_in') {
           $input.tomSelect('setValue', value);
         } else {
-          // Ensure autoComplete is initialized before using it
           if ($input[0].autoComplete) {
             $input[0].autoComplete.setValue(value);
           } else {
@@ -644,9 +612,6 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
       input: 'select',
       multiple: true,
       operators: ['in'],
-      // valueSetter: function (rule, value) {
-      //   rule.$el.find('.rule-value-container select')[0].selectize.setValue(value);
-      // },
       plugin: 'tomSelect',
       plugin_config: {
         plugins: ['remove_button'],
@@ -669,13 +634,6 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
           {text: 'Other areas (X)', value: 'X '}
         ],
         hideSelected: true,
-        // valueField: 'v',
-        // labelField: 'text',
-        // searchField: 'text',
-        // sortField: 'text',
-        // create: false,
-        // dropdownDirection: 'up',
-        // maxItems: null,
       },
     },
     createWordSearchRule({
@@ -711,6 +669,46 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
     prepareAutoComplete('reference', dbMap, getHumanName),
     prepareAutoComplete('additional', dbMap, getHumanName),
     prepareIntegerRule('num_crosses', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
+    {
+      id: 'cross_form',
+      field: 'crosses',
+      label: getHumanName('cross_form'),
+      operators: ['cross_form'],
+      optgroup: 'other',
+      input: function (rule, name) {
+        // this is a bit of a hack as getValuesFromAllData function is intended for other use
+        const allCrossForms = viewModel.getAllCrossForms().map(item => {
+          return `<option value="${item}">${item}</option>`;
+        }).join('');
+        return `
+          <select name="${name}_1" class="form-select" aria-label="Cross form">${allCrossForms}</select>
+          <div>Certain?
+            <div class="form-check form-check-inline">
+              <input type="radio" name="${name}_2" value="0" class="form-check-input" id="${name}_2_0">
+              <label for="${name}_2_0" class="form-check-label">No</label>
+            </div>
+
+            <div class="form-check form-check-inline">
+              <input type="radio" name="${name}_2" value="1" class="form-check-input" id="${name}_2_1">
+              <label for="${name}_2_1" class="form-check-label">Yes</label>
+            </div>
+
+            <div class="form-check form-check-inline">
+              <input type="radio" name="${name}_2" value="2" class="form-check-input" id="${name}_2_2" checked>
+              <label for="${name}_2_2" class="form-check-label">Doesn't matter</label>
+            </div>
+          </div>`;
+      },
+      valueGetter: function (rule) {
+        const val1 = rule.$el.find('.rule-value-container [name$=_1]').val();
+        const val2 = rule.$el.find('.rule-value-container [name$=_2]:checked').val();
+        return {form: val1, is_certain: val2};
+      },
+      valueSetter: function (rule, value) {
+        $(rule.$el.find('.rule-value-container [name$=_1]')[0]).val(value.form);
+        rule.$el.find(`.rule-value-container [name$=_2][value=${value.is_certain}]`).prop('checked', true);
+      },
+    },
   ];
 
   const my_rule_template = ({ rule_id, icons, settings, translate, builder }) => {
@@ -744,7 +742,7 @@ export function initQueryBuilder(containerId, dbMap, getHumanName) {
 
   queryBuilder.queryBuilder({
     display_empty_filter: false,
-    operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat(rundataOperators),
+    //operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat(rundataOperators),
 
     plugins: queryBuilderPlugins,
     filters: queryBuilderFilters,

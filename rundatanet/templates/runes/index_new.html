@@ -708,7 +708,7 @@ function onDbLoaded() {
   gAllMarkers = inscriptions2markers(dbMap, L);
   //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
   // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
-  initQueryBuilder(inpQueryBuilder, dbMap, getHumanName);
+  initQueryBuilder(inpQueryBuilder, gViewModel, getHumanName);
   calcWordsAndPersonalNames(gViewModel.getAllInscriptions());
 
   // populate jstree with data
@@ -841,7 +841,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
-    const results = doSearch(rules, gViewModel.getAllInscriptions());
+    const results = doSearch(rules, gViewModel.getAllInscriptions().values());
     console.log(`Got ${results.length} results`);
     gViewModel.setSearchResults(results);
   });

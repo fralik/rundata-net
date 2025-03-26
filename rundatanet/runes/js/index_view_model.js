@@ -4,6 +4,24 @@ export class RunicViewModel {
     this.dbMap = dbMap;            // Original data source
     this.searchResults = null;     // Last search results (or null if no search active)
     this.currentSelectionIds = []; // Currently selected IDs
+    this.allCrossForms = new Set();
+
+    for (const inscription of dbMap.values()) {
+      if (inscription.crosses && Array.isArray(inscription.crosses)) {
+        for (const cross of inscription.crosses) {
+          if (Array.isArray(cross)) {
+            for (const group of cross) {
+              if (Array.isArray(group)) {
+                for (const element of group) {
+                  this.allCrossForms.add(element.name);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    this.allCrossForms = Array.from(this.allCrossForms).sort();
   }
   
   // Get data for a specific ID, prioritizing search results if available
@@ -12,6 +30,10 @@ export class RunicViewModel {
       return this.searchResults.get(id);
     }
     return this.dbMap.get(id);
+  }
+
+  getAllCrossForms() {
+    return this.allCrossForms;
   }
 
   getInscriptions(ids) {
@@ -26,7 +48,7 @@ export class RunicViewModel {
    * @returns {Iterator} An iterator over all values in the database map.
    */
   getAllInscriptions() {
-    return this.dbMap.values();
+    return this.dbMap;
   }
 
   // Get all currently active inscriptions (filtered by search if a search is active)

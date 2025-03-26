@@ -156,6 +156,12 @@ export const schemaFieldsInfo = [
     },
   },
   {
+    schemaName: 'cross_form',
+    text: {
+      en: 'Cross form',
+    },
+  },
+  {
     schemaName: 'crosses',
     text: {
       en: 'Cross form',

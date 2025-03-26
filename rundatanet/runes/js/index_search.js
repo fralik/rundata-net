@@ -211,16 +211,12 @@ export class QueryBuilderParser {
   _evaluateRule(rule, record) {
     const field = rule.field || rule.id;
     // Check if this is a special multi-field rule
-    const isMultiFieldRule = rule.data && rule.data.multiField === true;
+    const isMultiFieldRule = rule.data ? rule.data && rule.data.multiField === true : false;
+    const operatorName = rule.operator;
 
     // For standard single-field rules, verify the field exists
     if (!isMultiFieldRule && !(field in record)) {
       return { match: false };
-    }
-
-    const operatorName = rule.operator;
-    if (!this.operators[operatorName]) {
-      throw new Error(`Unknown operator: ${operatorName}`);
     }
 
     // For multi-field rules, pass the entire record
@@ -246,26 +242,6 @@ export class QueryBuilderParser {
     // handled by the custom function
     let convertedFieldValue = fieldValue;
     let convertedRuleValue = ruleValue;
-
-    if (!isMultiFieldRule) {
-      const valueType = rule.type;
-      if (valueType && this.typeConverters[valueType]) {
-        const converter = this.typeConverters[valueType];
-        try {
-          if (Array.isArray(ruleValue)) {
-            convertedRuleValue = ruleValue.map(v => converter(v));
-          } else {
-            convertedRuleValue = converter(ruleValue);
-          }
-          
-          if (!Array.isArray(fieldValue)) {
-            convertedFieldValue = converter(fieldValue);
-          }
-        } catch (e) {
-          return { match: false };
-        }
-      }
-    }
 
     // If a custom search function exists for this rule id and operator, call it.
     if (
@@ -414,6 +390,36 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
   };
 };
 
+const searchCrossForm = (crosses, ruleValue) => {
+  if (crosses.length === 0) {
+    return { match: false };
+  }
+
+  for (const cross of crosses) {
+    if (Array.isArray(cross)) {
+      for (const group of cross) {
+        if (Array.isArray(group)) {
+          for (const element of group) {
+            const nameHit = element.name === ruleValue.form;
+            const ruleIsCertain = parseInt(ruleValue.is_certain, 10);
+            if (ruleIsCertain == 2 && nameHit) {
+              // doesn't matter if the form is certain or not
+              return { match: nameHit };
+            }
+            const isCertain = ruleIsCertain === element.isCertain;
+            const isMatch = nameHit && isCertain;
+            if (isMatch) {
+              return { match: isMatch };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return { match: false };
+};
+
 const customSearchFunctions = {
   signature_text: {
     in: searchViaList,
@@ -432,6 +438,9 @@ const customSearchFunctions = {
     ends_with: (fieldValue, ruleValue) => {
       return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'endsWith');
     },
+  },
+  cross_form: {
+    cross_form: searchCrossForm,
   },
 };
 
@@ -536,7 +545,7 @@ export function calcWordsAndPersonalNames(dbMap) {
   let totalPersonalNames = 0;
   let totalSignatures = 0;
 
-  dbMap.forEach(entry => {
+  dbMap.values().forEach(entry => {
     if (entry.matchDetails && entry.matchDetails.wordIndices) {
       totalWordMatches += entry.matchDetails.wordIndices.length;
       totalPersonalNames += entry.matchDetails.numPersonalNames;  
