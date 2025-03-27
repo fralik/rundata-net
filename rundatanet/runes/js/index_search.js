@@ -141,15 +141,24 @@ export class QueryBuilderParser {
    * @private
    */
   _evaluateGroup(group, record) {
+    // Helper function to apply negation if needed
+    const applyNegation = (result, shouldNegate) => {
+      if (!shouldNegate) return result;
+      
+      return {
+        match: !result.match
+      };
+    };
+  
     if (!group.condition || !group.rules) {
-      return { match: false };
+      return applyNegation({ match: false }, group.not);
     }
 
     const condition = group.condition.toUpperCase();
     const rules = group.rules;
 
     if (!rules || !rules.length) {
-      return { match: true };
+      return applyNegation({ match: true }, group.not);
     }
 
     const results = rules.map(rule => {
@@ -165,6 +174,8 @@ export class QueryBuilderParser {
     });
 
     // Combine the results based on the condition
+    let combinedResult = null;
+
     if (condition === 'AND') {
       const isMatch = results.every(result => result.match);
       // For AND condition, we collect all details
@@ -182,7 +193,7 @@ export class QueryBuilderParser {
           return acc;
         }, {}) : null;
       
-      return { 
+      combinedResult = { 
         match: isMatch,
         details: combinedDetails
       };
@@ -191,13 +202,15 @@ export class QueryBuilderParser {
       const isMatch = matchingResults.length > 0;
       
       // For OR condition, we take the first matching details
-      return {
+      combinedResult = {
         match: isMatch,
         details: isMatch ? matchingResults[0].details : null
       };
     } else {
       throw new Error(`Unknown condition: ${condition}`);
     }
+
+    return applyNegation(combinedResult, group.not);
   }
   
   /**
