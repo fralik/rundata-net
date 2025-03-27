@@ -420,6 +420,11 @@ const searchCrossForm = (crosses, ruleValue) => {
   return { match: false };
 };
 
+const searchHasPersonalName = (numNames, ruleValue) => {
+  const isMatch = ruleValue === 0 ? numNames === 0 : numNames > 0;
+  return { match: isMatch };
+};
+
 const customSearchFunctions = {
   signature_text: {
     in: searchViaList,
@@ -441,6 +446,15 @@ const customSearchFunctions = {
   },
   cross_form: {
     cross_form: searchCrossForm,
+  },
+  has_personal_name: {
+    equal: (fieldValue, ruleValue) => {
+
+      return searchHasPersonalName(fieldValue, ruleValue);
+    },
+    not_equal: (fieldValue, ruleValue) => {
+      return !searchHasPersonalName(fieldValue, ruleValue);
+    },
   },
 };
 

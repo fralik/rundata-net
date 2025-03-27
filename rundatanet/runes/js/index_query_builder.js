@@ -709,6 +709,20 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
         rule.$el.find(`.rule-value-container [name$=_2][value=${value.is_certain}]`).prop('checked', true);
       },
     },
+    {
+      id: 'has_personal_name',
+      label: "Has personal name(s)?",
+      field: 'num_names',
+      optgroup: 'other',
+      type: 'integer',
+      input: 'radio',
+      values: [
+        {0: 'No'},
+        {1: 'Yes'},
+      ],
+      default_value: 1,
+      operators: ['equal'],
+    }
   ];
 
   const my_rule_template = ({ rule_id, icons, settings, translate, builder }) => {
