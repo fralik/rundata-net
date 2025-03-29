@@ -356,7 +356,7 @@
               Import/Export
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Search parameters</a></li>
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#containerRuleIo">Search parameters</a></li>
               <li><a class="dropdown-item" href="#">Results</a></li>
             </ul>
           </li>
@@ -435,10 +435,10 @@
         <input type="text" class="form-control" id="searchInscriptions" placeholder="Quick inscription seletion">
       </div>
 
-      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border mx-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
+      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height p-0"></div>
     </div>
 
     <div class="row">
@@ -562,8 +562,8 @@
       <div class="modal-content">
 
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h4>
+          <h5 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -589,7 +589,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
         </div>
 
       </div>
@@ -848,6 +848,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
     gViewModel.clearSearchResults();
+  });
+  document.getElementById('btnRulesExport').addEventListener('click', function() {
+    const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    if (!$.isEmptyObject(rules)) {
+      $('#ruleIo').val(JSON.stringify(rules, null, 2));
+    }
+  });
+  document.getElementById('btnRulesImport').addEventListener('click', function() {
+    const rules = JSON.parse($('#ruleIo').val());
+    $(`#${inpQueryBuilder}`).queryBuilder('setRules', rules, true);
+  });
+  document.getElementById('btnClearRules').addEventListener('click', function() {
+    $(`#${inpQueryBuilder}`).queryBuilder('reset');
   });
 
   // Search statistics updates:

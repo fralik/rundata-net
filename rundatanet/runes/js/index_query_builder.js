@@ -30,14 +30,14 @@ $.fn.queryBuilder.define('case-rule', function(options) {
       let $rule = $(this).closest($.fn.queryBuilder.constructor.selectors.rule_container);
       let rule = self.getModel($rule);
       rule.ignoreCase = !rule.ignoreCase;
-      console.log(`afterInit: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
+      // console.log(`afterInit: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
       // print rule configuration
-      console.log(rule);
+      // console.log(rule);
     });
 
     self.model.on('update', function(e, node, field) {
       if (node instanceof $.fn.queryBuilder.constructor.Rule && field === 'ignoreCase') {
-        console.log(`update: ${node.id}, ignoreCase: ${node.ignoreCase}`);
+        // console.log(`update: ${node.id}, ignoreCase: ${node.ignoreCase}`);
         self.updateRuleCaseIgnore(node);
       }
     });
@@ -110,7 +110,7 @@ $.fn.queryBuilder.extend({
    * @private
    */
   updateRuleCaseIgnore: function(rule) {
-      console.log(`updateRuleCaseIgnore: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
+      // console.log(`updateRuleCaseIgnore: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
       rule.$el.find(cssSelectorPluginCaseRule + "> .case-rule-text")
           .text(this.translate(rule.ignoreCase ? 'Ignore case' : 'Match case'));
 
