@@ -457,6 +457,20 @@ const customSearchFunctions = {
       return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'endsWith');
     },
   },
+  normalization_scandinavian_to_transliteration: {
+    contains: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'includes');
+    },
+    equal: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'exact');
+    },
+    begins_with: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'beginsWith');
+    },
+    ends_with: (fieldValue, ruleValue) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'endsWith');
+    },
+  },
   cross_form: {
     cross_form: searchCrossForm,
   },

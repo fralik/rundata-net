@@ -506,16 +506,16 @@ function createWordSearchRule(config) {
     valueGetter: function(rule) {
       var $container = rule.$el.find('.rule-value-container');
       return {
-        input1: $container.find('[id$=_normalizationInput]').val(),
-        input2: $container.find('[id$=_transliterationInput]').val(),
+        normalization: $container.find('[id$=_normalizationInput]').val(),
+        transliteration: $container.find('[id$=_transliterationInput]').val(),
         names_mode: $container.find('[name$=_personalNamesMode]:checked').val()
       };
     },
     valueSetter: function(rule, value) {
       const names_mode = value.names_mode || 'includeAll';
       var $container = rule.$el.find('.rule-value-container');
-      $container.find('[id$=_normalizationInput]').val(value.input1 || '');
-      $container.find('[id$=_transliterationInput]').val(value.input2 || '');
+      $container.find('[id$=_normalizationInput]').val(value.normalization || '');
+      $container.find('[id$=_transliterationInput]').val(value.transliteration || '');
       $container.find('[name$=_personalNamesMode][value="' + names_mode + '"]').prop('checked', true);
     }
   };
