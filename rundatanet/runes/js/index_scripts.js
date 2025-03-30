@@ -893,7 +893,7 @@ export function onExportWorkerMessage(e) {
       document.body.removeChild(link);
       
       // Close the modal after successful export
-      $('#modalResultsIo').modal('hide');
+      closeResultsIoModal();
     }
   } catch (error) {
     onExportError(error);
@@ -934,3 +934,8 @@ export function showLoading() {
 export function hideLoading() {
   $('#loading').hide();
 }
+
+export function closeResultsIoModal() {
+  $('#modalResultsIo').modal('hide');
+}
+
