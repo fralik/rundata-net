@@ -895,6 +895,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('outNumFoundNames').textContent = data.count;
   });
   $(document).on('viewModelUpdated', function(event, data) {
+    document.getElementById('mainDisplay').innerHTML = "";
     $('#jstree').jstree(true).refresh(false, true);
     showMarkersWrapper();
     calcWordsAndPersonalNames(data.model.getActiveInscriptions());
