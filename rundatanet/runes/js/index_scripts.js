@@ -750,7 +750,7 @@ export function inscriptions2markup(inscriptions) {
     let paragraph = `<article signature="${signatureName}" id="${signatureName}" rundata-db-id="${signatureId}" class="inscription-section">`;
     for (let j = 0; j < userSelectedFields.length; j++) {
       const field = userSelectedFields[j];
-      const columnName = field.schemaName;
+      const columnName = field.schemaName == "signature_text" ? "signature_header" : field.schemaName;
       const humanName = field.text[lang];
       const cssStyle = field.css || "";
       const shouldHighlight = field.highlight || false;
