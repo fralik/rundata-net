@@ -237,7 +237,7 @@ export function getMinMaxValues(dataSource, fieldName) {
   return hasValues ? { min, max } : null;
 }
 
-function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelect = false) {
+export function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelect = false) {
   // Get all unique values from dbMap for the specified fieldName
   let allValues = [];
   const uniqueTracker = new Set();
@@ -252,7 +252,7 @@ function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelect = fal
         id: item[fieldName],
         score: item.id || 0
       });
-      if (item.aliases) {
+      if (fieldName === 'signature_text' && item.aliases) {
         const aliases = item.aliases.split('|').map(a => a.trim()).filter(a => a);
         
         // Add each alias with an artificial ID
