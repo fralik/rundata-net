@@ -681,6 +681,8 @@ function isSafari() {
 <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@3.0.0/dist/js/query-builder.standalone.min.js"></script>
 <!-- end of query builder js -->
 
+<!-- <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script> -->
+
 <script type="text/javascript" src="{% static 'runes/index.min.js' %}"></script>
 
 <script type="text/javascript">
@@ -692,6 +694,7 @@ let gMyMap = null;
 let gMarkersLayer = null;
 let inpQueryBuilder = "builder";
 let gViewModel = null; // Global view model for the runic inscriptions
+let gExportInProgress = false;
 
 function getCrossUrl(crossName) {
   // It is important that staticBase is written in a file that is processed by the back-end.
@@ -790,23 +793,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('mHideMap').addEventListener('click', function() {
     onHideMapClicked('mapDisplay', 'mHideMap');
   });
-
-  /*document.getElementById('inpInscriptions').addEventListener('change', event => {
-    const selectedOptions = Array.from(event.target.selectedOptions);
-    const selectedValues = selectedOptions.map(option => option.value);
-    console.log('Selected inscriptions:', selectedValues);
-    // Add your logic to handle the selected inscriptions here
-    selectedValues.forEach(v => {
-      const key = parseInt(v, 10);
-      console.log('Inscription ID:', key);
-      console.log(`Key type: ${typeof key}`);
-      console.log(gDbMap.get(key));
-    });
-    displaySignatureInfo();
-  });
-  */
   
-  // configure jsTree even before we have the data
+  // Configure jsTree even before we have the data
   $("#jstree")
   .on('ready.jstree', function() {
     showMarkersWrapper();
@@ -863,6 +851,38 @@ document.addEventListener('DOMContentLoaded', function() {
     $(`#${inpQueryBuilder}`).queryBuilder('reset');
   });
 
+  // Export Excel button handler
+  document.getElementById('btnExportResults').addEventListener('click', function() {
+    if (gExportInProgress) {
+      return;
+    }
+    gExportInProgress = true;
+    showLoading();
+    
+    // Create a mapping of column names to human-readable names
+    const userSelectedFields =  getUserSelectedDisplay();
+    const columns = userSelectedFields.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']);
+    const columnMap = {};
+    
+    columns.forEach(column => {
+      columnMap[column] = getHumanName(column);
+    });
+    
+    // Get the current search rules to include in the export
+    const searchRules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    
+    // Create worker and send data
+    const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}?v=0.0.1");
+    exportWorker.onmessage = onExportWorkerMessage;
+    exportWorker.onerror = onExportError;
+    
+    exportWorker.postMessage({
+      inscriptions: Array.from(gViewModel.getActiveInscriptions().values()),
+      columnMap: columnMap,
+      rules: searchRules
+    });
+  });
+
   // Search statistics updates:
   $(document).on('updateSignatureCount', function(event, data) {
     document.getElementById('outNumSignaturesFound').textContent = data.count;
@@ -880,6 +900,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 });
+
 </script>
 
 </body>

@@ -164,7 +164,7 @@ export const schemaFieldsInfo = [
   {
     schemaName: 'crosses',
     text: {
-      en: 'Cross form',
+      en: 'Cross',
     },
   },
   {
@@ -863,4 +863,74 @@ export function inscriptions2markup(inscriptions) {
     markupData.push(paragraph);
   }
   return markupData;
+}
+
+/**
+ * Handle message from export worker
+ */
+export function onExportWorkerMessage(e) {
+  gExportInProgress = false;
+  
+  if (e.data.error) {
+    onExportError({message: e.data.message});
+    return;
+  }
+  
+  try {
+    // Create a download for the XLSX file
+    if (e.data.buffer) {
+      // Convert ArrayBuffer to Blob with the correct MIME type
+      const blob = new Blob([e.data.buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      
+      // Create a download link and trigger the download
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'rundata-net_results.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Close the modal after successful export
+      $('#modalResultsIo').modal('hide');
+    }
+  } catch (error) {
+    onExportError(error);
+  } finally {
+    hideLoading();
+  }
+}
+
+/**
+ * Handle export errors
+ */
+export function onExportError(error) {
+  console.error('Export error:', error);
+  hideLoading();
+  gExportInProgress = false;
+  
+  // Display error to user
+  const alertObj = document.getElementById('alertObj');
+  alertObj.textContent = `Export error: ${error.message || 'Unknown error'}`;
+  alertObj.style.display = 'block';
+  
+  // Hide the alert after 5 seconds
+  setTimeout(() => {
+    alertObj.style.display = 'none';
+  }, 5000);
+}
+
+/**
+ * Helper function to show loading indicator
+ */
+export function showLoading() {
+  $('#loading').show();
+}
+
+/**
+ * Helper function to hide loading indicator
+ */
+export function hideLoading() {
+  $('#loading').hide();
 }
