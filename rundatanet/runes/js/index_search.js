@@ -2,6 +2,30 @@
 This file contains code to do search in the inscriptions
 */
 
+// Standard comparison operators that can be used both in QueryBuilderParser and custom search functions
+export const operators = {
+  equal: (a, b) => a == b,
+  not_equal: (a, b) => a != b,
+  in: (a, b) => b.includes(a),
+  not_in: (a, b) => !b.includes(a),
+  less: (a, b) => a < b,
+  less_or_equal: (a, b) => a <= b,
+  greater: (a, b) => a > b,
+  greater_or_equal: (a, b) => a >= b,
+  between: (a, b) => b[0] <= a && a <= b[1],
+  not_between: (a, b) => !(b[0] <= a && a <= b[1]),
+  begins_with: (a, b) => String(a).startsWith(String(b)),
+  not_begins_with: (a, b) => !String(a).startsWith(String(b)),
+  contains: (a, b) => String(a).includes(String(b)),
+  not_contains: (a, b) => !String(a).includes(String(b)),
+  ends_with: (a, b) => String(a).endsWith(String(b)),
+  not_ends_with: (a, b) => !String(a).endsWith(String(b)),
+  is_empty: (a) => a === '' || a === null || a === undefined || (Array.isArray(a) && a.length === 0),
+  is_not_empty: (a) => a !== '' && a !== null && a !== undefined && (!Array.isArray(a) || a.length > 0),
+  is_null: (a) => a === null || a === undefined,
+  is_not_null: (a) => a !== null && a !== undefined,
+};
+
 /**
  * JavaScript processor for jQuery QueryBuilder rules.
  * This module allows searching through data using rules
@@ -13,61 +37,9 @@ export class QueryBuilderParser {
    * Initialize the parser with standard operators
    */
   constructor(customSearchFunctions = {}) {
-    // Dictionary mapping operator names to functions
-    this.operators = {
-      equal: (a, b) => ({ match: a == b }),
-      not_equal: (a, b) => ({ match: a != b }),
-      in: (a, b) => ({ match: b.includes(a) }),
-      not_in: (a, b) => ({ match: !b.includes(a) }),
-      less: (a, b) => ({ match: a < b }),
-      less_or_equal: (a, b) => ({ match: a <= b }),
-      greater: (a, b) => ({ match: a > b }),
-      greater_or_equal: (a, b) => ({ match: a >= b }),
-      between: (a, b) => ({ match: b[0] <= a && a <= b[1] }),
-      not_between: (a, b) => ({ match: !(b[0] <= a && a <= b[1]) }),
-      begins_with: (a, b) => ({ match: String(a).startsWith(String(b)) }),
-      not_begins_with: (a, b) => ({ match: !String(a).startsWith(String(b)) }),
-      contains: (a, b) => ({ match: String(a).includes(String(b)) }),
-      not_contains: (a, b) => ({ match: !String(a).includes(String(b)) }),
-      ends_with: (a, b) => ({ match: String(a).endsWith(String(b)) }),
-      not_ends_with: (a, b) => ({ match: !String(a).endsWith(String(b)) }),
-      is_empty: (a) => ({ match: a === '' || a === null || a === undefined || (Array.isArray(a) && a.length === 0) }),
-      is_not_empty: (a) => ({ match: a !== '' && a !== null && a !== undefined && (!Array.isArray(a) || a.length > 0) }),
-      is_null: (a) => ({ match: a === null || a === undefined }),
-      is_not_null: (a) => ({ match: a !== null && a !== undefined }),
-      in_separated_list: (a, b) => ({ match: false }),
-    };
+    // Use the external operators
+    this.operators = { ...operators };
     this.customSearchFunctions = customSearchFunctions;
-  
-    // Type converters for handling different data types
-    this.typeConverters = {
-      string: (x) => String(x),
-      integer: (x) => parseInt(x, 10),
-      double: (x) => parseFloat(x),
-      date: (x) => {
-        if (x instanceof Date) return x;
-        return new Date(x);
-      },
-      time: (x) => {
-        if (typeof x === 'string') {
-          const [hours, minutes] = x.split(':').map(Number);
-          const date = new Date();
-          date.setHours(hours, minutes, 0, 0);
-          return date;
-        }
-        return x;
-      },
-      datetime: (x) => {
-        if (x instanceof Date) return x;
-        return new Date(x);
-      },
-      boolean: (x) => {
-        if (typeof x === 'string') {
-          return ['true', 'yes', '1'].includes(x.toLowerCase());
-        }
-        return Boolean(x);
-      }
-    };
   }
   
   /**
@@ -223,62 +195,58 @@ export class QueryBuilderParser {
    */
   _evaluateRule(rule, record) {
     const field = rule.field || rule.id;
-    // Check if this is a special multi-field rule
-    const isMultiFieldRule = rule.data ? rule.data && rule.data.multiField === true : false;
     const operatorName = rule.operator;
-
+    const isMultiFieldRule = rule.data && rule.data.multiField === true;
+    
+    // Fast path: handle custom search functions first
+    if (rule.id && 
+        this.customSearchFunctions[rule.id] && 
+        typeof this.customSearchFunctions[rule.id][operatorName] === "function") {
+      
+      // For custom functions, provide field value or entire record as needed
+      const valueToCheck = isMultiFieldRule ? record : record[field];
+      const result = this.customSearchFunctions[rule.id][operatorName](valueToCheck, rule.value);
+      
+      // Normalize the result to always have match and details properties
+      return typeof result === 'object' && 'match' in result ? 
+        result : { match: Boolean(result) };
+    }
+    
     // For standard single-field rules, verify the field exists
     if (!isMultiFieldRule && !(field in record)) {
       return { match: false };
     }
-
-    // For multi-field rules, pass the entire record
-    // Otherwise, get the specific field value
-    const fieldValue = isMultiFieldRule ? record : record[field];
-
+    
+    // For multi-field rules without custom handlers, we can't process with standard operators
+    if (isMultiFieldRule) {
+      return { match: false };
+    }
+    
+    const fieldValue = record[field];
+    
     // Handle special operators that don't need a value
     if (['is_empty', 'is_not_empty', 'is_null', 'is_not_null'].includes(operatorName)) {
       const result = this.operators[operatorName](fieldValue);
-      return {
-        match: result.match,
-        details: result.match && !isMultiFieldRule ? { [field]: true } : null
+      return { 
+        match: result, 
+        details: result ? { [field]: true } : null 
       };
     }
-
-    // Get the rule value
+    
+    // For regular operators, ensure we have a value to compare against
     const ruleValue = rule.value;
     if (ruleValue === null || ruleValue === undefined) {
       return { match: false };
     }
-
-    // For multi-field rules, skip type conversion as it would be
-    // handled by the custom function
-    let convertedFieldValue = fieldValue;
-    let convertedRuleValue = ruleValue;
-
-    // If a custom search function exists for this rule id and operator, call it.
-    if (
-      rule.id &&
-      this.customSearchFunctions[rule.id] &&
-      typeof this.customSearchFunctions[rule.id][operatorName] === "function"
-    ) {
-      const result = this.customSearchFunctions[rule.id][operatorName](convertedFieldValue, convertedRuleValue);
-      return typeof result === 'object' && 'match' in result ? 
-        result : 
-        { match: Boolean(result) };
-    }
-
-    // For multi-field rules without a custom function, return false
-    // as we don't know how to handle them with standard operators
-    if (isMultiFieldRule) {
-      return { match: false };
-    }
-
-    // Apply the operator
-    const result = this.operators[operatorName](convertedFieldValue, convertedRuleValue);
-    return typeof result === 'object' && 'match' in result ? 
-      { ...result, details: result.match ? { [field]: true } : null } : 
-      { match: Boolean(result) };
+    
+    // Apply the operator and normalize the result
+    const result = this.operators[operatorName](fieldValue, ruleValue);
+    const isMatch = Boolean(result);
+    
+    return {
+      match: isMatch,
+      details: isMatch ? { [field]: true } : null
+    };
   }
   
   /**
@@ -309,6 +277,45 @@ const searchViaList = (fieldValue, ruleValue) => {
   return { match };
 };
 
+/**
+ * Wrapper function for searching in signature_text and aliases
+ * @param {Object} record - The complete record object containing signature_text and aliases
+ * @param {string|Array} ruleValue - The value to search for
+ * @param {Function} operatorFn - The comparison function to apply (e.g., String.includes, String.startsWith)
+ * @param {boolean} [negate=false] - Whether to negate the result
+ * @returns {Object} Result object with match property
+ */
+const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false) => {
+  // Get the main signature text
+  const signatureText = record.signature_text;
+  
+  // Get the aliases (if any) as an array
+  const aliases = record.aliases ? 
+    record.aliases.split('|').map(a => a.trim()).filter(a => a) : 
+    [];
+  
+  // Combine into one array of values to check
+  const allSignatures = [signatureText, ...aliases];
+  
+  // Process the rule value based on the input type
+  const items = Array.isArray(ruleValue) ? ruleValue : 
+    (typeof ruleValue === 'string' && ruleValue.indexOf('|') > -1) ? 
+    ruleValue.split('|') : 
+    [ruleValue];
+  
+  // Apply the operator function to check if any signature matches any item
+  let match = allSignatures.some(sig => 
+    items.some(item => operatorFn(sig, item))
+  );
+  
+  // Negate the result if needed
+  if (negate) {
+    match = !match;
+  }
+  
+  return { match };
+};
+
 const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
   const isAHit = getWordSearchFunction(searchMode);
   // key names defined in valueGetter, e.g. normalization_norse_to_transliteration
@@ -317,78 +324,56 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
   const namesMode = ruleValue['names_mode'];
 
   // Determine which normalization field to use
-  let normalizationField;
-  if (searchDirection.includes('norse')) {
-    normalizationField = 'normalisation_norse';
-  } else {
-    normalizationField = 'normalisation_scandinavian';
-  }
+  const normalizationField = searchDirection.includes('norse') ? 
+    'normalisation_norse' : 'normalisation_scandinavian';
 
   const normalWords = entry[`${normalizationField}_words`];
-  const normalisationText = entry[normalizationField];
   const transliterationWords = entry['transliteration_words'];
-  const transliterationText = entry['transliteration'];
 
   let matchFound = false;
   let matchedWords = [];
   let numFoundNames = 0;
-  let personalNamePresent = false;
 
+  // Helper function to check personal name constraints and record matches
+  const processMatch = (index, isPersonal) => {
+    // Skip if filtering by personal names and constraints are not met
+    if ((namesMode === 'excludeNames' && isPersonal) ||
+        (namesMode === 'namesOnly' && !isPersonal)) {
+      return false;
+    }
+    
+    matchFound = true;
+    matchedWords.push(index);
+    if (isPersonal) numFoundNames++;
+    return true;
+  };
+
+  // Case 1: Both normalization and transliteration queries are present
   if (normalisationQuery && transliterationQuery) {
     for (let i = 0; i < Math.min(normalWords.length, transliterationWords.length); i++) {
       if (isAHit(normalWords[i], normalisationQuery) && isAHit(transliterationWords[i], transliterationQuery)) {
-        personalNamePresent = isPersonalName(normalWords[i]);
-        if (namesMode === 'excludeNames' && personalNamePresent) {
-          continue;
-        }
-        if (namesMode === 'namesOnly' && !personalNamePresent) {
-          continue;
-        }
-
-        matchFound = true;
-        matchedWords.push(i);
-        if (personalNamePresent) {
-          numFoundNames++;
-        }
+        processMatch(i, isPersonalName(normalWords[i]));
       }
     }
-  } else {
+  } 
+  // Case 2: Only one query type is present
+  else {
+    // Check normalization words
     if (normalisationQuery) {
       normalWords.forEach((word, i) => {
         if (isAHit(word, normalisationQuery)) {
-          personalNamePresent = isPersonalName(word);
-          if (namesMode === 'excludeNames' && personalNamePresent) {
-            return;
-          }
-          if (namesMode === 'namesOnly' && !personalNamePresent) {
-            return;
-          }
-
-          matchFound = true;
-          matchedWords.push(i);
-          if (personalNamePresent) {
-            numFoundNames++;
-          }
+          processMatch(i, isPersonalName(word));
         }
       });
     }
+    
+    // Check transliteration words
     if (transliterationQuery) {
       transliterationWords.forEach((word, i) => {
         if (isAHit(word, transliterationQuery)) {
-          // transliterated words do not contain personal name annotation, use normalised word instead
-          personalNamePresent = true ? (i < normalWords.length) && isPersonalName(normalWords[i]) : false;
-
-          if (namesMode == 'excludeNames' && personalNamePresent) {
-            return;
-          }
-          if (namesMode == 'namesOnly' && !personalNamePresent) {
-            return;
-          }
-          matchFound = true;
-          matchedWords.push(i);
-          if (personalNamePresent) {
-            numFoundNames++;
-          }
+          // transliterated words don't contain personal name annotation
+          const isPersonal = (i < normalWords.length) && isPersonalName(normalWords[i]);
+          processMatch(i, isPersonal);
         }
       });
     }
@@ -404,26 +389,26 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
 };
 
 const searchCrossForm = (crosses, ruleValue) => {
-  if (crosses.length === 0) {
+  if (!crosses || crosses.length === 0) {
     return { match: false };
   }
 
+  const ruleIsCertain = parseInt(ruleValue.is_certain, 10);
+  const searchForm = ruleValue.form;
+  
+  // Flatten the array structure and search through all elements
   for (const cross of crosses) {
-    if (Array.isArray(cross)) {
-      for (const group of cross) {
-        if (Array.isArray(group)) {
-          for (const element of group) {
-            const nameHit = element.name === ruleValue.form;
-            const ruleIsCertain = parseInt(ruleValue.is_certain, 10);
-            if (ruleIsCertain == 2 && nameHit) {
-              // doesn't matter if the form is certain or not
-              return { match: nameHit };
-            }
-            const isCertain = ruleIsCertain === element.isCertain;
-            const isMatch = nameHit && isCertain;
-            if (isMatch) {
-              return { match: isMatch };
-            }
+    if (!Array.isArray(cross)) continue;
+    
+    for (const group of cross) {
+      if (!Array.isArray(group)) continue;
+      
+      for (const element of group) {
+        // Check if the form name matches
+        if (element.name === searchForm) {
+          // If certainty doesn't matter (option 2) or certainty matches
+          if (ruleIsCertain === 2 || ruleIsCertain === element.isCertain) {
+            return { match: true };
           }
         }
       }
@@ -440,8 +425,16 @@ const searchHasPersonalName = (numNames, ruleValue) => {
 
 const customSearchFunctions = {
   signature_text: {
-    in: searchViaList,
-    in_separated_list: searchViaList,
+    in: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
+    in_separated_list: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
+    begins_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.begins_with),
+    not_begins_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.begins_with, true),
+    ends_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.ends_with),
+    not_ends_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.ends_with, true),
+    contains: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.contains),
+    not_contains: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.contains, true),
+    equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
+    not_equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.not_equal),
   },
   normalization_norse_to_transliteration: {
     contains: (fieldValue, ruleValue) => {
@@ -475,12 +468,10 @@ const customSearchFunctions = {
     cross_form: searchCrossForm,
   },
   has_personal_name: {
-    equal: (fieldValue, ruleValue) => {
-
-      return searchHasPersonalName(fieldValue, ruleValue);
-    },
+    equal: searchHasPersonalName,
     not_equal: (fieldValue, ruleValue) => {
-      return !searchHasPersonalName(fieldValue, ruleValue);
+      const result = searchHasPersonalName(fieldValue, ruleValue);
+      return { match: !result.match };
     },
   },
 };

@@ -582,6 +582,9 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       label: getHumanName('signature_text'),
       type: 'string',
       multiple: true,
+      data: {
+        multiField: true,
+      },  
       operators: [
         'in', 'in_separated_list', 'begins_with', 'not_begins_with',
         'ends_with', 'not_ends_with', 'contains', 'not_contains',
