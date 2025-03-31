@@ -430,16 +430,16 @@
     </div>
 
     <div class="row">
-      <div id="leftPanel" class="col-md-2 col-sm-2 p-0 d-flex flex-column my-fixed-height">
+      <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-fixed-height my-2 me-3 my-md-0 ms-md-2">
         <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
         <div id="jstree" class="overflow-scroll h-100"></div>
         <input type="text" class="form-control" id="searchInscriptions" placeholder="Quick inscription seletion">
       </div>
 
-      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border mx-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border my-2 me-3 my-md-0 ms-md-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height p-0"></div>
+      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height ps-0 mt-3 mt-md-0 me-3 me-md-0"></div>
     </div>
 
     <div class="row">
@@ -460,27 +460,29 @@
       </div>
     </form>
 
-    <section role="group" class="row vertical-align">
-      <div class="col-md-2">Copy symbols to clipboard:</div>
-      <div class="col-md-4 btn-group" role="group">
-        <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
-        <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
-        <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
-        <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
-        <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
-        <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
-        <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
-        <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
-        <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
-        <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
-        <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
-        <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
-        <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
-        <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
-        <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
-        <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
-        <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
-        <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+    <section class="row vertical-align">
+      <div class="col-md-2">Copy symbol to clipboard:</div>
+      <div class="col-md-10">
+        <div class="btn-group flex-wrap" role="group">
+          <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
+          <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
+          <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
+          <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
+          <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
+          <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
+          <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
+          <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
+          <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
+          <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
+          <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
+          <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
+          <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
+          <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
+          <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
+          <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
+          <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
+          <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+        </div>
       </div>
     </section>
 

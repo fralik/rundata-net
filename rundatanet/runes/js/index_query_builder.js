@@ -8,7 +8,7 @@ const queryBuilderPlugins = {
   'bt-tooltip-errors': null,
   'sortable': null,
   'not-group': null,
-  'case-rule': null,
+  // 'case-rule': null,
 };
 
 const optGroups = {
