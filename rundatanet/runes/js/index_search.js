@@ -41,7 +41,7 @@ export class QueryBuilderParser {
     this.operators = { ...operators };
     this.customSearchFunctions = customSearchFunctions;
   }
-  
+
   /**
    * Apply rules from jQuery QueryBuilder to filter a list of data.
    *
@@ -71,7 +71,7 @@ export class QueryBuilderParser {
           });
         }
       });
-    } 
+    }
     // If data is any iterable (e.g. a generator, Set, etc.)
     else if (typeof data[Symbol.iterator] === 'function') {
       for (const item of data) {
@@ -83,7 +83,7 @@ export class QueryBuilderParser {
           });
         }
       }
-    } 
+    }
     // Fallback: if data implements the iterator protocol (has a next() method)
     else if (typeof data.next === 'function') {
       let nextItem = data.next();
@@ -103,7 +103,7 @@ export class QueryBuilderParser {
 
     return result;
   }
-  
+
   /**
    * Recursively evaluate a group of rules.
    *
@@ -116,12 +116,12 @@ export class QueryBuilderParser {
     // Helper function to apply negation if needed
     const applyNegation = (result, shouldNegate) => {
       if (!shouldNegate) return result;
-      
+
       return {
         match: !result.match
       };
     };
-  
+
     if (!group.condition || !group.rules) {
       return applyNegation({ match: false }, group.not);
     }
@@ -151,7 +151,7 @@ export class QueryBuilderParser {
     if (condition === 'AND') {
       const isMatch = results.every(result => result.match);
       // For AND condition, we collect all details
-      const combinedDetails = isMatch ? 
+      const combinedDetails = isMatch ?
         results.reduce((acc, result) => {
           if (result.details) {
             Object.entries(result.details).forEach(([field, details]) => {
@@ -164,15 +164,15 @@ export class QueryBuilderParser {
           }
           return acc;
         }, {}) : null;
-      
-      combinedResult = { 
+
+      combinedResult = {
         match: isMatch,
         details: combinedDetails
       };
     } else if (condition === 'OR') {
       const matchingResults = results.filter(result => result.match);
       const isMatch = matchingResults.length > 0;
-      
+
       // For OR condition, we take the first matching details
       combinedResult = {
         match: isMatch,
@@ -184,7 +184,7 @@ export class QueryBuilderParser {
 
     return applyNegation(combinedResult, group.not);
   }
-  
+
   /**
    * Evaluate a single rule against a record.
    *
@@ -197,58 +197,58 @@ export class QueryBuilderParser {
     const field = rule.field || rule.id;
     const operatorName = rule.operator;
     const isMultiFieldRule = rule.data && rule.data.multiField === true;
-    
+
     // Fast path: handle custom search functions first
-    if (rule.id && 
-        this.customSearchFunctions[rule.id] && 
+    if (rule.id &&
+        this.customSearchFunctions[rule.id] &&
         typeof this.customSearchFunctions[rule.id][operatorName] === "function") {
-      
+
       // For custom functions, provide field value or entire record as needed
       const valueToCheck = isMultiFieldRule ? record : record[field];
       const result = this.customSearchFunctions[rule.id][operatorName](valueToCheck, rule.value);
-      
+
       // Normalize the result to always have match and details properties
-      return typeof result === 'object' && 'match' in result ? 
+      return typeof result === 'object' && 'match' in result ?
         result : { match: Boolean(result) };
     }
-    
+
     // For standard single-field rules, verify the field exists
     if (!isMultiFieldRule && !(field in record)) {
       return { match: false };
     }
-    
+
     // For multi-field rules without custom handlers, we can't process with standard operators
     if (isMultiFieldRule) {
       return { match: false };
     }
-    
+
     const fieldValue = record[field];
-    
+
     // Handle special operators that don't need a value
     if (['is_empty', 'is_not_empty', 'is_null', 'is_not_null'].includes(operatorName)) {
       const result = this.operators[operatorName](fieldValue);
-      return { 
-        match: result, 
-        details: result ? { [field]: true } : null 
+      return {
+        match: result,
+        details: result ? { [field]: true } : null
       };
     }
-    
+
     // For regular operators, ensure we have a value to compare against
     const ruleValue = rule.value;
     if (ruleValue === null || ruleValue === undefined) {
       return { match: false };
     }
-    
+
     // Apply the operator and normalize the result
     const result = this.operators[operatorName](fieldValue, ruleValue);
     const isMatch = Boolean(result);
-    
+
     return {
       match: isMatch,
       details: isMatch ? { [field]: true } : null
     };
   }
-  
+
   /**
    * Add a custom operator function.
    *
@@ -288,31 +288,31 @@ const searchViaList = (fieldValue, ruleValue) => {
 const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false) => {
   // Get the main signature text
   const signatureText = record.signature_text;
-  
+
   // Get the aliases (if any) as an array
-  const aliases = record.aliases ? 
-    record.aliases.split('|').map(a => a.trim()).filter(a => a) : 
+  const aliases = record.aliases ?
+    record.aliases.split('|').map(a => a.trim()).filter(a => a) :
     [];
-  
+
   // Combine into one array of values to check
   const allSignatures = [signatureText, ...aliases];
-  
+
   // Process the rule value based on the input type
-  const items = Array.isArray(ruleValue) ? ruleValue : 
-    (typeof ruleValue === 'string' && ruleValue.indexOf('|') > -1) ? 
-    ruleValue.split('|') : 
+  const items = Array.isArray(ruleValue) ? ruleValue :
+    (typeof ruleValue === 'string' && ruleValue.indexOf('|') > -1) ?
+    ruleValue.split('|') :
     [ruleValue];
-  
+
   // Apply the operator function to check if any signature matches any item
-  let match = allSignatures.some(sig => 
+  let match = allSignatures.some(sig =>
     items.some(item => operatorFn(sig, item))
   );
-  
+
   // Negate the result if needed
   if (negate) {
     match = !match;
   }
-  
+
   return { match };
 };
 
@@ -324,7 +324,7 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
   const namesMode = ruleValue['names_mode'];
 
   // Determine which normalization field to use
-  const normalizationField = searchDirection.includes('norse') ? 
+  const normalizationField = searchDirection.includes('norse') ?
     'normalisation_norse' : 'normalisation_scandinavian';
 
   const normalWords = entry[`${normalizationField}_words`];
@@ -341,7 +341,7 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
         (namesMode === 'namesOnly' && !isPersonal)) {
       return false;
     }
-    
+
     matchFound = true;
     matchedWords.push(index);
     if (isPersonal) numFoundNames++;
@@ -355,7 +355,7 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
         processMatch(i, isPersonalName(normalWords[i]));
       }
     }
-  } 
+  }
   // Case 2: Only one query type is present
   else {
     // Check normalization words
@@ -366,7 +366,7 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
         }
       });
     }
-    
+
     // Check transliteration words
     if (transliterationQuery) {
       transliterationWords.forEach((word, i) => {
@@ -395,14 +395,14 @@ const searchCrossForm = (crosses, ruleValue) => {
 
   const ruleIsCertain = parseInt(ruleValue.is_certain, 10);
   const searchForm = ruleValue.form;
-  
+
   // Flatten the array structure and search through all elements
   for (const cross of crosses) {
     if (!Array.isArray(cross)) continue;
-    
+
     for (const group of cross) {
       if (!Array.isArray(group)) continue;
-      
+
       for (const element of group) {
         // Check if the form name matches
         if (element.name === searchForm) {
@@ -486,10 +486,10 @@ const customSearchFunctions = {
  */
 export function getWordSearchFunction(searchMode, options = {}) {
   const { ignoreCase = false } = options;
-  
+
   // Create a function to handle case sensitivity
-  const prepareString = ignoreCase 
-    ? str => String(str).toLowerCase() 
+  const prepareString = ignoreCase
+    ? str => String(str).toLowerCase()
     : str => String(str);
 
   const prepareWord = (word) => {
@@ -503,11 +503,11 @@ export function getWordSearchFunction(searchMode, options = {}) {
       // Return the array of individual names
       return names;
     }
-    
+
     // If it's not a list, just return the original word
     return [word];
   }
-  
+
   switch (searchMode) {
     case 'exact':
       return (word, query) => {
@@ -515,21 +515,21 @@ export function getWordSearchFunction(searchMode, options = {}) {
         // Check if any of the words match the query
         return words.some(w => prepareString(w) === prepareString(query));
       }
-      
+
     case 'beginsWith':
       return (word, query) => {
         const words = prepareWord(word);
         // Check if any of the words start with the query
         return words.some(w => prepareString(w).startsWith(prepareString(query)));
       }
-      
+
     case 'endsWith':
       return (word, query) => {
         const words = prepareWord(word);
         // Check if any of the words end with the query
         return words.some(w => prepareString(w).endsWith(prepareString(query)));
       }
-      
+
     case 'regex': {
       return (word, query) => {
         try {
@@ -542,7 +542,7 @@ export function getWordSearchFunction(searchMode, options = {}) {
         }
       };
     }
-      
+
     case 'includes':
     default:
       return (word, query) => {
@@ -577,11 +577,12 @@ export function calcWordsAndPersonalNames(dbMap) {
   let totalPersonalNames = 0;
   let totalSignatures = 0;
 
-  if (dbMap) {
-    dbMap.values().forEach(entry => {
+  try {
+    const entries = dbMap.values();
+    for (const entry of entries) {
       if (entry.matchDetails && entry.matchDetails.wordIndices) {
         totalWordMatches += entry.matchDetails.wordIndices.length;
-        totalPersonalNames += entry.matchDetails.numPersonalNames;  
+        totalPersonalNames += entry.matchDetails.numPersonalNames;
       } else {
         totalWordMatches += entry.normalisation_norse_word_boundaries.length;
         entry.normalisation_norse_word_boundaries.forEach(boundary => {
@@ -589,7 +590,9 @@ export function calcWordsAndPersonalNames(dbMap) {
         });
       }
       totalSignatures++;
-    });
+    }
+  } catch (error) {
+    console.error('Error calculating words and personal names:', error);
   }
 
   $(document).trigger('updateSignatureCount', { count: totalSignatures });
