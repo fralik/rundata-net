@@ -577,18 +577,20 @@ export function calcWordsAndPersonalNames(dbMap) {
   let totalPersonalNames = 0;
   let totalSignatures = 0;
 
-  dbMap.values().forEach(entry => {
-    if (entry.matchDetails && entry.matchDetails.wordIndices) {
-      totalWordMatches += entry.matchDetails.wordIndices.length;
-      totalPersonalNames += entry.matchDetails.numPersonalNames;  
-    } else {
-      totalWordMatches += entry.normalisation_norse_word_boundaries.length;
-      entry.normalisation_norse_word_boundaries.forEach(boundary => {
-        totalPersonalNames += boundary.isPersonal;
-      });
-    }
-    totalSignatures++;
-  });
+  if (dbMap) {
+    dbMap.values().forEach(entry => {
+      if (entry.matchDetails && entry.matchDetails.wordIndices) {
+        totalWordMatches += entry.matchDetails.wordIndices.length;
+        totalPersonalNames += entry.matchDetails.numPersonalNames;  
+      } else {
+        totalWordMatches += entry.normalisation_norse_word_boundaries.length;
+        entry.normalisation_norse_word_boundaries.forEach(boundary => {
+          totalPersonalNames += boundary.isPersonal;
+        });
+      }
+      totalSignatures++;
+    });
+  }
 
   $(document).trigger('updateSignatureCount', { count: totalSignatures });
   $(document).trigger('updateWordCount', { count: totalWordMatches });
