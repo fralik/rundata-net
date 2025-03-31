@@ -435,7 +435,9 @@
       <div id="mainDisplay" class="col my-fixed-height overflow-scroll border my-2 me-3 my-md-0 ms-md-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height ps-0 mt-3 mt-md-0 me-3 me-md-0"></div>
+      <div id="mapDisplayWrapper" class="col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
+        <div id="mapDisplay" class="my-fixed-height"></div>
+      </div>
     </div>
 
     <div class="row">
@@ -483,13 +485,15 @@
     </section>
 
     <div class="row py-3" role="group" aria-label="">
-      <div class="offset-md-2 col-md-3">
+      <div class="col-auto col-md-3 offset-md-2">
         <button type="button" class="col-md-12 btn btn-success" id="btnSearch">Search</button>
       </div>
-      <div class="col-md-2">
+      <div class="col-auto col-md-2">
         <button type="button" class="col-md-12 btn btn-default" id="btnResetSearch">Reset search</button>
       </div>
-      <button type="button" class="btn btn-default col-md-2" id="btnClearRules">Clear search parameters</button>
+      <div class="col-auto col-md-2">
+        <button type="button" class="btn btn-default col-md-12" id="btnClearRules">Clear search parameters</button>
+      </div>
     </div>
 
     <!-- pb-6 is our custom class to make more vertical space -->
@@ -790,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initClipboardButtons();
   ({ map: gMyMap, markers: gMarkersLayer } = initMap("mapDisplay"));
   document.getElementById('mHideMap').addEventListener('click', function() {
-    onHideMapClicked('mapDisplay', 'mHideMap');
+    onHideMapClicked('mapDisplayWrapper', 'mHideMap');
   });
   
   // Configure jsTree even before we have the data
