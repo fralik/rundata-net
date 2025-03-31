@@ -2,9 +2,11 @@ import './setup-mocks.js';
 
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { convertDbToKeyMap } from '../../runes/js/index_scripts.js';
+import { mockDb } from './mockDb.js';
 
 // Now import the module
-import { sortGroupsByOrder } from '../../runes/js/index_query_builder.js';
+import { sortGroupsByOrder, getValuesFromAllData } from '../../runes/js/index_query_builder.js';
 
 test('sortGroupsByOrder() with specified order', () => {
   const items = [
@@ -88,6 +90,108 @@ test('sortGroupsByOrder() with empty arrays', () => {
   
   assert.is(group1Items.length, 2, 'Group1 items should be present');
   assert.is(group2Items.length, 2, 'Group2 items should be present');
+});
+
+//  const result = convertDbToKeyMap(mockDb);
+
+// Helper function to simulate the 'suggest' callback
+function createSuggestMock() {
+  const suggested = [];
+  return {
+    callback: (values) => {
+      suggested.push(...(Array.isArray(values) ? values : [values]));
+    },
+    suggested
+  };
+}
+
+test('getValuesFromAllData() with empty term and aliases', () => {
+  const mockDbMap = new Map([
+    [1, { 
+      id: 1, 
+      testField: 'Alpha', 
+      aliases: 'AlphaAlias1|AlphaAlias2'
+    }],
+    [2, { 
+      id: 2, 
+      testField: 'Bravo', 
+      aliases: 'BravoAlias'
+    }],
+    [3, { 
+      id: 3, 
+      testField: 'Charlie',
+      aliases: ''
+    }],
+    [4, { 
+      id: 4, 
+      testField: 'Delta',
+      aliases: ''
+    }],
+    [5, { 
+      id: 5, 
+      testField: 'Åkerman',
+      aliases: ''
+    }],
+    [6, { 
+      id: 6, 
+      testField: '',
+      aliases: ''
+    }],
+  ]);    
+  const { callback, suggested } = createSuggestMock();
+  
+  // Act
+  getValuesFromAllData('', callback, 'testField', mockDbMap);
+  
+  // Assert
+  assert.is(suggested.length, 5, 'Should return 5 values (all non-empty)');
+  assert.ok(suggested.includes('Alpha'), 'Should include Alpha');
+  assert.ok(suggested.includes('Bravo'), 'Should include Bravo');
+  assert.ok(suggested.includes('Charlie'), 'Should include Charlie');
+  assert.ok(suggested.includes('Delta'), 'Should include Delta');
+  assert.ok(suggested.includes('Åkerman'), 'Should include Åkerman');
+});
+
+test('getValuesFromAllData() with signature_text', () => {
+  const mockDbMap = new Map([
+    [1, { 
+      id: 1, 
+      signature_text: 'Alpha', 
+      aliases: 'AlphaAlias1|AlphaAlias2'
+    }],
+    [2, { 
+      id: 2, 
+      signature_text: 'Bravo', 
+      aliases: 'BravoAlias'
+    }],
+    [3, { 
+      id: 3, 
+      signature_text: 'Charlie',
+      aliases: ''
+    }],
+    [4, { 
+      id: 4, 
+      signature_text: 'Delta',
+      aliases: ''
+    }],
+    [5, { 
+      id: 5, 
+      signature_text: 'Åkerman',
+      aliases: ''
+    }],
+    [6, { 
+      id: 6, 
+      signature_text: '',
+      aliases: ''
+    }],
+  ]);
+  const { callback, suggested } = createSuggestMock();
+  
+  // Act
+  getValuesFromAllData('', callback, 'signature_text', mockDbMap);
+  
+  // Assert
+  assert.is(suggested.length, 8, 'Should return 8 values (5 non-empty + 3 aliases)');
 });
 
 test.run();

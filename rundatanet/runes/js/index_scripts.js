@@ -156,9 +156,15 @@ export const schemaFieldsInfo = [
     },
   },
   {
-    schemaName: 'crosses',
+    schemaName: 'cross_form',
     text: {
       en: 'Cross form',
+    },
+  },
+  {
+    schemaName: 'crosses',
+    text: {
+      en: 'Cross',
     },
   },
   {
@@ -744,7 +750,7 @@ export function inscriptions2markup(inscriptions) {
     let paragraph = `<article signature="${signatureName}" id="${signatureName}" rundata-db-id="${signatureId}" class="inscription-section">`;
     for (let j = 0; j < userSelectedFields.length; j++) {
       const field = userSelectedFields[j];
-      const columnName = field.schemaName;
+      const columnName = field.schemaName == "signature_text" ? "signature_header" : field.schemaName;
       const humanName = field.text[lang];
       const cssStyle = field.css || "";
       const shouldHighlight = field.highlight || false;
@@ -831,7 +837,7 @@ export function inscriptions2markup(inscriptions) {
 
       columnData = escapeHtml(columnData);
 
-      if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
+      if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails !== null && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
         const entryWordBoundaries = inscriptionData[`${columnName}_word_boundaries`];
         const matchedWords = inscriptionData.matchDetails.wordIndices;
         const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
@@ -858,3 +864,78 @@ export function inscriptions2markup(inscriptions) {
   }
   return markupData;
 }
+
+/**
+ * Handle message from export worker
+ */
+export function onExportWorkerMessage(e) {
+  gExportInProgress = false;
+  
+  if (e.data.error) {
+    onExportError({message: e.data.message});
+    return;
+  }
+  
+  try {
+    // Create a download for the XLSX file
+    if (e.data.buffer) {
+      // Convert ArrayBuffer to Blob with the correct MIME type
+      const blob = new Blob([e.data.buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      
+      // Create a download link and trigger the download
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'rundata-net_results.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Close the modal after successful export
+      closeResultsIoModal();
+    }
+  } catch (error) {
+    onExportError(error);
+  } finally {
+    hideLoading();
+  }
+}
+
+/**
+ * Handle export errors
+ */
+export function onExportError(error) {
+  console.error('Export error:', error);
+  hideLoading();
+  gExportInProgress = false;
+  
+  // Display error to user
+  const alertObj = document.getElementById('alertObj');
+  alertObj.textContent = `Export error: ${error.message || 'Unknown error'}`;
+  alertObj.style.display = 'block';
+  
+  // Hide the alert after 5 seconds
+  setTimeout(() => {
+    alertObj.style.display = 'none';
+  }, 5000);
+}
+
+/**
+ * Helper function to show loading indicator
+ */
+export function showLoading() {
+  $('#loading').show();
+}
+
+/**
+ * Helper function to hide loading indicator
+ */
+export function hideLoading() {
+  $('#loading').hide();
+}
+
+export function closeResultsIoModal() {
+  $('#modalResultsIo').modal('hide');
+}
+

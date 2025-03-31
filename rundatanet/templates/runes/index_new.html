@@ -158,10 +158,6 @@
       .py-5 {
         padding-bottom: 3rem !important;
       }
-      .pb-6,
-      .py-6 {
-        padding-bottom: 9rem !important;
-      }
 
       .selectize-control {
         min-width: 400px;
@@ -260,6 +256,11 @@
         font-weight: bold;
       }
 
+      .pb-6,
+      .py-6 {
+        padding-bottom: 9rem !important;
+      }
+
     </style>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -356,8 +357,8 @@
               Import/Export
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Search parameters</a></li>
-              <li><a class="dropdown-item" href="#">Results</a></li>
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#containerRuleIo">Search parameters</a></li>
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalResultsIo">Results</a></li>
             </ul>
           </li>
         </ul>
@@ -429,16 +430,16 @@
     </div>
 
     <div class="row">
-      <div id="leftPanel" class="col-md-2 col-sm-2 p-0 d-flex flex-column my-fixed-height">
+      <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-fixed-height my-2 me-3 my-md-0 ms-md-2">
         <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
         <div id="jstree" class="overflow-scroll h-100"></div>
         <input type="text" class="form-control" id="searchInscriptions" placeholder="Quick inscription seletion">
       </div>
 
-      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border my-2 me-3 my-md-0 ms-md-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
+      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height ps-0 mt-3 mt-md-0 me-3 me-md-0"></div>
     </div>
 
     <div class="row">
@@ -459,27 +460,29 @@
       </div>
     </form>
 
-    <section role="group" class="row vertical-align">
-      <div class="col-md-2">Copy symbols to clipboard:</div>
-      <div class="col-md-4 btn-group" role="group">
-        <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
-        <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
-        <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
-        <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
-        <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
-        <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
-        <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
-        <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
-        <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
-        <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
-        <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
-        <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
-        <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
-        <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
-        <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
-        <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
-        <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
-        <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+    <section class="row vertical-align">
+      <div class="col-md-2">Copy symbol to clipboard:</div>
+      <div class="col-md-10">
+        <div class="btn-group flex-wrap" role="group">
+          <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
+          <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
+          <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
+          <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
+          <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
+          <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
+          <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
+          <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
+          <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
+          <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
+          <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
+          <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
+          <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
+          <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
+          <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
+          <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
+          <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
+          <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+        </div>
       </div>
     </section>
 
@@ -493,10 +496,10 @@
       <button type="button" class="btn btn-default col-md-2" id="btnClearRules">Clear search parameters</button>
     </div>
 
+    <!-- pb-6 is our custom class to make more vertical space -->
     <div class="row pb-6">
       <div id="builder" class="col"></div>
     </div>
-
   </div>
 
   <div id="divFormatDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
@@ -562,8 +565,8 @@
       <div class="modal-content">
 
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h4>
+          <h5 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -589,7 +592,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
         </div>
 
       </div>
@@ -600,8 +603,8 @@
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="divResultsIoLabel">Export search results, import signatures</h4>
+          <h5 class="modal-title" id="divResultsIoLabel">Export search results, import signatures</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -629,7 +632,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
         </div>
 
   </section>
@@ -681,6 +684,8 @@ function isSafari() {
 <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@3.0.0/dist/js/query-builder.standalone.min.js"></script>
 <!-- end of query builder js -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <script type="text/javascript" src="{% static 'runes/index.min.js' %}"></script>
 
 <script type="text/javascript">
@@ -692,6 +697,7 @@ let gMyMap = null;
 let gMarkersLayer = null;
 let inpQueryBuilder = "builder";
 let gViewModel = null; // Global view model for the runic inscriptions
+let gExportInProgress = false;
 
 function getCrossUrl(crossName) {
   // It is important that staticBase is written in a file that is processed by the back-end.
@@ -708,7 +714,7 @@ function onDbLoaded() {
   gAllMarkers = inscriptions2markers(dbMap, L);
   //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
   // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
-  initQueryBuilder(inpQueryBuilder, dbMap, getHumanName);
+  initQueryBuilder(inpQueryBuilder, gViewModel, getHumanName);
   calcWordsAndPersonalNames(gViewModel.getAllInscriptions());
 
   // populate jstree with data
@@ -790,23 +796,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('mHideMap').addEventListener('click', function() {
     onHideMapClicked('mapDisplay', 'mHideMap');
   });
-
-  /*document.getElementById('inpInscriptions').addEventListener('change', event => {
-    const selectedOptions = Array.from(event.target.selectedOptions);
-    const selectedValues = selectedOptions.map(option => option.value);
-    console.log('Selected inscriptions:', selectedValues);
-    // Add your logic to handle the selected inscriptions here
-    selectedValues.forEach(v => {
-      const key = parseInt(v, 10);
-      console.log('Inscription ID:', key);
-      console.log(`Key type: ${typeof key}`);
-      console.log(gDbMap.get(key));
-    });
-    displaySignatureInfo();
-  });
-  */
   
-  // configure jsTree even before we have the data
+  // Configure jsTree even before we have the data
   $("#jstree")
   .on('ready.jstree', function() {
     showMarkersWrapper();
@@ -841,13 +832,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
-    const results = doSearch(rules, gViewModel.getAllInscriptions());
+    const results = doSearch(rules, gViewModel.getAllInscriptions().values());
     console.log(`Got ${results.length} results`);
     gViewModel.setSearchResults(results);
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
     gViewModel.clearSearchResults();
+  });
+  document.getElementById('btnRulesExport').addEventListener('click', function() {
+    const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    if (!$.isEmptyObject(rules)) {
+      $('#ruleIo').val(JSON.stringify(rules, null, 2));
+    }
+  });
+  document.getElementById('btnRulesImport').addEventListener('click', function() {
+    const rules = JSON.parse($('#ruleIo').val());
+    $(`#${inpQueryBuilder}`).queryBuilder('setRules', rules, true);
+  });
+  document.getElementById('btnClearRules').addEventListener('click', function() {
+    $(`#${inpQueryBuilder}`).queryBuilder('reset');
+  });
+
+  // Export Excel button handler
+  document.getElementById('btnExportResults').addEventListener('click', function() {
+    if (gExportInProgress) {
+      return;
+    }
+    gExportInProgress = true;
+    showLoading();
+    
+    // Create a mapping of column names to human-readable names
+    const userSelectedFields =  getUserSelectedDisplay();
+    const columns = userSelectedFields.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']);
+    const columnMap = {};
+    
+    columns.forEach(column => {
+      columnMap[column] = getHumanName(column);
+    });
+    
+    // Get the current search rules to include in the export
+    const searchRules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    
+    // Create worker and send data
+    const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}?v=0.0.1");
+    exportWorker.onmessage = onExportWorkerMessage;
+    exportWorker.onerror = onExportError;
+    
+    exportWorker.postMessage({
+      inscriptions: Array.from(gViewModel.getActiveInscriptions().values()),
+      columnMap: columnMap,
+      rules: searchRules
+    });
   });
 
   // Search statistics updates:
@@ -861,12 +897,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('outNumFoundNames').textContent = data.count;
   });
   $(document).on('viewModelUpdated', function(event, data) {
+    document.getElementById('mainDisplay').innerHTML = "";
     $('#jstree').jstree(true).refresh(false, true);
     showMarkersWrapper();
     calcWordsAndPersonalNames(data.model.getActiveInscriptions());
   });
 
+  initDragAndDrop();
 });
+
 </script>
 
 </body>
