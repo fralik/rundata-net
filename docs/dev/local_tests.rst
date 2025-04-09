@@ -21,3 +21,14 @@ To run the tests, use the following command:
 .. code-block:: shell
 
     npm test
+
+
+Debugging tests in VS Code
+==========================
+
+To debug the tests in VS Code, you can do the following:
+
+1. Open test file in VS Code.
+2. Run command `Debug: Debug npm script`.
+3. Select `test uvu rundatanet/js/tests`.
+
