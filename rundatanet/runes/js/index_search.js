@@ -423,6 +423,31 @@ const searchHasPersonalName = (numNames, ruleValue) => {
   return { match: isMatch };
 };
 
+const searchCountryOrProvince = (entry, ruleValues) => {
+  for (let i = 0; i < ruleValues.length; i++) {
+    // let areaCode = ruleValues[i];
+    if (ruleValues[i] == 'all_sweden') {
+      const areaCodes = ['Öl ', 'Ög ', 'Sö ', 'Sm ', 'Vg ', 'U ', 'Vs ', 'Nä ', 'Vr ', 'Gs ', 'Hs ', 'M ', 'Ån ', 'D ', 'Hr ', 'J ', 'Lp ', 'Ds ', 'Bo ', 'G ', 'SE ', 'Bo'];
+      for (let j = 0; j < areaCodes.length; j++) {
+        if (operators.begins_with(entry['signature_text'], areaCodes[j])) {
+          return { match: true };
+        }
+      }
+      const districts = ['Skåne', 'Halland', 'Blekinge'];
+      for (let j = 0; j < districts.length; j++) {
+        if (operators.contains(entry['district'], districts[j])) {
+          return { match: true };
+        }
+      }
+      return { match: false };
+    }
+    if (operators.begins_with(entry['signature_text'], ruleValues[i])) {
+      return { match: true };
+    }
+  }
+  return { match: false };
+}
+
 const customSearchFunctions = {
   signature_text: {
     in: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
@@ -435,6 +460,9 @@ const customSearchFunctions = {
     not_contains: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.contains, true),
     equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
     not_equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.not_equal),
+  },
+  signature_country: {
+    in: searchCountryOrProvince,
   },
   normalization_norse_to_transliteration: {
     contains: (fieldValue, ruleValue) => {

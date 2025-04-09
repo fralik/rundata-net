@@ -614,6 +614,9 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       type: 'string',
       input: 'select',
       multiple: true,
+      data: {
+        multiField: true,
+      },
       operators: ['in'],
       plugin: 'tomSelect',
       plugin_config: {
@@ -637,7 +640,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
           {text: 'Other areas (X)', value: 'X '}
         ],
         hideSelected: true,
-      },
+      }
     },
     createWordSearchRule({
       id: 'normalization_norse_to_transliteration',
