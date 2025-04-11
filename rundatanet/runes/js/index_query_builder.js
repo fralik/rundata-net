@@ -591,16 +591,8 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       ],
       valueSetter: function (rule, value) {
         const $input = rule.$el.find('.rule-value-container input');
-        const operator = rule.operator.type;
-        if (operator === 'in' || operator === 'not_in') {
-          $input.tomSelect('setValue', value);
-        } else {
-          if ($input[0].autoComplete) {
-            $input[0].autoComplete.setValue(value);
-          } else {
-            $input.val(value);
-          }
-        }
+        $input.val(value);
+        adjustTomSelectAndAutoComplete(rule, signature_text_tomselect_cfg, signature_text_autocomplete_cfg);
       },
       plugin: 'tomSelect',
       plugin_config: signature_text_tomselect_cfg,
