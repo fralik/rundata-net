@@ -148,6 +148,7 @@ function testSingleRuleSearch({
 }
 
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'in',
   value: 'Öl 1',
   expectedCount: 1,
@@ -156,6 +157,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'in',
   value: ['Öl 1', 'Öl 2'],
   expectedCount: 2,
@@ -163,12 +165,14 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'in_separated_list',
   value: 'Öl 1|Öl 2|Öl 12',
   expectedCount: 3,
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'begins_with',
   value: 'Öl 1',
   expectedCount: 11,
@@ -176,6 +180,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'not_begins_with',
   value: 'Öl 1',
   expectedCount: 6804,
@@ -183,6 +188,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'ends_with',
   value: '4',
   expectedCount: 1026,
@@ -190,6 +196,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'not_ends_with',
   value: '4',
   expectedCount: 5789,
@@ -197,6 +204,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'contains',
   value: 'Öl',
   expectedCount: 190,
@@ -204,6 +212,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'not_contains',
   value: 'Öl',
   expectedCount: 6625,
@@ -213,7 +222,7 @@ testSingleRuleSearch({
 
 
 testSingleRuleSearch({
-  id: 'signature_country',
+  id: 'inscription_country',
   field: 'signature_text',
   operator: 'in',
   value: ['Öl', 'Sm'],
@@ -222,7 +231,7 @@ testSingleRuleSearch({
   multiField: true,
 });
 testSingleRuleSearch({
-  id: 'signature_country',
+  id: 'inscription_country',
   field: 'signature_text',
   operator: 'in',
   value: ['all_sweden'],
@@ -277,5 +286,38 @@ testSingleRuleSearch({
   multiField: false,
   firstResultCheck: 1100,
 });
+
+test('search inscription via year range', () => {
+  const multiField = false;
+  const rules = {
+    condition: "AND",
+    rules: [
+      {
+        id: "year_from",
+        field: "year_from",
+        operator: "greater",
+        value: 1099,
+        data: multiField ? { multiField: true } : {}
+      },
+      {
+        id: "year_to",
+        field: "year_to",
+        operator: "less",
+        value: 1101,
+        data: multiField ? { multiField: true } : {}
+      },
+    ],
+    not: false,
+    valid: true
+  };
+  
+  const results = doSearch(rules, dbMap.values());
+  const expectedCount = 48;
+  
+  assert.not(results[0].signature_text === 'Ög 218', 'Should not find Ög 218');
+  assert.is(results.length, expectedCount, `Should find ${expectedCount} inscriptions`);
+});
+
+
 
 test.run();

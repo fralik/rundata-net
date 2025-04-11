@@ -239,6 +239,11 @@ export class QueryBuilderParser {
       return { match: false };
     }
 
+    if (typeof ruleValue === 'number' && fieldValue === '') {
+      // Handle case where fieldValue is an empty string but ruleValue is a number
+      return { match: false };
+    }
+
     // Apply the operator and normalize the result
     const result = this.operators[operatorName](fieldValue, ruleValue);
     const isMatch = Boolean(result);
@@ -449,7 +454,7 @@ const searchCountryOrProvince = (entry, ruleValues) => {
 }
 
 const customSearchFunctions = {
-  signature_text: {
+  inscription_id: {
     in: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
     in_separated_list: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
     begins_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.begins_with),
@@ -461,7 +466,7 @@ const customSearchFunctions = {
     equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
     not_equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.not_equal),
   },
-  signature_country: {
+  inscription_country: {
     in: searchCountryOrProvince,
   },
   normalization_norse_to_transliteration: {
