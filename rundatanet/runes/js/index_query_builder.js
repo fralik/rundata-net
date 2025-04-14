@@ -17,6 +17,7 @@ const optGroups = {
     "sv": "Signatura",
   },
   "gr_texts": "Texts",
+  "gr_location": "Location",
   "other": "---",
 };
 
@@ -321,10 +322,9 @@ function prepareAutoComplete(ruleId, dbMap, humanNameGetter, opt = {}) {
   }
   
   const fieldId = opt.fieldId || ruleId;
-  const operators = opt.operators || ["my_contains", "my_not_contains",
-        'my_equal', 'my_not_equal', 'my_begins_with',
-        "my_not_begins_with", "my_ends_with",
-        "my_not_ends_with", "is_empty", 'is_not_empty'];
+  const operators = opt.operators || ["contains", "not_contains",
+        'equal', 'not_equal', 'begins_with', "not_begins_with",
+        "ends_with", "not_ends_with", "is_empty", 'is_not_empty'];
   const type = opt.type || 'string';
   const size = opt.size || 100;
   const optgroup = opt.optgroup || "other";
@@ -346,7 +346,7 @@ function prepareAutoComplete(ruleId, dbMap, humanNameGetter, opt = {}) {
       attachToParent: true,
     },
     size: size,
-    // operators: operators,
+    operators: operators,
   }
 }
 
@@ -576,7 +576,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
   
   let queryBuilderFilters = [
     {
-      id: 'signature_text',
+      id: 'inscription_id',
       optgroup: 'gr_signature',
       field: 'signature_text',
       label: getHumanName('signature_text'),
@@ -591,23 +591,15 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       ],
       valueSetter: function (rule, value) {
         const $input = rule.$el.find('.rule-value-container input');
-        const operator = rule.operator.type;
-        if (operator === 'in' || operator === 'not_in') {
-          $input.tomSelect('setValue', value);
-        } else {
-          if ($input[0].autoComplete) {
-            $input[0].autoComplete.setValue(value);
-          } else {
-            $input.val(value);
-          }
-        }
+        $input.val(value);
+        adjustTomSelectAndAutoComplete(rule, signature_text_tomselect_cfg, signature_text_autocomplete_cfg);
       },
       plugin: 'tomSelect',
       plugin_config: signature_text_tomselect_cfg,
     },
     prepareAutoComplete('carver', dbMap, getHumanName),
     {
-      id: 'signature_country',
+      id: 'inscription_country',
       optgroup: "gr_signature",
       field: 'signature_text',
       label: 'Country or Swedish province',
@@ -657,13 +649,14 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     prepareAutoComplete('english_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
     prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
 
-    prepareAutoComplete('found_location', dbMap, getHumanName),
-    prepareAutoComplete('parish', dbMap, getHumanName),
-    prepareAutoComplete('district', dbMap, getHumanName),
-    prepareAutoComplete('municipality', dbMap, getHumanName),
-    prepareAutoComplete('current_location', dbMap, getHumanName),
+    prepareAutoComplete('full_address', dbMap, getHumanName, { optgroup: 'gr_location', operators: ['contains'] }),
+    prepareAutoComplete('found_location', dbMap, getHumanName, { optgroup: 'gr_location' }),
+    prepareAutoComplete('parish', dbMap, getHumanName, { optgroup: 'gr_location' }),
+    prepareAutoComplete('district', dbMap, getHumanName, { optgroup: 'gr_location' }),
+    prepareAutoComplete('municipality', dbMap, getHumanName, { optgroup: 'gr_location' }),
+    prepareAutoComplete('current_location', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('original_site', dbMap, getHumanName),
-    prepareAutoComplete('parish_code', dbMap, getHumanName),
+    prepareAutoComplete('parish_code', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('rune_type', dbMap, getHumanName),
     prepareAutoComplete('dating', dbMap, getHumanName),
     prepareIntegerRule('year_from', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
@@ -781,7 +774,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
 
   // Event handler when rule is created and rule operator is changed
   $('#builder').on('afterCreateRuleInput.queryBuilder afterUpdateRuleOperator.queryBuilder', function(e, rule) {
-    if (rule.filter.id !== 'signature_text') {
+    if (rule.filter.id !== 'inscription_id') {
       return;
     }
     adjustTomSelectAndAutoComplete(rule, signature_text_tomselect_cfg, signature_text_autocomplete_cfg);

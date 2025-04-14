@@ -73,18 +73,47 @@ test('highlightWordsFromWordBoundaries with no boundaries', () => {
   assert.is(result, expected, 'Should return original string when no boundaries are provided');
 });
 
-function testInscriptionSearch({
+
+// Helper function to create a readable string representation of the search value
+function getValueAsString(value) {
+  if (value === null) {
+    return 'null';
+  } else if (Array.isArray(value)) {
+    return '[' + value.map(v => `"${v}"`).join(', ') + ']';
+  } else if (typeof value === 'object') {
+    return JSON.stringify(value);
+  } else {
+    return `"${value}"`;
+  }
+}
+
+/**
+ * Test function for searching inscriptions using a single rule
+ * 
+ * @param {Object} options - The options for the search test
+ * @param {string} options.operator - The operator to use for the search rule (e.g., 'equal', 'contains')
+ * @param {*} options.value - The value to search for
+ * @param {number} options.expectedCount - The number of results expected to be found
+ * @param {string} [options.testName] - Custom name for the test (defaults to a generated name using field and operator)
+ * @param {string|null} [options.id] - Custom id for the rule (defaults to field name)
+ * @param {*} [options.firstResultCheck] - Value to check against the first result's field (if provided)
+ * @param {boolean} [options.multiField=false] - Whether the search rule is multi-field or not
+ * @param {string} [options.condition='AND'] - The condition to use for combining rules
+ * @param {string} [options.field='signature_text'] - The field to search in
+ * @returns {void}
+ */
+function testSingleRuleSearch({
   operator, 
   value, 
   expectedCount, 
   testName,
   id = null,
   firstResultCheck = null,
-  multiField = true,
+  multiField = false,
   condition = 'AND',
   field = 'signature_text'
 }) {
-  test(testName || `search inscription via ${operator} (${value})`, () => {
+  test(testName || `search inscription via ${field}::${operator} (${getValueAsString(value)})`, () => {
     const rules = {
       condition: condition,
       rules: [
@@ -107,69 +136,93 @@ function testInscriptionSearch({
     assert.is(result.length, expectedCount, `Should find ${expectedCount} inscriptions`);
     
     if (firstResultCheck) {
-      assert.is(result[0][field], firstResultCheck, `First result should be ${firstResultCheck}`);
+      if (typeof firstResultCheck === 'object') {
+        const fieldDataStr = JSON.stringify(result[0][field]);
+        const firstResultCheckStr = JSON.stringify(firstResultCheck);
+        assert.is(fieldDataStr, firstResultCheckStr, `First result should be ${firstResultCheckStr}`);
+      } else {
+        assert.is(result[0][field], firstResultCheck, `First result should be ${firstResultCheck}`);
+      }
     }
   });
 }
 
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'in',
   value: 'Öl 1',
   expectedCount: 1,
   testName: 'search one inscription',
-  firstResultCheck: 'Öl 1'
+  firstResultCheck: 'Öl 1',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'in',
   value: ['Öl 1', 'Öl 2'],
   expectedCount: 2,
-  testName: 'search multiple inscriptions by id'
+  testName: 'search multiple inscriptions by id',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'in_separated_list',
   value: 'Öl 1|Öl 2|Öl 12',
   expectedCount: 3,
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'begins_with',
   value: 'Öl 1',
   expectedCount: 11,
-  firstResultCheck: 'Öl 1'
+  firstResultCheck: 'Öl 1',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'not_begins_with',
   value: 'Öl 1',
   expectedCount: 6804,
-  firstResultCheck: 'Öl 2'
+  firstResultCheck: 'Öl 2',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'ends_with',
   value: '4',
   expectedCount: 1026,
-  firstResultCheck: 'Öl 2'
+  firstResultCheck: 'Öl 2',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'not_ends_with',
   value: '4',
   expectedCount: 5789,
-  firstResultCheck: 'Öl 1'
+  firstResultCheck: 'Öl 1',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'contains',
   value: 'Öl',
   expectedCount: 190,
-  firstResultCheck: 'Öl 1'
+  firstResultCheck: 'Öl 1',
+  multiField: true,
 });
-testInscriptionSearch({
+testSingleRuleSearch({
+  id: 'inscription_id',
   operator: 'not_contains',
   value: 'Öl',
   expectedCount: 6625,
-  firstResultCheck: 'Ög 1'
+  firstResultCheck: 'Ög 1',
+  multiField: true,
 });
 
 
-testInscriptionSearch({
-  id: 'signature_country',
+testSingleRuleSearch({
+  id: 'inscription_country',
   field: 'signature_text',
   operator: 'in',
   value: ['Öl', 'Sm'],
@@ -177,8 +230,8 @@ testInscriptionSearch({
   firstResultCheck: 'Öl 1',
   multiField: true,
 });
-testInscriptionSearch({
-  id: 'signature_country',
+testSingleRuleSearch({
+  id: 'inscription_country',
   field: 'signature_text',
   operator: 'in',
   value: ['all_sweden'],
@@ -186,5 +239,85 @@ testInscriptionSearch({
   firstResultCheck: 'Öl 1',
   multiField: true,
 });
+
+
+testSingleRuleSearch({
+  field: 'carver',
+  operator: 'is_empty',
+  value: null,
+  expectedCount: 5735,
+  firstResultCheck: '',
+});
+testSingleRuleSearch({
+  field: 'carver',
+  operator: 'is_not_empty',
+  value: null,
+  expectedCount: 1080,
+  firstResultCheck: 'Nilsson attribuerar stenen till Korp.',
+});
+testSingleRuleSearch({
+  field: 'carver',
+  operator: 'equal',
+  value: 'Nilsson attribuerar stenen till Korp.',
+  expectedCount: 3,
+  firstResultCheck: 'Nilsson attribuerar stenen till Korp.',
+});
+
+
+testSingleRuleSearch({
+  id: 'cross_form',
+  field: 'crosses',
+  operator: 'cross_form',
+  value: {
+    form: 'B1',
+    is_certain: "1",
+  },
+  expectedCount: 662,
+  multiField: false,
+  firstResultCheck: JSON.parse('[[[],[{"name":"A4","isCertain":1}],[{"name":"B1","isCertain":1}],[{"name":"C9","isCertain":1},{"name":"C10","isCertain":1}],[{"name":"D5","isCertain":1}],[{"name":"E5","isCertain":1}],[{"name":"F3","isCertain":1}],[]]]'),
+});
+
+
+testSingleRuleSearch({
+  field: 'year_from',
+  operator: 'equal',
+  value: 1100,
+  expectedCount: 1876,
+  multiField: false,
+  firstResultCheck: 1100,
+});
+
+test('search inscription via year range', () => {
+  const multiField = false;
+  const rules = {
+    condition: "AND",
+    rules: [
+      {
+        id: "year_from",
+        field: "year_from",
+        operator: "greater",
+        value: 1099,
+        data: multiField ? { multiField: true } : {}
+      },
+      {
+        id: "year_to",
+        field: "year_to",
+        operator: "less",
+        value: 1101,
+        data: multiField ? { multiField: true } : {}
+      },
+    ],
+    not: false,
+    valid: true
+  };
+  
+  const results = doSearch(rules, dbMap.values());
+  const expectedCount = 48;
+  
+  assert.not(results[0].signature_text === 'Ög 218', 'Should not find Ög 218');
+  assert.is(results.length, expectedCount, `Should find ${expectedCount} inscriptions`);
+});
+
+
 
 test.run();
