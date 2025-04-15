@@ -1,4 +1,5 @@
 import importlib.resources
+import logging
 import os
 from typing import Optional
 
@@ -6,6 +7,8 @@ from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def clean_llm_response(llm_response: str) -> str:
@@ -36,7 +39,6 @@ def inference(user_msg: str, api_token: Optional[str] = None) -> str:
     if not api_token:
         raise ValueError("Failed to obtain API token")
 
-    print(f"Using API token: {api_token}")
     client = ChatCompletionsClient(
         endpoint=endpoint,
         credential=AzureKeyCredential(api_token),
@@ -52,5 +54,6 @@ def inference(user_msg: str, api_token: Optional[str] = None) -> str:
         frequency_penalty=0.0,
         model=model_name,
     )
+    logger.debug(f"Raw LLM response: {response.choices[0].message.content}")
 
     return clean_llm_response(response.choices[0].message.content)
