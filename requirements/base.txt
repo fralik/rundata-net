@@ -16,6 +16,9 @@ django-environ==0.11.2  # https://github.com/joke2k/django-environ
 django-nested-admin==4.0.* # https://github.com/theatlantic/django-nested-admin
 
 # Django REST Framework
-djangorestframework==3.15.*  # https://github.com/encode/django-rest-framework
-#coreapi==2.3.3  # https://github.com/core-api/python-client
-django-extensions==3.2.3 # https://github.com/django-extensions/django-extensions
+djangorestframework==3.16.*  # https://github.com/encode/django-rest-framework
+django-extensions==4.1.* # https://github.com/django-extensions/django-extensions
+django-ninja==1.4.*  # https://github.com/vitalik/django-ninja
+
+# Azure
+azure-ai-inference  # https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/ai/azure-ai-inference/README.md

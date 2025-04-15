@@ -17,8 +17,11 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+from rundatanet.runes.api import api
+
 app_name = "rundatanet"
 urlpatterns = [
     path("", include("rundatanet.runes.urls", namespace="runes")),
+    path("api/", api.urls),
     path(settings.ADMIN_URL, admin.site.urls),
 ]
