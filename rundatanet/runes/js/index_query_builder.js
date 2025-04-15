@@ -136,7 +136,7 @@ export function sortGroupsByOrder(items, groupOrder) {
   groupOrder.forEach((group, index) => {
     priorityMap[group] = index;
   });
-  
+
   // Group items by their key
   const groups = {};
   items.forEach(item => {
@@ -144,7 +144,7 @@ export function sortGroupsByOrder(items, groupOrder) {
     if (!groups[groupKey]) groups[groupKey] = [];
     groups[groupKey].push(item);
   });
-  
+
   // Sort each group alphabetically by label
   Object.keys(groups).forEach(groupKey => {
     groups[groupKey].sort((a, b) => {
@@ -153,7 +153,7 @@ export function sortGroupsByOrder(items, groupOrder) {
       return labelA.localeCompare(labelB);
     });
   });
-  
+
   // Create result array by concatenating groups in specified order
   let result = [];
   groupOrder.forEach(groupKey => {
@@ -162,18 +162,18 @@ export function sortGroupsByOrder(items, groupOrder) {
       delete groups[groupKey];
     }
   });
-  
+
   // Add any remaining groups not specified in groupOrder
   Object.values(groups).forEach(group => {
     result = result.concat(group);
   });
-  
+
   return result;
 }
 
 /**
  * Gets the minimum and maximum values of a numerical field from a data source
- * 
+ *
  * @param {Map|Array} dataSource - Either a Map containing database records or an array of items
  * @param {string} fieldName - The name of the field to analyze
  * @returns {Object} Object containing min and max values, or null if field doesn't exist or has no numeric values
@@ -182,31 +182,31 @@ export function getMinMaxValues(dataSource, fieldName) {
   if (!dataSource) {
     throw new Error("dataSource parameter is required");
   }
-  
+
   if (!fieldName || typeof fieldName !== 'string') {
     throw new Error("fieldName parameter is required and must be a string");
   }
-  
+
   let min = null;
   let max = null;
   let hasValues = false;
-  
+
   // Function to process each item
   const processItem = (item) => {
     // Skip if item doesn't have the field or value isn't numeric
     if (!item || item[fieldName] === undefined || item[fieldName] === null) {
       return;
     }
-    
+
     // Convert to number if it's a string
-    const value = typeof item[fieldName] === 'string' ? 
+    const value = typeof item[fieldName] === 'string' ?
       parseFloat(item[fieldName]) : item[fieldName];
-      
+
     // Skip if not a valid number
     if (isNaN(value)) {
       return;
     }
-    
+
     // Initialize min/max on first valid value
     if (!hasValues) {
       min = value;
@@ -214,12 +214,12 @@ export function getMinMaxValues(dataSource, fieldName) {
       hasValues = true;
       return;
     }
-    
+
     // Update min/max
     if (value < min) min = value;
     if (value > max) max = value;
   };
-  
+
   // Handle different data source types
   if (dataSource instanceof Map) {
     // Process Map values
@@ -234,7 +234,7 @@ export function getMinMaxValues(dataSource, fieldName) {
   } else {
     throw new Error("dataSource must be either a Map or an Array");
   }
-  
+
   return hasValues ? { min, max } : null;
 }
 
@@ -255,7 +255,7 @@ export function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelec
       });
       if (fieldName === 'signature_text' && item.aliases) {
         const aliases = item.aliases.split('|').map(a => a.trim()).filter(a => a);
-        
+
         // Add each alias with an artificial ID
         aliases.forEach(alias => {
           if (!uniqueTracker.has(alias)) {
@@ -270,9 +270,9 @@ export function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelec
       }
     }
   });
-  
+
   allValues.sort((a, b) => a.score - b.score);
-  
+
   // Comparison without diacritics:
   if (term !== '') {
     // Normalize strings to remove diacritics
@@ -282,7 +282,7 @@ export function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelec
       return normalizedText.includes(normalizedTerm);
     });
   }
-  
+
   if (isTomSelect) {
     suggest(allValues);
     return allValues;
@@ -296,7 +296,7 @@ export function getValuesFromAllData(term, suggest, fieldName, dbMap, isTomSelec
 
 /**
  * Creates an autocomplete configuration object for QueryBuilder.
- * 
+ *
  * @param {string} ruleId - The unique identifier for the rule.
  * @param {Map} dbMap - A Map containing the database values for autocomplete.
  * @param {Function} humanNameGetter - Function that returns a human-readable name for the given rule ID.
@@ -320,7 +320,7 @@ function prepareAutoComplete(ruleId, dbMap, humanNameGetter, opt = {}) {
   if (!humanNameGetter || typeof humanNameGetter !== 'function') {
     throw new Error("prepareAutoComplete: 'humanNameGetter' parameter is required and must be a function");
   }
-  
+
   const fieldId = opt.fieldId || ruleId;
   const operators = opt.operators || ["contains", "not_contains",
         'equal', 'not_equal', 'begins_with', "not_begins_with",
@@ -352,7 +352,7 @@ function prepareAutoComplete(ruleId, dbMap, humanNameGetter, opt = {}) {
 
 /**
  * Creates a jQuery QueryBuilder filter configuration for integer rules
- * 
+ *
  * @param {string} ruleId - ID for the rule/filter
  * @param {Map} dbMap - A Map containing the database values for autocomplete.
  * @param {Function} humanNameGetter - Function that returns a human-readable name for the given rule ID.
@@ -383,7 +383,7 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
   const operators = opt.operators || ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal', 'between', 'not_between'];
   const size = opt.size || 10;
   const optgroup = opt.optgroup || "other";
-  
+
   let config = {
     id: ruleId,
     field: fieldId,
@@ -403,17 +403,17 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
     config.validation = {
       allow_empty_value: true
     };
-    
+
     if (opt.min !== undefined) config.validation.min = opt.min;
     if (opt.max !== undefined) config.validation.max = opt.max;
     if (opt.step !== undefined) config.validation.step = opt.step;
   }
-  
+
   // Add default value if provided
   if (opt.default_value !== undefined) {
     config.default_value = opt.default_value;
   }
-  
+
   return config;
 }
 
@@ -421,11 +421,11 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
 /**
  * Adjusts the input element in a query rule by applying either TomSelect or AutoComplete plugin
  * based on the rule's operator type.
- * 
+ *
  * @param {Object} rule - The query rule object containing the element and operator information
  * @param {Object} [tomSelectConfig={}] - Configuration options for TomSelect plugin
  * @param {Object} [autoCompleteConfig={}] - Configuration options for AutoComplete plugin
- * 
+ *
  * @description This function first cleans up any existing TomSelect or AutoComplete plugins
  * attached to the input element, then initializes the appropriate plugin based on the
  * operator type. If the operator is 'in' or 'not_in', TomSelect is applied; otherwise,
@@ -433,7 +433,7 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
  */
 function adjustTomSelectAndAutoComplete(rule, tomSelectConfig = {}, autoCompleteConfig = {}) {
   var $input = rule.$el.find('.rule-value-container input');
-  const operator = rule.operator.type;    
+  const operator = rule.operator.type;
 
   // Clean up existing plugins
   if ($input.data('tomSelect') !== undefined) {
@@ -442,7 +442,7 @@ function adjustTomSelectAndAutoComplete(rule, tomSelectConfig = {}, autoComplete
   if ($input.hasClass('autocomplete')) {
     $input.autoComplete('destroy');
   }
-  
+
   // Initialize the appropriate plugin based on operator
   if (operator === 'in' || operator === 'not_in') {
     $input.tomSelect(tomSelectConfig);
@@ -453,7 +453,7 @@ function adjustTomSelectAndAutoComplete(rule, tomSelectConfig = {}, autoComplete
 
 /**
  * Creates a rule for word search in runic texts
- * 
+ *
  * @param {Object} config Configuration object
  * @param {string} config.id Rule ID
  * @param {string} config.field Field name in data
@@ -499,7 +499,7 @@ function createWordSearchRule(config) {
               <label class="form-check-label" for="${name}_namesOnlyInput">Personal names only</label>
             </div>
           </div>
-        </div>        
+        </div>
       `;
     },
     operators: config.operators || ['contains', 'equal', 'begins_with', 'ends_with'],
@@ -557,7 +557,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     menuClass: 'clusterize-content',
     attachToParent: true,
   };
-  
+
   const signature_text_tomselect_cfg = {
     plugins: ['remove_button'],
     // options: getValuesFromAllData('', undefined, 'signature_text', dbMap),
@@ -572,8 +572,8 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     valueField: 'id',
     hideSelected: true,
     delimiter: '|',
-  };  
-  
+  };
+
   let queryBuilderFilters = [
     {
       id: 'inscription_id',
@@ -584,7 +584,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       multiple: true,
       data: {
         multiField: true,
-      },  
+      },
       operators: [
         'in', 'in_separated_list', 'begins_with', 'not_begins_with',
         'ends_with', 'not_ends_with', 'contains', 'not_contains',
@@ -632,6 +632,10 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
           {text: 'Other areas (X)', value: 'X '}
         ],
         hideSelected: true,
+      },
+      valueSetter: function (rule, value) {
+        const $input = rule.$el.find('.rule-value-container select');
+        $input.tomSelect('setValue', value);
       }
     },
     createWordSearchRule({
@@ -751,7 +755,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
   // swap two first filters, so that signature is on the first place!
   const tmp = queryBuilderFilters[0];
   queryBuilderFilters[0] = queryBuilderFilters[1];
-  queryBuilderFilters[1] = tmp;  
+  queryBuilderFilters[1] = tmp;
 
   queryBuilder.queryBuilder({
     display_empty_filter: false,
@@ -765,7 +769,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
 
     operators: qbOperators,
     lang: qbLang,
-    sqlOperators: qbSqlOperators,    
+    sqlOperators: qbSqlOperators,
 
     templates: {
       rule: my_rule_template,
@@ -779,5 +783,5 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     }
     adjustTomSelectAndAutoComplete(rule, signature_text_tomselect_cfg, signature_text_autocomplete_cfg);
   });
- 
+
 }
