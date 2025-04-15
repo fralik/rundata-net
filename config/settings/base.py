@@ -250,3 +250,6 @@ MANAGERS = ADMINS
 # ------------------------------------------------------------------------------
 # Whether to use Google Analytics or not.
 USE_GA = env.bool("USE_GA", False)
+
+# Azure Model API key
+MODEL_KEY = env("MODEL_KEY", default="")

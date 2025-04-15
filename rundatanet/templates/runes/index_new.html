@@ -81,9 +81,6 @@
         font-weight: bold;
         color: #CCCCCC;
       }
-      .white-text {
-        color:#fff!important;
-      }
       .navbar-static-top {
         margin-bottom: 0px;
       }
@@ -188,7 +185,7 @@
       .btn-default {
         color: #333;
         background-color: #fff;
-        border-color: #ccc;        
+        border-color: #ccc;
       }
       .btn-default:hover {
         background-color: #e6e6e6;
@@ -218,7 +215,7 @@
           }
         }
       }
-      
+
       .inscription-section {
         border-bottom: 2px solid #999;
       }
@@ -263,7 +260,7 @@
 
     </style>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" integrity="sha512-Dww58CIezLb4kFGtZ8Zlr85kRDwJgyPhe3gVABsvnJruZuYn3xCTpLbE3iBT5hGbrfCytJnZ4aiI3MxN0p+NVQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.82.0/dist/L.Control.Locate.min.css" integrity="sha256-3PXa1eIJsM3owBQDkWnv+w0ikd9zv9OJOOy2asvgGfA=" crossorigin="anonymous">
 
@@ -279,7 +276,7 @@
     <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css" integrity="sha512-TFee0335YRJoyiqz8hA8KV3P0tXa5CpRBSoM0Wnkn7JoJx1kaq1yXL/rb8YFpWXkMOjRcv5txv+C6UluttluCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />-->
     <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@3.0.0/dist/css/query-builder.default.min.css">
     <!-- end querybuilder-related css -->
 
@@ -293,23 +290,23 @@
           width: 100%;
           margin: 5px 0;
         }
-        
+
         .query-builder .rule-container .rule-value-container {
           border-left: none;
           padding-left: 0;
           border-top: 1px solid #DDD;
           padding-top: 5px;
         }
-        
+
         .query-builder .form-control {
           width: 100%;
         }
-          
+
         .query-builder .rule-container {
           padding: 10px;
           display: block !important;
         }
-          
+
         .query-builder .rule-header {
           margin-bottom: 5px;
         }
@@ -410,7 +407,7 @@
           <li class=""><a href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
           <li class=""><a href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
         </ul>
-      </div> 
+      </div>
     </div>
   </nav>-->
 
@@ -493,6 +490,18 @@
       </div>
       <div class="col-auto col-md-2">
         <button type="button" class="btn btn-default col-md-12" id="btnClearRules">Clear search parameters</button>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-2">
+        <span>Enter your search in natural language. For example, 'Sök på alla inskrifter som i sin translitterering innehåller ordet stan'</span>
+      </div>
+      <div class="col">
+        <textarea id="searchTextInput" class="form-control" rows="4" placeholder="Enter search query here..."></textarea>
+      </div>
+      <div class="col-2">
+        <button class="btn btn-primary" type="button" id="btnText2Rules">Convert to search parameters</button>
       </div>
     </div>
 
@@ -638,15 +647,17 @@
   </section>
 
   <aside id="loading" class="loading-screen" style="position:fixed; top:0; right:0; bottom:0; left:0; z-index:9999; background-color: #000; opacity: 0.6;">
-    <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4" style="position:absolute; top:50%; margin-top:-7em">
-      <div class="page-header">
-        <i class="text-primary fa fa-spin fa-fw pull-left fa-spinner fa-2x" style="text-shadow: 0px 0px 0ex;"></i>
-        <hgroup class="" style="text-shadow: 0px 0px 0ex;">
-          <h4 ng-switch-default="" class="white-text" id="loading-main-text">
+    <div class="col-sm-8 col-md-6 col-lg-4 position-absolute top-50 start-50 translate-middle">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border text-primary me-3" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div>
+          <h4 class="text-white mb-0">
             Loading<br>
-            <small class="white-text" id="loading-sub-text">It can take up to a minute.</small>
+            <small class="text-white" id="txtLoadingDescription"></small>
           </h4>
-        </hgroup>
+        </div>
       </div>
     </div>
   </aside>
@@ -718,7 +729,7 @@ function onDbLoaded() {
   calcWordsAndPersonalNames(gViewModel.getAllInscriptions());
 
   // populate jstree with data
-  $('#jstree').jstree(true).refresh();  
+  $('#jstree').jstree(true).refresh();
 }
 
 /**
@@ -796,7 +807,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('mHideMap').addEventListener('click', function() {
     onHideMapClicked('mapDisplayWrapper', 'mHideMap');
   });
-  
+
   // Configure jsTree even before we have the data
   $("#jstree")
   .on('ready.jstree', function() {
@@ -830,6 +841,47 @@ document.addEventListener('DOMContentLoaded', function() {
     showMarkersWrapper({preserveMapArea: true});
   });
 
+  document.getElementById('btnText2Rules').addEventListener('click', function() {
+    const text = document.getElementById('searchTextInput').value;
+    if (!text.trim()) {
+      showAlert('Please enter a search query first', 'danger');
+      return;
+    }
+
+    showLoading("Converting your search query to search parameters");
+
+    // Send the text to the API endpoint
+    fetch('api/txt2rules', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: text }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      hideLoading();
+      console.log('Got rules from server:', data);
+      if (data && data.rules) {
+        $(`#${inpQueryBuilder}`).queryBuilder('setRules', JSON.parse(data.rules));
+        // After successfully setting the rules, trigger the search
+        document.getElementById('btnSearch').click();
+      } else {
+        showAlert('The server could not generate search rules from your text');
+      }
+    })
+    .catch(error => {
+      hideLoading();
+      console.error('Error:', error);
+      showAlert('Failed to process your search query. Please try again.');
+    });
+  });
+
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
     const results = doSearch(rules, gViewModel.getAllInscriptions().values());
@@ -861,24 +913,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     gExportInProgress = true;
     showLoading();
-    
+
     // Create a mapping of column names to human-readable names
     const userSelectedFields =  getUserSelectedDisplay();
     const columns = userSelectedFields.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']);
     const columnMap = {};
-    
+
     columns.forEach(column => {
       columnMap[column] = getHumanName(column);
     });
-    
+
     // Get the current search rules to include in the export
     const searchRules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
-    
+
     // Create worker and send data
     const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}?v=0.0.1");
     exportWorker.onmessage = onExportWorkerMessage;
     exportWorker.onerror = onExportError;
-    
+
     exportWorker.postMessage({
       inscriptions: Array.from(gViewModel.getActiveInscriptions().values()),
       columnMap: columnMap,

@@ -283,7 +283,7 @@ let gRenderInProgress = false;
 
 /**
  * Retrieves a human-readable name for a schema field in the specified language.
- * 
+ *
  * @param {string} schemaName - The machine name of the schema field.
  * @param {string} [lang='en'] - The language code to get the translation for (defaults to 'en').
  * @returns {string} The translated human-readable name if available, otherwise returns the schemaName.
@@ -405,7 +405,7 @@ export function convertDbToKeyMap(db) {
   const presentLongitudeColumn = columns.indexOf('present_longitude');
   const metaColumn = columns.indexOf('id');
   const wordColumns = ['transliteration', 'normalisation_norse', 'normalisation_scandinavian'];
-  
+
   const allDbImages = fetchAllImages(db);
   let numDiffers = 0;
 
@@ -414,7 +414,7 @@ export function convertDbToKeyMap(db) {
     const metaId = row[metaColumn];
     for (let j = 0; j < row.length; j++) {
       const columnName = columns[j];
-      
+
       objSignature[columnName] = row[j];
       // handle NULL values
       if (row[j] === null) {
@@ -505,7 +505,7 @@ export function convertDbToKeyMap(db) {
   });
 
   console.log(`Number of signatures with different word boundaries (it should be 0): ${numDiffers}`);
-  
+
   return dbAsJson;
 }
 
@@ -605,7 +605,7 @@ export function crossesForMeta(db, metaId) {
 
 /**
  * Convert list/map of inscriptions to tree nodes suitable for jsTree.
- * 
+ *
  * @param {*} inscriptions - Either a list of objects or a map. If map is provided, it will be converted to a list of map values.
  */
 export function inscriptions2treeNodes(inscriptions) {
@@ -619,7 +619,7 @@ export function inscriptions2treeNodes(inscriptions) {
       icon: false,
       signature: inscription.signature_text,
     };
-  }); 
+  });
 }
 
 export function selectFirstSignature() {
@@ -645,7 +645,7 @@ export function inscriptions2Select(container, dbMap) {
 
 /**
  * Show tooltip message on a DOM element.
- * 
+ *
  * @param {object} el DOM element, e.g. document.getElementById("myBtn")
  * @param {string} message Tooltip message
  */
@@ -752,7 +752,7 @@ export function inscriptions2markup(inscriptions) {
     const inscriptionData = inscriptions[i];
     const signatureId = inscriptionData.id;
     const signatureName = inscriptionData.signature_text;
-    
+
     let paragraph = `<article signature="${signatureName}" id="${signatureName}" rundata-db-id="${signatureId}" class="inscription-section">`;
     for (let j = 0; j < userSelectedFields.length; j++) {
       const field = userSelectedFields[j];
@@ -876,12 +876,12 @@ export function inscriptions2markup(inscriptions) {
  */
 export function onExportWorkerMessage(e) {
   gExportInProgress = false;
-  
+
   if (e.data.error) {
     onExportError({message: e.data.message});
     return;
   }
-  
+
   try {
     // Create a download for the XLSX file
     if (e.data.buffer) {
@@ -889,7 +889,7 @@ export function onExportWorkerMessage(e) {
       const blob = new Blob([e.data.buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
-      
+
       // Create a download link and trigger the download
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -897,7 +897,7 @@ export function onExportWorkerMessage(e) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Close the modal after successful export
       closeResultsIoModal();
     }
@@ -915,12 +915,16 @@ export function onExportError(error) {
   console.error('Export error:', error);
   hideLoading();
   gExportInProgress = false;
-  
+
   // Display error to user
+  showAlert("Export error: " + (error.message || 'Unknown error'));
+}
+
+export function showAlert(message) {
   const alertObj = document.getElementById('alertObj');
-  alertObj.textContent = `Export error: ${error.message || 'Unknown error'}`;
+  alertObj.textContent = message;
   alertObj.style.display = 'block';
-  
+
   // Hide the alert after 5 seconds
   setTimeout(() => {
     alertObj.style.display = 'none';
@@ -929,8 +933,15 @@ export function onExportError(error) {
 
 /**
  * Helper function to show loading indicator
+ * @param {string} [description] - Optional loading description text
  */
-export function showLoading() {
+export function showLoading(description) {
+  const defaultDescription = "It can take up to a minute.";
+  const txtLoadingDescription = document.getElementById('txtLoadingDescription');
+
+  if (txtLoadingDescription) {
+    txtLoadingDescription.textContent = description || defaultDescription;
+  }
   $('#loading').show();
 }
 
