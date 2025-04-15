@@ -501,7 +501,7 @@
         <textarea id="searchTextInput" class="form-control" rows="4" placeholder="Enter search query here..."></textarea>
       </div>
       <div class="col-2">
-        <button class="btn btn-primary" type="button" id="btnText2Rules">Convert to search parameters</button>
+        <button class="btn btn-success" type="button" id="btnText2Rules">Convert to search parameters</button>
       </div>
     </div>
 
@@ -868,6 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hideLoading();
       console.log('Got rules from server:', data);
       if (data && data.rules) {
+        console.log(data.rules);
         $(`#${inpQueryBuilder}`).queryBuilder('setRules', JSON.parse(data.rules));
         // After successfully setting the rules, trigger the search
         document.getElementById('btnSearch').click();
