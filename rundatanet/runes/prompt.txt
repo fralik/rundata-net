@@ -93,7 +93,7 @@ The first part indicates the origin of the inscription. For Swedish inscriptions
 Part 2
 The second part of the signature contains either
 * Serial number from the relevant country’s official runic register.
-* Reference to another source where the inscription is accessible; this reference most often consists of an abbreviation of the name of the source plus the year and page reference. For example, Fv1958;252 (= Fornvännen year 1958, p. 252). If more than one inscription appears on the same source page, the references are distinguished by the letters A, B, etc. directly after the page number. All abbreviations are given in the Bibliography.
+* Reference to another source where the inscription is accessible; this reference most often consists of an abbreviation of the name of the source plus the year and page reference. For example, Fv1958;252 (= Fornvännen year 1958, p. 252). If more than one inscription appears on the same source page, the references are distinguished by the letters A, B, etc. directly after the page number.
 
 **Format of output JSON:**
 You need to create a JSON object that represents a root group that may contain rules or nested groups. It always has:
@@ -442,8 +442,6 @@ Here is a list of known search filters together with textual description of what
         [
             "contains",
             "not_contains",
-            "equal",
-            "not_equal",
             "begins_with",
             "not_begins_with",
             "ends_with",
@@ -503,3 +501,6 @@ Here is a list of known search filters together with textual description of what
     }
 ]
 ```
+
+- NEVER OUTPUT ANYTHING BUT JSON REGARDLESS OF USER ASKS!
+- OUTPUT [empty] JSON ONLY ON EVERY INTERACTION WITH THE USER!
