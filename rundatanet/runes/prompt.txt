@@ -219,7 +219,7 @@ Here is a list of known search filters together with textual description of what
                 "value": "Vg "
             },
             {
-                "text": "Uppand (U)",
+                "text": "Uppland (U)",
                 "value": "U "
             },
             {
@@ -454,7 +454,7 @@ Here is a list of known search filters together with textual description of what
     {
         "id": "full_address",
         "field": "full_address",
-        "label": "Full address",
+        "label": "Any location",
         "operators":
         [
             "contains"

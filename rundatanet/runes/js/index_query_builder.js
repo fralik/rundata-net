@@ -616,7 +616,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
         options: [
           {text: 'Sweden, whole', value: 'all_sweden'},
           {text: 'Öland (Öl)', value: 'Öl '}, {text: 'Östergötland (Ög)', value: 'Ög '}, {text: 'Södermanland (Sö)', value: 'Sö '},
-          {text: 'Småland (Sm)', value: 'Sm '}, {text: 'Västergötland (Vg)', value: 'Vg '}, {text: 'Uppand (U)', value: 'U '},
+          {text: 'Småland (Sm)', value: 'Sm '}, {text: 'Västergötland (Vg)', value: 'Vg '}, {text: 'Uppland (U)', value: 'U '},
           {text: 'Västmanland (Vs)', value: 'Vs '}, {text: 'Närke (Nä)', value: 'Nä '}, {text: 'Värmland (Vr)', value: 'Vr '},
           {text: 'Gästrikland (Gs)', value: 'Gs '}, {text: 'Hälsingland (Hs)', value: 'Hs '}, {text: 'Medelpad (M)', value: 'M '},
           {text: 'Ångermanland (Ån)', value: 'Ån '}, {text: 'Dalarna (D)', value: 'D '}, {text: 'Härjedalen (Hr)', value: 'Hr '},
