@@ -8,7 +8,7 @@ export const schemaFieldsInfo = [
   {
     schemaName: 'full_address',
     text: {
-      'en': 'Full address',
+      'en': 'Any location',
     },
   },
   {
