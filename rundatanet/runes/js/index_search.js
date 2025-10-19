@@ -2,6 +2,18 @@
 This file contains code to do search in the inscriptions
 */
 
+/**
+ * Normalizes whitespace in a string by replacing all whitespace characters
+ * (including non-breaking spaces, tabs, etc.) with regular spaces.
+ * This ensures consistent matching regardless of the type of whitespace used.
+ * 
+ * @param {*} value - The value to normalize
+ * @returns {string} The normalized string
+ */
+function normalizeWhitespace(value) {
+  return String(value).replace(/\s/g, ' ');
+}
+
 // Standard comparison operators that can be used both in QueryBuilderParser and custom search functions
 export const operators = {
   equal: (a, b) => a == b,
@@ -14,12 +26,12 @@ export const operators = {
   greater_or_equal: (a, b) => a >= b,
   between: (a, b) => b[0] <= a && a <= b[1],
   not_between: (a, b) => !(b[0] <= a && a <= b[1]),
-  begins_with: (a, b) => String(a).startsWith(String(b)),
-  not_begins_with: (a, b) => !String(a).startsWith(String(b)),
-  contains: (a, b) => String(a).includes(String(b)),
-  not_contains: (a, b) => !String(a).includes(String(b)),
-  ends_with: (a, b) => String(a).endsWith(String(b)),
-  not_ends_with: (a, b) => !String(a).endsWith(String(b)),
+  begins_with: (a, b) => normalizeWhitespace(a).startsWith(normalizeWhitespace(b)),
+  not_begins_with: (a, b) => !normalizeWhitespace(a).startsWith(normalizeWhitespace(b)),
+  contains: (a, b) => normalizeWhitespace(a).includes(normalizeWhitespace(b)),
+  not_contains: (a, b) => !normalizeWhitespace(a).includes(normalizeWhitespace(b)),
+  ends_with: (a, b) => normalizeWhitespace(a).endsWith(normalizeWhitespace(b)),
+  not_ends_with: (a, b) => !normalizeWhitespace(a).endsWith(normalizeWhitespace(b)),
   is_empty: (a) => a === '' || a === null || a === undefined || (Array.isArray(a) && a.length === 0),
   is_not_empty: (a) => a !== '' && a !== null && a !== undefined && (!Array.isArray(a) || a.length > 0),
   is_null: (a) => a === null || a === undefined,

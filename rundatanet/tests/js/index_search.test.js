@@ -338,18 +338,15 @@ test('search by style begins_with Pr 4 should find Öl 4', () => {
   
   const results = doSearch(rules, dbMap.values());
   
-  console.log('Number of results:', results.length);
-  console.log('First 5 results:', results.slice(0, 5).map(r => ({ sig: r.signature_text, style: r.style })));
-  
-  // Check what Öl 4 has in the database
-  const ol4FromDb = Array.from(dbMap.values()).find(r => r.signature_text === 'Öl 4');
-  console.log('Öl 4 from DB:', { sig: ol4FromDb?.signature_text, style: ol4FromDb?.style });
-  
   // Find if Öl 4 is in the results
   const ol4 = results.find(r => r.signature_text === 'Öl 4');
   
   assert.ok(ol4, 'Should find Öl 4 in results');
-  assert.is(ol4.style, 'Pr 4', 'Öl 4 should have style "Pr 4"');
+  // The style field may contain non-breaking spaces, so we normalize for comparison
+  assert.is(ol4.style.replace(/\s/g, ' '), 'Pr 4', 'Öl 4 should have style "Pr 4" (normalized)');
+  
+  // Verify we're finding many more results now (not just 3)
+  assert.ok(results.length > 100, `Should find many results (found ${results.length})`);
 });
 
 
