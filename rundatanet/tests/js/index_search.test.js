@@ -318,6 +318,36 @@ test('search inscription via year range', () => {
   assert.is(results.length, expectedCount, `Should find ${expectedCount} inscriptions`);
 });
 
+// Test for style search - Issue: "Öl 4" has style "Pr 4" but search for "begins_with Pr 4" doesn't find it
+test('search by style begins_with Pr 4 should find Öl 4', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'style',
+        field: 'style',
+        type: 'string',
+        input: 'text',
+        operator: 'begins_with',
+        value: 'Pr 4',
+      }
+    ],
+    not: false,
+    valid: true
+  };
+  
+  const results = doSearch(rules, dbMap.values());
+  
+  // Find if Öl 4 is in the results
+  const ol4 = results.find(r => r.signature_text === 'Öl 4');
+  
+  assert.ok(ol4, 'Should find Öl 4 in results');
+  // The style field may contain non-breaking spaces, so we normalize for comparison
+  assert.is(ol4.style.replace(/\s/g, ' '), 'Pr 4', 'Öl 4 should have style "Pr 4" (normalized)');
+  
+  // Verify we're finding many more results now (not just 3)
+  assert.ok(results.length > 100, `Should find many results (found ${results.length})`);
+});
 
 
 test.run();

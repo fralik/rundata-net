@@ -278,3 +278,7 @@ rundatanet/media/
 
 # do not put environment file under version control!
 .env
+
+# Built JavaScript files
+rundatanet/static/runes/*.js
+rundatanet/static/runes/*.js.map
