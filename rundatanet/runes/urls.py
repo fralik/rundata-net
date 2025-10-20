@@ -13,8 +13,8 @@ sitemaps = {
 
 app_name = "runes"
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="runes/index.html"), name="index"),
-    path("m", TemplateView.as_view(template_name="runes/index_new.html"), name="index_new"),
+    path("v1", TemplateView.as_view(template_name="runes/index.html"), name="index_v1"),
+    path("", TemplateView.as_view(template_name="runes/index_new.html"), name="index"),
     # path('master', views.master),
     path("about/", TemplateView.as_view(template_name="runes/about.html"), name="about"),
     path("references/", TemplateView.as_view(template_name="runes/references.html"), name="references"),
