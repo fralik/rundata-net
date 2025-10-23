@@ -170,13 +170,6 @@
       .selectize-control {
         min-width: 400px;
       }
-      /* Make QueryBuilder optgroup labels bold */
-      .query-builder .form-control optgroup {
-        font-weight: bold;
-      }
-      .query-builder select optgroup {
-        font-weight: bold;
-      }
     </style>
   </head>
 <body style="">
@@ -1489,7 +1482,7 @@ function onDbLoaded() {
     id: 'material_type',
     field: 'materialType_id',
     label: 'Material type',
-    optgroup: "gr_design",
+    optgroup: "other",
     type: 'string',
     plugin: 'autoComplete',
     plugin_config: {
@@ -1520,12 +1513,12 @@ function onDbLoaded() {
   ];
 
   const optGroups = {
-    "gr_inscription": "Inscription",
+    "gr_signature": {
+      "en": "Inscription ID",
+      "sv": "Signatura",
+    },
     "gr_texts": "Texts",
-    "gr_location": "Location",
-    "gr_time_period": "Time Period",
-    "gr_design": "Design",
-    "gr_more_info": "More information",
+    "other": "---",
   };
 
   const signature_text_autocomplete_cfg = {
@@ -1566,7 +1559,7 @@ function onDbLoaded() {
     // filters within a group will be sorted alphabetically
     {
       id: 'signature_text',
-      optgroup: "gr_inscription",
+      optgroup: "gr_signature",
       field: 'signature_text',
       label: humanNameForColumnName('signature_text'),
       type: 'string',
@@ -1614,10 +1607,10 @@ function onDbLoaded() {
       operators: text_operators,
     }),
     prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
-    prepareAutoComplete('carver', {optgroup: "gr_design"}),
+    prepareAutoComplete('carver'),
     {
       id: 'signature_country',
-      optgroup: "gr_location",
+      optgroup: "gr_signature",
       field: 'signature_text',
       label: 'Country or Swedish province',
       type: 'string',
@@ -1656,27 +1649,27 @@ function onDbLoaded() {
         maxItems: null,
       },
     },
-    prepareAutoComplete('found_location', {optgroup: "gr_location"}),
-    prepareAutoComplete('parish', {optgroup: "gr_location"}),
-    prepareAutoComplete('district', {optgroup: "gr_location"}),
-    prepareAutoComplete('municipality', {optgroup: "gr_location"}),
-    prepareAutoComplete('current_location', {optgroup: "gr_location"}),
-    prepareAutoComplete('original_site', {optgroup: "gr_location"}),
-    prepareAutoComplete('rune_type', {optgroup: "gr_design"}),
-    prepareAutoComplete('dating', {optgroup: "gr_time_period"}),
-    prepareIntegerField('year_from', {optgroup: "gr_time_period"}),
-    prepareIntegerField('year_to', {optgroup: "gr_time_period"}),
-    prepareAutoComplete('material', {optgroup: "gr_design"}),
-    prepareAutoComplete('style', {optgroup: "gr_time_period"}),
-    prepareAutoComplete('reference', {optgroup: "gr_more_info"}),
-    prepareAutoComplete('additional', {optgroup: "gr_more_info"}),
-    prepareAutoComplete('objectInfo', {optgroup: "gr_design"}),
-    prepareAutoComplete('runes_personalname', {optgroup: "gr_texts"}),
-    prepareBooleanRule({'r':'has_personal_name', 'l':'Has personal name?', 'f':'num_names', 'v':1, 'optgroup': 'gr_texts'}),
+    prepareAutoComplete('found_location'),
+    prepareAutoComplete('parish'),
+    prepareAutoComplete('district'),
+    prepareAutoComplete('municipality'),
+    prepareAutoComplete('current_location'),
+    prepareAutoComplete('original_site'),
+    prepareAutoComplete('rune_type'),
+    prepareAutoComplete('dating'),
+    prepareIntegerField('year_from'),
+    prepareIntegerField('year_to'),
+    prepareAutoComplete('material'),
+    prepareAutoComplete('style'),
+    prepareAutoComplete('reference'),
+    prepareAutoComplete('additional'),
+    prepareAutoComplete('objectInfo'),
+    prepareAutoComplete('runes_personalname'),
+    prepareBooleanRule({'r':'has_personal_name', 'l':'Has personal name?', 'f':'num_names', 'v':1}),
     {
       id: 'alternatives',
       label: 'Has alternative(s)?',
-      optgroup: "gr_inscription",
+      optgroup: "other",
       type: 'integer',
       input: 'radio',
       field: 'signature_id',
@@ -1687,12 +1680,12 @@ function onDbLoaded() {
       default_value: 1,
       operators: ['alternatives_in'],
     },
-    prepareBooleanRule({'r':'lost', 'l':'Is lost?', 'optgroup': 'gr_inscription'}),
-    prepareBooleanRule({'r':'new_reading', 'l':'New reading?', 'optgroup': 'gr_inscription'}),
+    prepareBooleanRule({'r':'lost', 'l':'Is lost?'}),
+    prepareBooleanRule({'r':'new_reading', 'l':'New reading?'}),
     {
       id: 'num_crosses',
       label: 'Number of crosses',
-      optgroup: "gr_design",
+      optgroup: "other",
       type: 'integer',
       input: 'number',
       validation: {
@@ -1710,7 +1703,7 @@ function onDbLoaded() {
       id: 'cross_form',
       label: 'Cross form',
       type: 'string',
-      optgroup: "gr_design",
+      optgroup: "other",
       operators: ['cross_form'],
       input: function (rule, name) {
         //let $container = rule.$el.find('.rule-value-container');
@@ -1741,7 +1734,7 @@ function onDbLoaded() {
       },
     },
     materialTypeFilter,
-    prepareBooleanRule({'r':'ornamental', 'l':'Is pure ornamental?', 'v': 1, 'optgroup': 'gr_design'}),
+    prepareBooleanRule({'r':'ornamental', 'l':'Is pure ornamental?', 'v': 1}),
   ];
 
   // sort into groups
