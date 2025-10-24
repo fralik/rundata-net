@@ -12,13 +12,15 @@ const queryBuilderPlugins = {
 };
 
 const optGroups = {
-  "gr_signature": {
+  "gr_inscription": {
     "en": "Inscription",
     "sv": "Signatura",
   },
   "gr_texts": "Texts",
   "gr_location": "Location",
-  "other": "---",
+  "gr_time_period": "Time Period",
+  "gr_design": "Design",
+  "gr_more_info": "More information",
 };
 
 // QueryBuilder plugin for case-(in)sensitive search
@@ -577,7 +579,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
   let queryBuilderFilters = [
     {
       id: 'inscription_id',
-      optgroup: 'gr_signature',
+      optgroup: 'gr_inscription',
       field: 'signature_text',
       label: getHumanName('signature_text'),
       type: 'string',
@@ -597,10 +599,10 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       plugin: 'tomSelect',
       plugin_config: signature_text_tomselect_cfg,
     },
-    prepareAutoComplete('carver', dbMap, getHumanName),
+    prepareAutoComplete('carver', dbMap, getHumanName, { optgroup: 'gr_design' }),
     {
       id: 'inscription_country',
-      optgroup: "gr_signature",
+      optgroup: "gr_location",
       field: 'signature_text',
       label: 'Country or Swedish province',
       type: 'string',
@@ -659,25 +661,25 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     prepareAutoComplete('district', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('municipality', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('current_location', dbMap, getHumanName, { optgroup: 'gr_location' }),
-    prepareAutoComplete('original_site', dbMap, getHumanName),
+    prepareAutoComplete('original_site', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('parish_code', dbMap, getHumanName, { optgroup: 'gr_location' }),
-    prepareAutoComplete('rune_type', dbMap, getHumanName),
-    prepareAutoComplete('dating', dbMap, getHumanName),
-    prepareIntegerRule('year_from', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
-    prepareIntegerRule('year_to', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
-    prepareAutoComplete('style', dbMap, getHumanName),
-    prepareAutoComplete('material', dbMap, getHumanName),
-    prepareAutoComplete('material_type', dbMap, getHumanName),
-    prepareAutoComplete('objectInfo', dbMap, getHumanName),
-    prepareAutoComplete('reference', dbMap, getHumanName),
-    prepareAutoComplete('additional', dbMap, getHumanName),
-    prepareIntegerRule('num_crosses', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'] }),
+    prepareAutoComplete('rune_type', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    prepareAutoComplete('dating', dbMap, getHumanName, { optgroup: 'gr_time_period' }),
+    prepareIntegerRule('year_from', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_time_period' }),
+    prepareIntegerRule('year_to', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_time_period' }),
+    prepareAutoComplete('style', dbMap, getHumanName, { optgroup: 'gr_time_period' }),
+    prepareAutoComplete('material', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    prepareAutoComplete('material_type', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    prepareAutoComplete('objectInfo', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    prepareAutoComplete('reference', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
+    prepareAutoComplete('additional', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
+    prepareIntegerRule('num_crosses', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_design' }),
     {
       id: 'cross_form',
       field: 'crosses',
       label: getHumanName('cross_form'),
       operators: ['cross_form'],
-      optgroup: 'other',
+      optgroup: 'gr_design',
       input: function (rule, name) {
         // this is a bit of a hack as getValuesFromAllData function is intended for other use
         const allCrossForms = viewModel.getAllCrossForms().map(item => {
@@ -716,7 +718,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       id: 'has_personal_name',
       label: "Has personal name(s)?",
       field: 'num_names',
-      optgroup: 'other',
+      optgroup: 'gr_texts',
       type: 'integer',
       input: 'radio',
       values: [
