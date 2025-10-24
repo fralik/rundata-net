@@ -12,7 +12,10 @@ const queryBuilderPlugins = {
 };
 
 const optGroups = {
-  "gr_inscription": "Inscription",
+  "gr_inscription": {
+    "en": "Inscription",
+    "sv": "Signatura",
+  },
   "gr_texts": "Texts",
   "gr_location": "Location",
   "gr_time_period": "Time Period",
