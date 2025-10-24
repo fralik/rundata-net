@@ -194,4 +194,51 @@ test('getValuesFromAllData() with signature_text', () => {
   assert.is(suggested.length, 8, 'Should return 8 values (5 non-empty + 3 aliases)');
 });
 
+test('sortGroupsByOrder() maintains group order for sorted input', () => {
+  // This test verifies that filters already sorted by optGroups order remain in correct order
+  const optGroupsOrder = ['gr_inscription', 'gr_texts', 'gr_location', 'gr_time_period', 'gr_design', 'gr_more_info'];
+  
+  const items = [
+    { id: 'inscription_id', label: 'Inscription ID', optgroup: 'gr_inscription' },
+    { id: 'normalization', label: 'Normalization', optgroup: 'gr_texts' },
+    { id: 'translation', label: 'Translation', optgroup: 'gr_texts' },
+    { id: 'country', label: 'Country', optgroup: 'gr_location' },
+    { id: 'parish', label: 'Parish', optgroup: 'gr_location' },
+    { id: 'dating', label: 'Dating', optgroup: 'gr_time_period' },
+    { id: 'year_from', label: 'Year From', optgroup: 'gr_time_period' },
+    { id: 'carver', label: 'Carver', optgroup: 'gr_design' },
+    { id: 'material', label: 'Material', optgroup: 'gr_design' },
+    { id: 'reference', label: 'Reference', optgroup: 'gr_more_info' },
+  ];
+  
+  const result = sortGroupsByOrder(items, optGroupsOrder);
+  
+  // Verify the groups appear in the correct order
+  let currentGroupIndex = -1;
+  let lastGroup = '';
+  
+  for (const item of result) {
+    const groupIndex = optGroupsOrder.indexOf(item.optgroup);
+    
+    // Group index should never decrease (groups should stay in order)
+    assert.ok(groupIndex >= currentGroupIndex, 
+      `Group ${item.optgroup} (index ${groupIndex}) should not appear before ${lastGroup} (index ${currentGroupIndex})`);
+    
+    if (groupIndex > currentGroupIndex) {
+      currentGroupIndex = groupIndex;
+      lastGroup = item.optgroup;
+    }
+  }
+  
+  // Verify all groups are present
+  const resultGroups = [...new Set(result.map(item => item.optgroup))];
+  assert.is(resultGroups.length, 6, 'All 6 groups should be present');
+  
+  // Verify the first item is from gr_inscription
+  assert.is(result[0].optgroup, 'gr_inscription', 'First item should be from gr_inscription');
+  
+  // Verify the last item is from gr_more_info
+  assert.is(result[result.length - 1].optgroup, 'gr_more_info', 'Last item should be from gr_more_info');
+});
+
 test.run();
