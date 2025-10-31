@@ -18,17 +18,7 @@
     </script>
     {% endif %}
 
-    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/themes/default/style.min.css" integrity="sha512-P8BwDSUInKMA7I116Z1RFg/Dfk85uFdliEUYO7vQlwtxLVMNvZimfMAQsaf++9EhlAGOVX6yhDQAIY3/70jDUg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-     integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-     crossorigin=""/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
-    <link href="{% static 'runes/leaflet.fullscreen/leaflet.fullscreen.css' %}" rel='stylesheet' />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.css" integrity="sha256-b1FUshftUDgzY/VtFMamPDs0o3GER52S9Tk8IK+wOoE=" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
@@ -37,7 +27,7 @@
     <meta name="msapplication-TileColor" content="#2b5797">
     <meta name="theme-color" content="#ffffff">
 
-    <style type="text/css">
+    <!--<style type="text/css">
       .my-fixed-height {
         max-height: 500px;
         min-height: 500px;
@@ -47,7 +37,13 @@
       .jstree-scrollable {
         overflow-y: scroll;
         max-height: 100%;
-        height: 100%;
+        height: 100% !important;
+        width: 100%;
+        min-width: 100%;
+        border-width: 0px;
+      }
+      option:hover {
+        background-color: #f0f0f0;
       }
       .border-1 {
         border: 1px solid #ccc;
@@ -84,9 +80,6 @@
       span.null {
         font-weight: bold;
         color: #CCCCCC;
-      }
-      .white-text {
-        color:#fff!important;
       }
       .navbar-static-top {
         margin-bottom: 0px;
@@ -162,18 +155,218 @@
       .py-5 {
         padding-bottom: 3rem !important;
       }
+
+      .selectize-control {
+        min-width: 400px;
+      }
+    </style>-->
+    <style>
+      .rundata-navbar {
+        border-bottom: 1px solid #e7e7e7;
+      }
+      #alertObj {
+        display: none;
+      }
+      .my-fixed-height {
+        max-height: 500px;
+        min-height: 500px;
+        height: 500px;
+        margin-bottom: 15px;
+      }
+      .jstree-scrollable {
+        overflow-y: scroll;
+        max-height: 100%;
+        height: 100%;
+      }
+      .btn-primary-outline {
+        background-color: transparent;
+        border-color: #ccc;
+      }
+      .btn-default {
+        color: #333;
+        background-color: #fff;
+        border-color: #ccc;
+      }
+      .btn-default:hover {
+        background-color: #e6e6e6;
+        border-color: #adadad;
+      }
+      /* Used in display options dialog */
+      .btn-block+.btn-block {
+        margin-top: 5px;
+      }
+      .btn-no-hover {
+        &:hover {
+          background-color: var(--bs-btn-bg);
+          color: var(--bs-btn-color);
+        }
+        &:focus {
+          background-color: var(--bs-btn-bg);
+          color: var(--bs-btn-color);
+        }
+        &.active {
+          &:hover {
+            background-color: var(--bs-btn-active-bg);
+            color: var(--bs-btn-active-color);
+          }
+          &:focus {
+            background-color: var(--bs-btn-active-bg);
+            color: var(--bs-btn-active-color);
+          }
+        }
+      }
+
+      .inscription-section {
+        border-bottom: 2px solid #999;
+      }
+
+      table.crosses {
+	      text-align: center;
+	      border-collapse: collapse;
+        margin-left: 1.5em;
+      }
+
+      table.crossforms th:first-child {
+        border-left: none;
+        text-align: right;
+      }
+      table.crosses tbody>tr {
+        border-top: solid 1px #999999;
+      }
+      table.crosses tbody:only-child>tr {
+        border-top: none;
+      }
+      table.crosses tbody td,
+      table.crosses thead th {
+        border-left: solid 1px #999999;
+        padding: 0.25em;
+      }
+      span.null {
+        font-weight: bold;
+        color: #CCCCCC;
+      }
+      .select2-results__option[aria-selected=true] {
+        display: none;
+      }
+      .highlight {
+        color: red;
+        font-weight: bold;
+      }
+
       .pb-6,
       .py-6 {
         padding-bottom: 9rem !important;
       }
 
-      .selectize-control {
-        min-width: 400px;
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" integrity="sha512-Dww58CIezLb4kFGtZ8Zlr85kRDwJgyPhe3gVABsvnJruZuYn3xCTpLbE3iBT5hGbrfCytJnZ4aiI3MxN0p+NVQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.82.0/dist/L.Control.Locate.min.css" integrity="sha256-3PXa1eIJsM3owBQDkWnv+w0ikd9zv9OJOOy2asvgGfA=" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" integrity="sha512-ENrTWqddXrLJsQS2A86QmvA17PkJ0GVm1bqj5aTgpeMAfDKN2+SIOLpKG8R/6KkimnhTb+VW5qqUHB/r1zaRgg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" integrity="sha512-fYyZwU1wU0QWB4Yutd/Pvhy5J1oWAwFXun1pt+Bps04WSe4Aq6tyHlT4+MHSJhD8JlLfgLuC4CbCnX5KHSjyCg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css" integrity="sha512-A5OJVuNqxRragmJeYTW19bnw9M2WyxoshScX/rGTgZYj5hRXuqwZ+1AVn2d6wYTZPzPXxDeAGlae0XwTQdXjQA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- begin querybuilder-related css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.css" integrity="sha256-vW5UjM/Ka9/jIY8I5s5KcudaTRWh/cCGE1ZUsrJvlI0=" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css" integrity="sha512-TFee0335YRJoyiqz8hA8KV3P0tXa5CpRBSoM0Wnkn7JoJx1kaq1yXL/rb8YFpWXkMOjRcv5txv+C6UluttluCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />-->
+    <link rel="stylesheet" href="{% static 'runes/pixabay/jquery.auto-complete.css' %}" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@3.0.0/dist/css/query-builder.default.min.css">
+    <!-- end querybuilder-related css -->
+
+    <!-- modifications for query builder to make it responsive -->
+    <style>
+      @media (max-width: 768px) {
+        .query-builder .rule-container .rule-filter-container,
+        .query-builder .rule-container .rule-operator-container,
+        .query-builder .rule-container .rule-value-container {
+          display: block;
+          width: 100%;
+          margin: 5px 0;
+        }
+
+        .query-builder .rule-container .rule-value-container {
+          border-left: none;
+          padding-left: 0;
+          border-top: 1px solid #DDD;
+          padding-top: 5px;
+        }
+
+        .query-builder .form-control {
+          width: 100%;
+        }
+
+        .query-builder .rule-container {
+          padding: 10px;
+          display: block !important;
+        }
+
+        .query-builder .rule-header {
+          margin-bottom: 5px;
+        }
       }
     </style>
   </head>
-<body style="">
-  <nav class="navbar navbar-default navbar-static-top">
+<body>
+  <nav class="navbar navbar-expand-md bg-body-tertiary rundata-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Rundata-net</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Map
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" id="mHideMap">Hide Map</a></li>
+              <li>
+                <div class="dropdown-item">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
+                    <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div class="dropdown-item"><div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="chkShowOriginalLocation" aria-label="Checkbox for showing original location">
+                  <label class="form-check-label" for="chkShowOriginalLocation">Show inscriptions based on original location</label>
+                </div></div>
+              </li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Import/Export
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#containerRuleIo">Search parameters</a></li>
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalResultsIo">Results</a></li>
+            </ul>
+          </li>
+        </ul>
+        <form class="d-flex" role="about">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="{% url 'runes:about' %}" target="_blank">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+          </ul>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <!--<nav class="navbar navbar-expand-md rundata-navbar">
     <div class="container">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -214,93 +407,116 @@
           <li class=""><a href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
           <li class=""><a href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
         </ul>
-      </div> <!--/.navbar-collapse-->
+      </div>
     </div>
-  </nav>
+  </nav>-->
 
   <div class="container-fluid">
     <div class="row">
       <div class="col alert alert-danger" role="alert" id="alertObj"></div>
     </div>
 
+    <!--<div class="row border border-1">
+      <div class="col-md-2 p-0 bg-warning">f</div>
+      <div class="col-md-6 p-0 bg-light">f</div>
+      <div class="col-md-4 p-0 bg-success">f</div>
+    </div>-->
+
     <div class="row">
-      <div id="leftPanel" class="col-md-2 col-sm-2 my-fixed-height table-bordered" style="padding: 0;">
-        <div class="list-group group-full-height" style="padding-right: 0px; position: relative;">
-          <div id="jstree" class="jstree-scrollable"></div>
-        </div>
+      <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-fixed-height my-2 me-3 my-md-0 ms-md-2">
+        <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
+        <div id="jstree" class="overflow-scroll h-100"></div>
+        <!--<input type="text" class="form-control" id="txtQuickSearch" placeholder="Quick inscription selection, just type ID">-->
       </div>
 
-      <div id="mainDisplay" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false" class="col-md-6 col-sm-8 table-bordered my-fixed-height pre-scrollable">
+      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border my-2 me-3 my-md-0 ms-md-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <div id="mapDisplay" class="col-md-4 col-sm-2 my-fixed-height"></div>
+      <div id="mapDisplayWrapper" class="col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
+        <div id="mapDisplay" class="my-fixed-height"></div>
+      </div>
     </div>
 
     <div class="row">
-      <div class="col-md-2" id="lblNumAvailable">6815 inscriptions.</div>
-      <div class="col-md-6 col-sm-8">&nbsp;</div>
-      <div class="col-md-4 col-sm-2">
-      </div>
+      <div class="col-md-auto">Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
+      <div class="col-md-auto">Number of words: <span id="outNumWords">0</span></div>
+      <div class="col-md-auto">Number of personal names: <span id="outNumFoundNames">0</span></div>
     </div>
     <div class="row">
       <div class="col-xs-12">&nbsp;</div>
     </div>
 
-    <form class="row pb-3 vertical-align" role="group">
+    <form class="row pb-1 vertical-align" role="group">
       <div class="col-md-2">
         Control buttons:
       </div>
-      <div class="col-md-10" aria-label="">
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#divFormatDialog">Choose what to show about each inscription</button>
+      <div class="col" aria-label="">
+        <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#divFormatDialog">Choose what to show about each inscription</button>
       </div>
     </form>
 
-    <section role="group" class="row vertical-align py-3">
-      <div class="col-md-2">Copy symbols to clipboard:</div>
-      <div class="col-md-10 btn-group" role="group">
-        <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
-        <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
-        <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
-        <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
-        <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
-        <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
-        <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
-        <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
-        <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
-        <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
-        <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
-        <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
-        <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
-        <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
-        <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
-        <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
-        <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
-        <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+    <section class="row vertical-align">
+      <div class="col-md-2">Copy symbol to clipboard:</div>
+      <div class="col-md-10">
+        <div class="btn-group flex-wrap" role="group">
+          <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
+          <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
+          <button type="button" class="btn btn-default clip" id="btnAaSmall">å</button>
+          <button type="button" class="btn btn-default clip" id="btnAa">Å</button>
+          <button type="button" class="btn btn-default clip" id="btnAaUmlautSmall">ä</button>
+          <button type="button" class="btn btn-default clip" id="btnAaUmlaut">Ä</button>
+          <button type="button" class="btn btn-default clip" id="btnTh">þ</button>
+          <button type="button" class="btn btn-default clip" id="btnEn">ñ</button>
+          <button type="button" class="btn btn-default clip" id="btnDh">ð</button>
+          <button type="button" class="btn btn-default clip" id="btnDh">ï</button>
+          <button type="button" class="btn btn-default clip" id="btnAe">æ</button>
+          <button type="button" class="btn btn-default clip" id="btnAe">Æ</button>
+          <button type="button" class="btn btn-default clip" id="btnOe">ø</button>
+          <button type="button" class="btn btn-default clip" id="btnOe">Ø</button>
+          <button type="button" class="btn btn-default clip" id="btnOe2">œ</button>
+          <button type="button" class="btn btn-default clip" id="btnOe2">Œ</button>
+          <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
+          <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
+        </div>
       </div>
     </section>
 
     <div class="row py-3" role="group" aria-label="">
-      <div class="col-md-offset-2 col-md-3">
+      <div class="col-auto col-md-3 offset-md-2">
         <button type="button" class="col-md-12 btn btn-success" id="btnSearch">Search</button>
       </div>
-      <div class="col-md-2">
+      <div class="col-auto col-md-2">
         <button type="button" class="col-md-12 btn btn-default" id="btnResetSearch">Reset search</button>
       </div>
-      <button type="button" class="btn btn-default col-md-2" id="btnClearRules">Clear search parameters</button>
+      <div class="col-auto col-md-2">
+        <button type="button" class="btn btn-default col-md-12" id="btnClearRules">Clear search parameters</button>
+      </div>
     </div>
 
+    <div class="row mb-3">
+      <div class="col-2">
+        <span>Enter your search in natural language. For example, 'Sök på alla inskrifter som i sin translitterering innehåller ordet stan'</span>
+      </div>
+      <div class="col">
+        <textarea id="searchTextInput" class="form-control" rows="4" placeholder="Enter search query here..."></textarea>
+      </div>
+      <div class="col-2">
+        <button class="btn btn-success" type="button" id="btnText2Rules">Convert to search parameters</button>
+      </div>
+    </div>
+
+    <!-- pb-6 is our custom class to make more vertical space -->
     <div class="row pb-6">
-      <div id="builder" class="col-xs-12"></div>
+      <div id="builder" class="col"></div>
     </div>
-
   </div>
 
   <div id="divFormatDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="divFormatDialogLabel">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title" id="divFormatDialogLabel">Configure inscription display</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" style="padding-top: 1em; padding-left: 1em; padding-right: 1em;">
           <div class="row" style="padding-left: 1em; padding-right: 1em;">
@@ -317,36 +533,36 @@
               <select name="from[]" id="multiselect" class="form-control" size="8" multiple="multiple"></select>
               <div class="row">
                 <form role="form" class="col-sm-6">
-                  <div class="checkbox">
-                    <input type="checkbox" id="chkDisplayHeaders" checked>
-                    <label for="chkDisplayHeaders">Display headers</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkDisplayHeaders" checked>
+                    <label class="form-check-label" for="chkDisplayHeaders">Display headers</label>
                   </div>
                 </form>
               </div>
             </div>
 
             <div class="col-sm-2">
-              <button type="button" id="multiselect_rightAll" class="btn btn-block"><i class="glyphicon glyphicon-forward"></i></button>
-              <button type="button" id="multiselect_rightSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
-              <button type="button" id="multiselect_leftSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
-              <button type="button" id="multiselect_leftAll" class="btn btn-block"><i class="glyphicon glyphicon-backward"></i></button>
+              <button type="button" id="multiselect_rightAll" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-double-right"></i></button>
+              <button type="button" id="multiselect_rightSelected" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-right"></i></button>
+              <button type="button" id="multiselect_leftSelected" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-left"></i></button>
+              <button type="button" id="multiselect_leftAll" class="btn btn-secondary w-100 btn-block btn-no-hover"><i class="bi bi-chevron-double-left"></i></button>
             </div>
 
             <div class="col-sm-5">
               <select name="to[]" id="multiselect_to" class="form-control" size="8" multiple="multiple"></select>
-              <div class="row">
+              <div class="row mt-2">
                 <div class="col-sm-6">
-                  <button type="button" id="multiselect_move_up" class="btn btn-block"><i class="glyphicon glyphicon-arrow-up"></i></button>
+                  <button type="button" id="multiselect_move_up" class="btn btn-secondary btn-block w-100"><i class="bi bi-chevron-up"></i></button>
                 </div>
                 <div class="col-sm-6">
-                  <button type="button" id="multiselect_move_down" class="btn btn-block"><i class="glyphicon glyphicon-arrow-down"></i></button>
+                  <button type="button" id="multiselect_move_down" class="btn btn-secondary btn-block w-100"><i class="bi bi-chevron-down"></i></button>
                 </div>
               </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal" id="btnDismissDisplayFormat">Close</button>
           <button type="button" class="btn btn-primary" id="btnApplyDisplayFormat">Apply changes</button>
         </div>
       </div>
@@ -358,8 +574,8 @@
       <div class="modal-content">
 
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h4>
+          <h5 class="modal-title" id="containerRuleIoLabel">Export/import search parameters</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -385,7 +601,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
         </div>
 
       </div>
@@ -396,8 +612,8 @@
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="divResultsIoLabel">Export search results, import signatures</h4>
+          <h5 class="modal-title" id="divResultsIoLabel">Export search results, import signatures</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
@@ -425,34 +641,26 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
         </div>
 
   </section>
 
   <aside id="loading" class="loading-screen" style="position:fixed; top:0; right:0; bottom:0; left:0; z-index:9999; background-color: #000; opacity: 0.6;">
-    <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4" style="position:absolute; top:50%; margin-top:-7em">
-      <div class="page-header">
-        <i class="text-primary fa fa-spin fa-fw pull-left fa-spinner fa-2x" style="text-shadow: 0px 0px 0ex;"></i>
-        <hgroup class="" style="text-shadow: 0px 0px 0ex;">
-          <h4 ng-switch-default="" class="white-text" id="loading-main-text">
+    <div class="col-sm-8 col-md-6 col-lg-4 position-absolute top-50 start-50 translate-middle">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border text-primary me-3" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div>
+          <h4 class="text-white mb-0">
             Loading<br>
-            <small class="white-text" id="loading-sub-text">It can take up to a minute.</small>
+            <small class="text-white" id="txtLoadingDescription"></small>
           </h4>
-        </hgroup>
+        </div>
       </div>
     </div>
   </aside>
-
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<!-- query builder styles -->
-<!-- This is a known working version of selectize, versions up to 15.2 do not work as intended -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.14.0/css/selectize.bootstrap5.min.css" integrity="sha512-gPfqgXe/pl1EpOS++KmVkF5Ca6C/Kj/4K/bt+n9nt6FkkeralgnL2907thbVEmYhacdqChfgw8XTlyCh2be4+A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css" integrity="sha512-ARJR74swou2y0Q2V9k0GbzQ/5vJ2RBSoCWokg4zkfM29Fb3vZEQyv0iWBMW/yvKgyHSR/7D64pFMmU8nYmbRkg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link href="https://cdnjs.cloudflare.com/ajax/libs/awesome-bootstrap-checkbox/0.3.7/awesome-bootstrap-checkbox.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/2.7.0/css/query-builder.default.min.css" integrity="sha512-3RXOBSeNrHg76YEaO0rTrJNAk+slrOFD9NkxnNKkZ0+JQGc0iIhXS5g0UNNYEDH5nV9uuD9FSLzEt7vj3xqA/g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link href="{% static 'runes/jquery-ui/jquery-ui.min.css' %}" rel="stylesheet">
-<!-- end of query builder styles -->
 
 <script>
 function isSafari() {
@@ -460,2618 +668,115 @@ function isSafari() {
 }
 </script>
 
-<script src="https://unpkg.com/clipboard@2.0.0/dist/clipboard.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/jstree.min.js" integrity="sha512-z8+IQvZEPLZTS3Dj7gklMVJfJMNbQjIQwmKMwAuX+P9KkzEmDIiXybdXsbWuoMlQ942SfyNafeu6JdOGwzCx0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.3.0/bootbox.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js" integrity="sha512-KMs6GZJsWI3DXBlu2QMbVdaHJbFrzVDYeccH/Ipuvtg3IOHnABXwUZbIhr5ybFSNYL6Bde1dCQ37xtszsBZcSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<!-- begin of query builder js -->
-<script src="{% static 'query-builder/moment.min.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.14.0/js/selectize.min.js" integrity="sha512-VReIIr1tJEzBye8Elk8Dw/B2dAUZFRfxnV2wbpJ0qOvk57xupH+bZRVHVngdV04WVrjaMeR1HfYlMLCiFENoKw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/js/bootstrap-select.min.js" integrity="sha512-yDlE7vpGDP7o2eftkCiPZ+yuUyEcaBwoJoIhdXv71KZWugFqEphIS3PU60lEkFaz8RxaVsMpSvQxMBaKVwA5xg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/2.7.0/js/query-builder.standalone.min.js" integrity="sha512-xZdPnncEMc0dM2up7iLOoYLfjI2BIDoBA37wWo4S4iIXrHaTctpjfjGSbu/Snif+7YuF/VN6VLUIGJUAjZ4Sqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/interactjs@1.3.3/dist/interact.min.js" integrity="sha256-xDVbjmOet3n1w9fUkbwXlf9M5Kxaji3kq0vRxOOZz+A=" crossorigin="anonymous"></script>
-<script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
-<script src="{% static 'query-builder/my-templates.js' %}"></script>
-<!-- end of query builder js -->
-
-<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet-src.js"
- integrity="sha512-+ZaXMZ7sjFMiCigvm8WjllFy6g3aou3+GZngAtugLzrmPFKFK7yjSri0XnElvCTu/PrifAYQuxZTybAEkA8VOA=="
- crossorigin=""></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js"></script>
-
-<script src="{% static 'runes/multiselect.min.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<!--<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js" integrity="sha512-MSOo1aY+3pXCOCdGAYoBZ6YGI0aragoQsg1mKKBHXCYPIWxamwOE7Drh+N5CPgGI5SA9IEKJiPjdfqWFWmZtRA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+<!--<script type="text/javascript" src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>-->
 <script src="{% static 'runes/pixabay/jquery.auto-complete.min.js' %}"></script>
-<!-- <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script> -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.3/papaparse.min.js" integrity="sha512-AHuRHNDvzJWmGpGhswFB+Akkr1IwuqumT1Po40zlwgjBP1RnoCf3cP/EHBF/3ilfdYaocNQrUrCkE7q8RpN0fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="{% static 'runes/leaflet.fullscreen/Leaflet.fullscreen.min.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.js" integrity="sha256-43FlkezpyRF326OVLB4hJ2nwWATdloa0VVWKR727wI4=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js" integrity="sha512-KMs6GZJsWI3DXBlu2QMbVdaHJbFrzVDYeccH/Ipuvtg3IOHnABXwUZbIhr5ybFSNYL6Bde1dCQ37xtszsBZcSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js" integrity="sha512-javanlE101qSyZ7XdaJMpB/RnKP4S/8jq1we4sy50BfBgXlcVbIJ5LIOyVa2qqnD+aGiD7J6TQ4bYKnL1Yqp5g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.82.0/dist/L.Control.Locate.min.js" integrity="sha256-CRW6hVaCmkqNXZE7/pJBwnC+JxxqttfPC0wvNu/HxUc=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js" integrity="sha512-TiMWaqipFi2Vqt4ugRzsF8oRoGFlFFuqIi30FFxEPNw58Ov9mOy6LgC05ysfkxwLE0xVeZtmr92wVg9siAFRWA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/jstree.min.js" integrity="sha512-Rzhxh2sskKwa+96nRopp/hvGexBzEPG6mnFI6uRy059FZfksJJFYmqDFn050KUDhivXLsT6SvoaEf5iSp2SHjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="{% static 'runes/multiselect.min.js' %}"></script>
+
+<!-- begin of query builder js -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4/dist/js/tom-select.complete.min.js" integrity="sha256-t5cAXPIzePs4RIuA3FejMxOlxXe4QXZXQ7sfKJxNU+Y=" crossorigin="anonymous"></script>
+<script src="{% static 'runes/jquery.tom-select.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js" integrity="sha256-mbK9O9BSYbD9/9uBHmA1oo2AuLgeZ8+aIo53go9GwyY=" crossorigin="anonymous"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js" integrity="sha512-RtZU3AyMVArmHLiW0suEZ9McadTdegwbgtiQl5Qqo9kunkVg1ofwueXD8/8wv3Af8jkME3DDe3yLfR8HSJfT2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder@3.0.0/dist/js/query-builder.standalone.min.js"></script>
+<!-- end of query builder js -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script type="text/javascript" src="{% static 'runes/index.min.js' %}"></script>
 
 <script type="text/javascript">
-var entityMap = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-  '/': '&#x2F;',
-  '`': '&#x60;',
-  '=': '&#x3D;'
-};
+let gSqlDb = null;
+let gJsTreeInscriptions = [];
+// let gDbMap = {}; // Map object. Key - inscription ID, value - inscription object.
+let gAllMarkers = null; // Mapping of all leaflet markers. Key - inscription ID, value - object with keys 'found', 'present'.
+let gMyMap = null;
+let gMarkersLayer = null;
+let inpQueryBuilder = "builder";
+let gViewModel = null; // Global view model for the runic inscriptions
+let gExportInProgress = false;
 
-function escapeHtml (string) {
-  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-    return entityMap[s];
-  });
+function getCrossUrl(crossName) {
+  // It is important that staticBase is written in a file that is processed by the back-end.
+  // Otherwise front-end will not able to make correct URL.
+  const staticBase = "{% static 'runes/images/cross_forms/' %}";
+  return staticBase + crossName + '.png';
 }
 
-// Globals:
-// connection to the DB
-var db = null;
-// original data when no filter is applied.
-// Used as cache, so we can skip querying the db again
-var gOriginalData = [];
-var gOriginalIds = [];
-var gRootIds = []; // Map of parent/root inscription IDs
-var gRootsJson = []; // JSON representation for gRootIds
-var signaturesSelectize = [];
-var formatDialog = [];
-var userSelectedDisplay = []; // list of user selected fields for display per inscription
-var myMap = null; // Global handle to map object
-var mapMarkers = {}; // Collection of created map markers. This is used in order to create
-  // markers only once.
-var markers = []; // Leaflet markers group
-var lastShowHeaders = true; // last value of show headers checkbox in display format dialog
-let gRegExpMap = {}; // Object of all regex expressions
-var gRegExpMapG = {}; // Object of all regex expressions with global flag
-var gWordIndices = {}; // Object that contains matched word indices across inscription text.
-    // Words in this case are based on values prepared for search.
-    // Each entry is an object itself where keys are column names and values
-    // are arrays of matched words. Example entry of gWordIndices:
-    // {search_transliteration: [1, 3, 5]; normalisation_search_norse: [3];}
-var gMatchedWordIndices = {}; // A processed version of gWordIndices. It is a map that provides
-    // information which words are matched for particular signature id. Key is signature id,
-    // values set of matched word indices.
-var gHighlights = {};
-let gSearch2Original = {}; // mapping used for highlighting search results
-var gFoundPersonalNames = 0;
-var gWordVariants = 0;
-// regex that is used to separate words in displayed inscription texts.
-//var gWordSearchRegex = new RegExp("((·|:|×|¤|'|\\+|÷|\\s)+|¶+)+", 'g');
-var gWordSearchRegex = new RegExp("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)", 'g');
-var gWordSearchRegexEsc = new RegExp(escapeHtml("((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)"), 'g');
-var gWordPunctuationRegex = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+");
-var gWordPunctuationRegexEsc = new RegExp(escapeHtml("(·|:|×|¤|'|\\+|÷|¶|\\(|\\)|\\[|\\])+"));
-
-// True while rendering of signature information is in progress.
-var gRenderInProgress = false;
-// True if export is in progress
-var gExportInProgress = false;
-// Global variable that is assigned with timer ID for displaySignatureInfo function call.
-// If it is a valid ID, then we must not execute another call to displaySignatureInfo.
-// Used to accumulate multiple jstree.changed events.
-var gDisplayTimeout = -1;
-
-// Map of aliases. Key is parent ID, value - list of alias names
-// parent ID is SQLite index ID, it is not a signature!
-var gAliasByParent = {};
-
-// This is a key-value representation of all inscriptions in the database.
-// Key is signature (i.e. 'Öl 1'), value is an object where each property is
-// one of the displayFields() and value is it's corresponding value.
-// used in makeMarkers, inscriptions2markup, exportResults
-var gDbAsMap = {};
-
-// Clusterize.js object for main isncription display
-var gMainClusterize = null;
-
-/*
-  direction: 'up' or 'down',
-  iteration: integer
-  maxTries: integer,
-  seekFactor: integer
-*/
-var gClusterizeParams = {};
-var gMainScrollArea = document.getElementById('mainDisplay');
-
-// Key in the local storage under which users display options are saved.
-// display options are information, which is displayed per inscription.
-const gUserSelectedDisplayKey = "userSelectedDisplay";
-
-// defaults.
-userSelectedDisplay = getUserSelectedDisplay();
-
-/////////////////////////////////////
-// variables used for rendering. Have it here for speed.
-/////////////////////////////////////
-let highlightColumns = ['transliteration', 'normalisation_scandinavian', 'normalisation_norse'];
-let customColumns = new Array(...highlightColumns);
-customColumns.push('english_translation');
-const paragraphSymbol = '§';
-
-// An extension of Leaflet marker that provides information about inscription
-MarkerWithData = L.Marker.extend({
-   options: {
-      inscription: '',
-   }
-});
-
-// QueryBuilder plugin for case-(in)sensitive search
-$.fn.queryBuilder.define('case-rule', function(options) {
-  let self = this;
-
-  // Bind events
-  this.on('afterInit', function() {
-    self.$el.on('click.queryBuilder', '[data-case=rule]', function () {
-      let $rule = $(this).closest($.fn.queryBuilder.constructor.selectors.rule_container);
-      let rule = self.getModel($rule);
-      rule.ignoreCase = !rule.ignoreCase;
-      console.log(`afterInit: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
-      // print rule configuration
-      console.log(rule);
-    });
-
-    self.model.on('update', function(e, node, field) {
-      if (node instanceof $.fn.queryBuilder.constructor.Rule && field === 'ignoreCase') {
-        console.log(`update: ${node.id}, ignoreCase: ${node.ignoreCase}`);
-        self.updateRuleCaseIgnore(node);
-      }
-    });
-  });
-
-  // Init case-sensitivity property
-  this.on('afterAddRule', function(e, rule) {
-    rule.__.ignoreCase = false;
-  });
-
-  this.on('afterCreateRuleInput.filter', function(e, rule) {
-    // Show plugin's button only for text fields
-    if (!rule.filter || typeof rule.filter.input !== 'string') {
-      rule.$el.find(cssSelectorPluginCaseRule).hide();
-      return;
-    }
-
-    if (rule.filter.input.indexOf('text') === -1) {
-      rule.$el.find(cssSelectorPluginCaseRule).hide();
-    } else {
-      rule.$el.find(cssSelectorPluginCaseRule).show();
-    }
-  });
-
-  // Modify templates
-  if (!options.disable_template) {
-    this.on('getRuleTemplate.filter', function(h) {
-      var $h = $($.parseHTML(h.value));
-      $h.find($.fn.queryBuilder.constructor.selectors.rule_actions).prepend(
-          '<button type="button" class="btn btn-xs btn-default" active data-case="rule">' +
-          '<i class="' + options.icon_checked + '"></i> ' +
-          '<span class="case-rule-text">' + self.translate('Match case') + '</span>' +
-          '</button>'
-      );
-      h.value = $h.prop('outerHTML');
-    });
-  }
-
-  // Export "case-rule" to JSON
-  this.on('ruleToJson.filter', function(e, rule) {
-    e.value.ignoreCase = rule.ignoreCase;
-  });
-
-  // Read "case-rule" from JSON
-  this.on('jsonToRule.filter', function(e, json) {
-    e.value.ignoreCase = !!json.ignoreCase;
-  });
-
-  // Export case selector to SQL
-  this.on('ruleToSQL.filter', function(e, rule, value, sqlFn) {
-    console.log(`ruleToSQL.filter: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
-    if (rule.ignoreCase) {
-      e.value = 'NOCASE ( ' + e.value + ' )';
-    }
-  });
-}, {
-  icon_unchecked: 'glyphicon glyphicon-unchecked',
-  icon_checked: 'glyphicon glyphicon-check',
-  disable_template: false
-});
-
-$.fn.queryBuilder.constructor.utils.defineModelProperties($.fn.queryBuilder.constructor.Rule, ['ignoreCase']);
-
-const cssSelectorPluginCaseRule = $.fn.queryBuilder.constructor.selectors.rule_actions + ' [data-case=rule]';
-
-$.fn.queryBuilder.extend({
-  /**
-   * Performs actions when a rule's case selector changes
-   * @param {Rule} rule
-   * @fires module:plugins.CaseSelector.updateRuleCaseIgnore
-   * @private
-   */
-  updateRuleCaseIgnore: function(rule) {
-      console.log(`updateRuleCaseIgnore: ${rule.id}, ignoreCase: ${rule.ignoreCase}`);
-      rule.$el.find(cssSelectorPluginCaseRule + "> .case-rule-text")
-          .text(this.translate(rule.ignoreCase ? 'Ignore case' : 'Match case'));
-          //.find('i').attr('class', rule.ignoreCase ? options.icon_checked : options.icon_unchecked);
-
-      /**
-       * After the rule's case selector has been modified
-       * @event afterUpdateRuleCaseSelector
-       * @memberof module:plugins.CaseSelector
-       * @param {Rule} rule
-       */
-      this.trigger('afterUpdateRuleCaseSelector', rule);
-
-      this.trigger('rulesChanged');
-  }
-});
-
-
- // Function to sort filters within each optgroup
- function sortFilters(filters) {
-  var groupedFilters = {};
-
-  // Group filters by optgroup
-  filters.forEach(function(filter) {
-      if (!groupedFilters[filter.optgroup]) {
-          groupedFilters[filter.optgroup] = [];
-      }
-      groupedFilters[filter.optgroup].push(filter);
-  });
-
-  // Sort filters within each optgroup
-  for (var group in groupedFilters) {
-      groupedFilters[group].sort(function(a, b) {
-          return a.label.localeCompare(b.label);
-      });
-  }
-
-  // Flatten the sorted filters back into a single array
-  var sortedFilters = [];
-  for (var group in groupedFilters) {
-      sortedFilters = sortedFilters.concat(groupedFilters[group]);
-  }
-
-  return sortedFilters;
-}
-
-
-function displayStatistics() {
-  var total = gRootsJson.length;
-  if (total == 0) {
-    $('#lblNumAvailable').html('Sorry, no inscriptions has been found.');
-  } else {
-    let numWords = 0;
-    for (signId in gMatchedWordIndices) {
-      numWords += gMatchedWordIndices[signId].size;
-    }
-    let infoStr = `${gRootsJson.length} inscriptions`;
-    numWords -= gWordVariants;
-    if (numWords > 0) {
-      infoStr += `, ${numWords} words, ${gFoundPersonalNames} personal names`;
-    }
-    infoStr += '.';
-    $('#lblNumAvailable').html(infoStr);
-  }
-}
-
-function dbToJson(columnNames, values) {
-  let lostIdx = columnNames.indexOf('lost');
-  let newReadingIdx = columnNames.indexOf('new_reading');
-
-  let dbJson = values.map(function(v, i) {
-      var hasChildren = false;
-
-      let additional = '';
-      if (lostIdx != -1 && newReadingIdx != -1) {
-        let isLost = !!+v[lostIdx];
-        let isNewReading = !!+v[newReadingIdx];
-
-        if (isLost) {
-          additional += "†";
-        }
-        if (isNewReading) {
-          additional += '$';
-        }
-        if (additional.length > 0)
-          additional = ' ' + additional;
-      }
-
-      return {
-          id: v[0].toString(),
-          text: v[1] + additional,
-          normalizedText: v[1].normalize('NFD').replace(/[\u0300-\u036f]/g, ""),
-          icon: false,
-          children: hasChildren,
-          id_numeric: v[0],
-          signature: v[1],
-      }
-  });
-
-  return dbJson;
-}
-
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
-function storageAvailable(type) {
-  var storage;
-  try {
-    storage = window[type];
-    var x = '__storage_test__';
-    storage.setItem(x, x);
-    storage.removeItem(x);
-    return true;
-  }
-  catch(e) {
-    return e instanceof DOMException && (
-      // everything except Firefox
-      e.code === 22 ||
-      // Firefox
-      e.code === 1014 ||
-      // test name field too, because code might not be present
-      // everything except Firefox
-      e.name === 'QuotaExceededError' ||
-      // Firefox
-      e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-      // acknowledge QuotaExceededError only if there's something already stored
-      (storage && storage.length !== 0);
-  }
-}
-
-function getUserSelectedDisplay() {
-  var defaults = ['signature_text', 'transliteration', 'english_translation', 'found_location',
-      'parish', 'municipality', 'district', 'current_location', 'images'];
-  var fieldsToDisplay = defaults;
-
-  if (storageAvailable('localStorage')) {
-    storage = window['localStorage'];
-    if (storage.getItem(gUserSelectedDisplayKey)) {
-      fieldsToDisplay = JSON.parse(storage.getItem(gUserSelectedDisplayKey));
-    }
-  }
-  return fieldsToDisplay;
-}
-
-function saveUserSelectedDisplay() {
-  if (!storageAvailable('localStorage'))
-    return;
-  storage = window['localStorage'];
-
-  var selectedValues = $('#multiselect_to option').map((index, el) => $(el).val()).toArray();
-  // ensure it is an array and encode it as json string, because local storage can work with string only.
-  var selectedValuesArray = JSON.stringify(selectedValues ? [].concat(selectedValues) : []);
-
-  storage.setItem(gUserSelectedDisplayKey, selectedValuesArray);
-}
-
-function onDisplayFormatClicked(e) {
-  e.preventDefault();
-
-  var selectedValues = [];
-  var alertObj = $('#formatDialogAlertObj');
-  $('#multiselect_to option').each(function() { selectedValues.push($(this).val()); });
-  if (selectedValues === null || selectedValues.length == 0) {
-    alertObj.html('Nothing is selected for display! Please select at least one property.');
-    alertObj.removeClass('hidden');
-    alertObj.addClass('show');
-    return;
-  }
-
-  if (alertObj.hasClass('show')) {
-    alertObj.removeClass('show');
-    alertObj.addClass('hidden');
-  }
-
-  if (selectedValues.length > 0) {
-    const newShowHeaders = $('#chkDisplayHeaders').is(":checked");
-    if (!arraysEqual(userSelectedDisplay, selectedValues) || newShowHeaders != lastShowHeaders) {
-      userSelectedDisplay = selectedValues;
-
-      displaySignatureInfo();
-
-      lastShowHeaders = newShowHeaders;
-    }
-  }
-  $(this).prev().click();
-}
-
-function onHideMapClicked() {
-  $('#mapDisplay').toggle();
-  var mainContainer = $('#mainDisplay');
-
-  if ($('#mapDisplay').is(':visible')) {
-    $('#mHideMap').html('Hide map');
-    mainContainer.removeClass('col-md-10 col-sm-10');
-    mainContainer.addClass('col-md-6 col-sm-8');
-  } else {
-    $('#mHideMap').html('Show map');
-    mainContainer.removeClass('col-md-6 col-sm-8');
-    mainContainer.addClass('col-md-10 col-sm-10');
-  }
-}
-
-function selectizeFilter(fieldId) {
-  var str = `SELECT DISTINCT ${fieldId} FROM all_data WHERE ${fieldId} NOT NULL AND ${fieldId} <> '' ORDER BY ${fieldId} COLLATE NOCASE;`;
-  var contents = db.exec(str);
-  var myOptions = contents[0].values.map(function (v) { return {text: v[0]} });
-
-  return {
-    id: fieldId,
-    field: fieldId,
-    label: humanNameForColumnName(fieldId),
-    type: 'string',
-    plugin: 'selectize',
-    plugin_config: {
-      valueField: 'text',
-      labelField: 'text',
-      searchField: 'text',
-      sortField: 'text',
-      maxItems: 1,
-      plugins: ['restore_on_backspace'],
-      valueSetter: function (rule, value) {
-        rule.$el.find('.rule-value-container input')[0].selectize.setValue(value);
-      },
-      options: myOptions,
-      create: true,
-      createOnBlur: true,
-      persist: true,
-      dropdownDirection: 'up',
-    }
-  }
-}
-
-/* Dictionary with fields:
-  .r => rule id, mandatory
-  .l => label, mandatory
-  .f => field id, optional. If not provided, .r is used.
-  .v => default value, optional. If not provided, set to 0.
-*/
-function prepareBooleanRule(opt) {
-  if (!opt) opt = {};
-  const fieldId = opt.f || opt.r;
-  const defaultValue = opt.v || 0;
-  const optgroup = opt.optgroup || "other";
-
-  return {
-    id: opt.r,
-    label: opt.l,
-    type: 'integer',
-    field: fieldId,
-    optgroup: optgroup,
-    input: 'radio',
-    values: [
-      {0: 'No'},
-      {1: 'Yes'}
-    ],
-    default_value: defaultValue,
-    operators: ['equal'],
-  };
-}
-
-function prepareIntegerField(ruleId, opt) {
-  if (!opt) opt = {};
-  const fieldId = opt.fieldId || ruleId;
-  const operators = opt.operators || ['equal', 'not equal', 'less', 'less or equal', 'greater', 'greater or equal', 'between', 'not between'];
-  const size = opt.size || 10;
-  const optgroup = opt.optgroup || "other";
-
-  return {
-    id: ruleId,
-    field: fieldId,
-    optgroup: optgroup,
-    label: humanNameForColumnName(fieldId),
-    type: 'integer',
-    size: size,
-    operators: operators,
-  }
-}
-
-function prepareAutoComplete(ruleId, opt) {
-  if (!opt) opt = {};
-  const fieldId = opt.fieldId || ruleId;
-  const operators = opt.operators || ["my_contains", "my_not_contains",
-        'my_equal', 'my_not_equal', 'my_begins_with',
-        "my_not_begins_with", "my_ends_with",
-        "my_not_ends_with", "is_empty", 'is_not_empty'];
-  const type = opt.type || 'string';
-  const size = opt.size || 100;
-  const optgroup = opt.optgroup || "other";
-
-  let contents = [];
-  if (ruleId.indexOf('normalisation') != -1) {
-    let str = `SELECT DISTINCT search_value FROM ${ruleId}`;
-    contents = db.exec(str);
-  } else if (ruleId.indexOf('runes_personalname') != -1) {
-    let str = `SELECT DISTINCT value FROM ${ruleId}`;
-    contents = db.exec(str);
-  } else if (ruleId.indexOf('transliteration') != -1) {
-    let str = 'SELECT DISTINCT search_value FROM transliterated_text';
-    contents = db.exec(str);
-  } else {
-    let str = `SELECT DISTINCT ${fieldId} FROM all_data WHERE ${fieldId} NOT NULL AND ${fieldId} <> '' ORDER BY ${fieldId} COLLATE NOCASE;`;
-    contents = db.exec(str);
-  }
-
-  return {
-    id: ruleId,
-    field: fieldId,
-    optgroup: optgroup,
-    label: humanNameForColumnName(fieldId),
-    type: type,
-    plugin: 'autoComplete',
-    plugin_config: {
-      minChars: 0,
-      delay: 100,
-      source: function (term, suggest) {
-        var matches = [];
-        for (i = 0; i < contents[0].values.length; i++) {
-          if (contents[0].values[i][0].startsWith(term))
-            matches.push(contents[0].values[i][0]);
-        }
-        suggest(matches);
-      },
-      menuClass: ' clusterize-content ',
-      attachToParent: true,
-    },
-    size: size,
-    operators: operators,
-  }
-}
-
-function resetSearchStats() {
-  gWordIndices = {};
-  gHighlights = {};
-  gMatchedWordIndices = {};
-  gFoundPersonalNames = 0;
-  gWordVariants = 0;
-}
-
-// Take user-defined filters and apply them to the database to obtain inscription IDs
-// Returns object with keys: status, columns, values. Status is either true or false.
-function doSqlFilterSearch() {
-  let results = {
-    status: false,
-    columns: [],
-    values: [],
-  };
-
-  var query = $('#builder').queryBuilder('getSQL', false);
-  if (!query || !query.sql.length) {
-    return results;
-  }
-
-  query.sql = query.sql.replace("signature_text LIKE ('all_sweden%')", "signature_text LIKE ('Öl %') OR \
-    signature_text LIKE ('Ög %') OR signature_text LIKE ('Sö %') OR signature_text LIKE ('Sm %') OR \
-    signature_text LIKE ('Vg %') OR signature_text LIKE ('U %') OR signature_text LIKE ('Vs %') OR \
-    signature_text LIKE ('Nä %') OR signature_text LIKE ('Vr %') OR signature_text LIKE ('Gs %') OR \
-    signature_text LIKE ('Hs %') OR signature_text LIKE ('M %') OR signature_text LIKE ('Ån %') OR \
-    signature_text LIKE ('D %') OR signature_text LIKE ('Hr %') OR signature_text LIKE ('J %') OR \
-    signature_text LIKE ('Lp %') OR signature_text LIKE ('Ds %') OR signature_text LIKE ('Bo %') OR \
-    signature_text LIKE ('G %') OR signature_text LIKE ('SE %') OR signature_text LIKE ('Bo %') OR \
-    district LIKE ('Skåne%') OR district LIKE ('%Halland%') OR district LIKE ('%Blekinge%')");
-
-  console.log('Got SQL: ' + query.sql);
-  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading, normalisation_scandinavian FROM all_data WHERE " + query.sql);
-  results.status = true;
-
-  if (contents.length == 0) {
-    // search successful, but no results
-    return results;
-  }
-
-  results.columns = contents[0].columns;
-  results.values = contents[0].values;
-  return results;
-}
-
-// Applies user-defined filters in order to obtain valid IDs
-// Returns true on success, false on any failure.
-//
-function applyFilters() {
-  const searchResults = doSqlFilterSearch();
-  if (!searchResults.status) {
-    return false;
-  }
-
-  resetSearchStats();
-
-  if (searchResults.columns.length == 0) {
-    // no results
-    gRootsJson = [];
-    return true;
-  }
-
-  let signatureIdIdx = searchResults.columns.indexOf('signature_id');
-  let normalisationScandinavianIdx = searchResults.columns.indexOf('normalisation_scandinavian');
-
-  if (Object.keys(gWordIndices).length != 0) {
-    searchResults.values = searchResults.values.filter(function checkIds(row) {
-      id = row[signatureIdIdx];
-      normalizedText = row[normalisationScandinavianIdx];
-
-      if (!gWordIndices.hasOwnProperty(id))
-        return true;
-
-      let allKeys = Object.keys(gWordIndices[id]);
-      let intersection = new Set(gWordIndices[id][allKeys[0]]);
-      for (i = 1; i < allKeys.length; i++) {
-        if (allKeys[i].indexOf('_par') != -1) {
-          continue;
-        }
-        let b = new Set(gWordIndices[id][allKeys[i]]);
-        intersection = new Set([...intersection].filter(x => b.has(x)));
-        if (intersection.size == 0) {
-          return false;
-        }
-      }
-
-      let words = getWordBoundaries(normalizedText, gWordSearchRegex, gWordPunctuationRegex);
-      let wordVariants = [];
-      var counts = {};
-      var countsPersonal = {};
-      intersection.forEach(function (val) {
-        // We do not need to count words that have isVariant > 0.
-        // Do not count corresponding personal names
-        gFoundPersonalNames += words[val].isPersonal;
-        if (words[val].isVariant > 0) {
-          let key = words[val].isVariant;
-          counts[key] = (counts[key] || 0) + 1;
-          if (words[val].isPersonal) {
-            countsPersonal[key] = (countsPersonal[key] || 0) + 1;
-          } else {
-            countsPersonal[key] = (countsPersonal[key] || 0);
-          }
-        }
-      });
-
-      let countValues = [...Object.values(counts)];
-      var personalBias = 0;
-      if (countValues.length > 0) {
-        let minCounts = Math.min(...countValues);
-        let minIndex = countValues.indexOf(minCounts) + 1;
-
-        if (!isNaN(minCounts))
-          gWordVariants += minCounts * (countValues.length-1);
-        if (!isNaN(countsPersonal[minIndex]))
-          personalBias += countsPersonal[minIndex] * (countValues.length-1);
-      }
-      gFoundPersonalNames -= personalBias;
-
-      gMatchedWordIndices[id] = intersection;
-      return true;
-    });
-  }
-
-  // hash map of inscription IDs that have children.
-  var rootsWithChildren = db.exec("SELECT * FROM signatures_with_children");
-  // make a hash map for quick read access
-  rootsWithChildren = new Map(rootsWithChildren[0].values.map((v, i) => [v[0], 1]));
-
-  gRootIds = new Map(searchResults.values.map((v, i) => [v[0], i]));
-  gRootsJson = dbToJson(searchResults.columns, searchResults.values);
-
-  return true;
-}
-
-
-function range(size, startAt = 0) {
-    return [...Array(size).keys()].map(i => i + startAt);
-}
-
-// extract starting indices of words from str
-// Can be applied for string where words are separated by a single whitespace
-function getWordStarts(str, regexStr) {
-  if (regexStr === undefined) {
-    regexStr = '\\s';
-  }
-  let r = new RegExp(regexStr, 'gu');
-  var matches = [-1];
-  while ((arr = r.exec(str)) !== null) {
-    matches.push(arr.index);
-  }
-  matches.push(str.length);
-
-  return matches;
-}
-
-// Extracts word boundaries from inscription texts. These texts
-// have multiple separators (whitespaces, punctuation) that often
-// go together, i.e. space,punctuation,space
-// returns array of objects. Each object:
-// {start: num, end: num, text: string, isPersonal: 0 or 1, isVariant: [0...N] }
-// isVariant - if word is located within a paragrapgh (i.e. §P) isVariant
-// contains a numerical difference between paragraph character and 'P'. For §P
-// isVariant is 1, for §Q isVariant is 1.
-// str - search string
-// reg - regex used to detect word boundaries
-// purePunctuation - regex used to check if detected word is pure punctuational
-function getWordBoundaries(str, reg, purePunctuation) {
-  var words = [];
-  var wordBegin = 0;
-  //var purePunctuation = new RegExp("(·|:|×|¤|'|\\+|÷|¶|\\(|\\))+");
-  var strReversed = str.split("").reverse().join("");
-  let pCode = 'P'.charCodeAt();
-
-  while ((arr = reg.exec(str)) !== null) {
-    if (wordBegin == arr.index) {
-      wordBegin += arr[0].length;
-      continue;
-    }
-    let oneWord = {start: wordBegin, end: arr.index, isPersonal: 0, isVariant: 0};
-    let wordText = str.slice(oneWord.start, oneWord.end);
-    oneWord.text = wordText;
-    // skip double sides character
-    if (arr[0] == '¶¶')
-      continue;
-
-    punctuationCheck = purePunctuation.exec(oneWord.text);
-    if (punctuationCheck !== null && punctuationCheck[0].length == oneWord.text.length)
-    {
-      wordBegin = arr.index + arr[0].length;
-      continue;
-    }
-
-    if (wordText.startsWith('"') || wordText.startsWith("&quot;"))
-      oneWord.isPersonal = 1;
-    let reverseStart = str.length-1 - wordBegin;
-    if ((parPos = strReversed.indexOf('§', reverseStart)) != -1) {
-      if (strReversed[parPos-1].charCodeAt() - pCode >= 0) {
-        oneWord.isVariant = strReversed[parPos-1].charCodeAt() - pCode + 1;
-      }
-    }
-
-    words.push(oneWord);
-    wordBegin = arr.index + arr[0].length;
-  }
-  if (wordBegin == 0) {
-    if (str.length > 0) {
-      let oneWord = {start: 0, end: str.length, text: str, isPersonal: 0, isVariant: 0};
-      if (oneWord.text.startsWith('"') || oneWord.text.startsWith("&quot;"))
-        oneWord.isPersonal = 1;
-
-      let reverseStart = str.length-1;
-      if ((parPos = strReversed.indexOf('§', reverseStart)) != -1) {
-        if (strReversed[parPos-1].charCodeAt() - pCode >= 0) {
-          oneWord.isVariant = strReversed[parPos-1].charCodeAt() - pCode + 1;
-        }
-      }
-
-      punctuationCheck = purePunctuation.exec(oneWord.text);
-      if (punctuationCheck === null || punctuationCheck[0].length != oneWord.text.length)
-        words.push(oneWord);
-    }
-  } else {
-    // let's add the final word
-    if (wordBegin != str.length) {
-      let oneWord = {start: wordBegin, end: str.length, isPersonal: 0, isVariant: 0};
-      oneWord.text = str.slice(oneWord.start, oneWord.end);
-      if (oneWord.text.startsWith('"') || oneWord.text.startsWith("&quot;"))
-        oneWord.isPersonal = 1;
-
-      let reverseStart = str.length-1 - wordBegin;
-      if ((parPos = strReversed.indexOf('§', reverseStart)) != -1) {
-        if (strReversed[parPos-1].charCodeAt() - pCode >= 0) {
-          oneWord.isVariant = strReversed[parPos-1].charCodeAt() - pCode + 1;
-        }
-      }
-
-      punctuationCheck = purePunctuation.exec(oneWord.text);
-      if (punctuationCheck === null || punctuationCheck[0].length != oneWord.text.length)
-        words.push(oneWord);
-    }
-  }
-  return words;
-}
-
-// return words by index. Words are separated by a single space
-function wordsByIndex(str, indices) {
-  let allWords = str.split(' ');
-  let words = [];
-  indices.forEach(item => words.push(allWords[item]));
-  return words;
-}
-
-function wordByCharPos(wordStarts, charPos) {
-  for (i = 0; i < wordStarts.length - 1; i++) {
-    if (charPos > wordStarts[i] && charPos < wordStarts[i+1]) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-function sqlRegexp(regexValue, fieldData) {
-  // take care of special tokens that get spoiled by several string handlers before
-  const trueRegexValue = regexValue.replace(/\\\\/g, '\\');
-
-  // do not recreate expression objects
-  if (!gRegExpMapG.hasOwnProperty(regexValue)) {
-    // Use unicode flag for all regexps
-    gRegExpMapG[regexValue] = new RegExp(trueRegexValue, 'gu');
-  }
-  if (!gRegExpMap.hasOwnProperty(regexValue)) {
-    // Use unicode flag for all regexps
-    gRegExpMap[regexValue] = new RegExp(trueRegexValue, 'u');
-  }
-  let res = -1;
-  var exprResult = gRegExpMap[regexValue].test(fieldData);
-  if (exprResult == true) {
-    res = 1;
-  }
-
-  // reset expression
-  gRegExpMap[regexValue].lastIndex = 0;
-
-  return res;
-}
-
-function sqlRegexpNew(regexValue, fieldData, inscriptionId, ignoreCase, fieldName)
-{
-  //const ignoreCase = rule.ignoreCase;
-
-  // take care of special tokens that get spoiled by several string handlers before
-  const trueRegexValue = regexValue.replace(/\\\\/g, '\\');
-  const modifiers = 'gu' + (ignoreCase ? 'i' : '');
-  const mappingKey = regexValue + '__' + modifiers;
-
-  if (!gRegExpMapG.hasOwnProperty(mappingKey)) {
-    // Use unicode flag for all regexps
-    gRegExpMapG[mappingKey] = new RegExp(trueRegexValue, modifiers);
-  }
-
-  // if there is a match, let's collect highlight statistics
-  let matchResult;
-  let hasMatch = false;
-  while ((matchResult = gRegExpMapG[mappingKey].exec(fieldData)) !== null) {
-    hasMatch = true;
-    const matchStart = matchResult.index;
-    const matchEnd = matchStart + matchResult[0].length;
-    // const matchIndices = range(matchEnd-matchStart, matchStart);
-
-    if (!gHighlights.hasOwnProperty(inscriptionId)) {
-      gHighlights[inscriptionId] = {};
-    }
-    if (!gHighlights[inscriptionId].hasOwnProperty(fieldName)) {
-      gHighlights[inscriptionId][fieldName] = [];
-    }
-    gHighlights[inscriptionId][fieldName].push([matchStart, matchEnd]);
-    // console.log(`Signature ${inscriptionId}, field ${fieldName}, match: ${matchStart}-${matchEnd}`);
-  }
-
-  return hasMatch ? 1 : -1;
-}
-
-function sqlWordRegexp(regexValue, fieldData, id, fieldName) {
-  // regexValue is a string that contains a regular expression
-  // fieldData is a string that contains a text of inscription
-  // id is a signature ID, integer
-  // fieldName is a column name, string
-
-  const trueRegexValue = regexValue.replace(/\\\\/g, '\\');
-
-  if (!gRegExpMapG.hasOwnProperty(regexValue)) {
-    gRegExpMapG[regexValue] = new RegExp(trueRegexValue, 'gu');
-  }
-  if (!gRegExpMap.hasOwnProperty(regexValue)) {
-    gRegExpMap[regexValue] = new RegExp(trueRegexValue, 'u');
-  }
-
-  // Test method doesn't really work with global regexps. At least
-  // when regex is stored in a global variable, i.e. preserves state
-  // between function calls
-
-  // reset expressions
-  gRegExpMap[regexValue].lastIndex = 0;
-  gRegExpMapG[regexValue].lastIndex = 0;
-
-
-  try {
-    if (gRegExpMap[regexValue].test(fieldData) == true) {
-      // Use gRegExpMapG from now on. This is important!
-
-      wordStarts = getWordStarts(fieldData);
-      var matchIndices = [];
-      while ((array1 = gRegExpMapG[regexValue].exec(fieldData)) !== null) {
-        minWordIdx = wordByCharPos(wordStarts, array1.index);
-        maxWordIdx = wordByCharPos(wordStarts, array1.index+array1[0].length-1);
-
-        let wordIndices = range(maxWordIdx-minWordIdx+1, minWordIdx); // range of word indices
-        if (!gWordIndices.hasOwnProperty(id)) {
-          gWordIndices[id] = {};
-        }
-        if (!gWordIndices[id].hasOwnProperty(fieldName)) {
-          gWordIndices[id][fieldName] = [];
-        }
-        gWordIndices[id][fieldName].push(...wordIndices);
-      }
-      return 1;
-    }
-  } catch (error) {
-    console.log(`Error in sqlWordRegexp: ${error}`);
-  }
-
-  return -1;
-}
-
-function modifySignatureTextRules(rules) {
-/* In order to handle both in and other operators for signature text,
- * we may need to modify the rules on the fly. We need value to be array for selectize and
- * a string for autoComplete.
-*/
-  if (Array.isArray(rules.rules)) {
-    rules.rules.forEach(rule => {
-      if (rule.id === 'signature_text' && rule.operator === 'in') {
-        if (typeof rule.value === 'string') {
-          rule.value = rule.value.split('|');
-        }
-      }
-      // Recursively handle nested rules
-      if (rule.rules) {
-        modifySignatureTextRules(rule);
-      }
-    });
-  }
-}
-
+$('#loading').hide();
 
 function onDbLoaded() {
-  // add support for regexp searches
-  db.create_function('regexp', sqlRegexp);
+  const dbMap = convertDbToKeyMap(gSqlDb);
+  gViewModel = new RunicViewModel(dbMap);
+  gAllMarkers = inscriptions2markers(dbMap, L);
+  //inscriptions2Select(document.getElementById('inpInscriptions'), gDbMap);
+  // gJsTreeInscriptions = inscriptions2treeNodes(dbJson);
+  initQueryBuilder(inpQueryBuilder, gViewModel, getHumanName);
+  calcWordsAndPersonalNames(gViewModel.getAllInscriptions());
 
-  // Add support for searches across words
-  db.create_function('wordRegexp', sqlWordRegexp);
-
-  db.create_function('regexp_new', sqlRegexpNew);
-
-  // get all root signatures (that are not aliases)
-  var contents = db.exec("SELECT signature_id, signature_text, lost, new_reading FROM all_data");
-
-  gRootIds = new Map(contents[0].values.map((v, i) => [v[0], i]));
-  gRootsJson = dbToJson(contents[0].columns, contents[0].values);
-
-  ////////////////////////////////////////////////////////////////////
-  // fill in gAliasByParent. Must be done before convertDbToKeyMap!
-  let aliasContents = db.exec('SELECT id, signature_text, parent_id FROM signatures WHERE parent_id NOT NULL');
-  if (aliasContents && aliasContents.length > 0) {
-    aliasContents[0].values.map(function (row, i) {
-      let parent_id = row[2];
-      let signature_text = row[1];
-
-      if (!(parent_id in gAliasByParent)) {
-        // we do not have an entry for that parent. initialize it
-        gAliasByParent[parent_id] = [];
-      }
-      curValue = gAliasByParent[parent_id];
-      curValue.push(signature_text);
-      gAliasByParent[parent_id] = curValue;
-    });
-  }
-  ////////////////////////////////////////////////////////////////////
-
-  gOriginalData = gRootsJson;
-  gOriginalIds = gRootIds;
-  gDbAsMap = convertDbToKeyMap();
-
-  contents = db.exec("SELECT id, signature_text FROM signatures");
-  signaturesSelectize = dbToJson(contents[0].columns, contents[0].values);
-
+  // populate jstree with data
   $('#jstree').jstree(true).refresh();
-
-  contents = db.exec('SELECT meta_id, count(1) AS num FROM crosses GROUP BY meta_id ORDER BY num DESC LIMIT 1');
-  var maxCrosses = contents[0].values[0][1];
-
-  contents = db.exec('SELECT DISTINCT id, name from cross_forms ORDER BY name COLLATE NOCASE');
-  var allCrossForms = contents[0].values.map((v, i) => ['<option value="'+v[0]+'">'+v[1]+'</option>']);
-
-  contents = db.exec('SELECT DISTINCT id, name from material_types ORDER BY name COLLATE NOCASE');
-  var allMaterialTypes = (contents[0].values);
-  var materialTypeFilter = {
-    id: 'material_type',
-    field: 'materialType_id',
-    label: 'Material type',
-    optgroup: "other",
-    type: 'string',
-    plugin: 'autoComplete',
-    plugin_config: {
-      minChars: 0,
-      delay: 100,
-      source: function (term, suggest) {
-        var matches = [];
-        for (i = 0; i < allMaterialTypes.length; i++) {
-          if (allMaterialTypes[i][1].startsWith(term))
-            matches.push(allMaterialTypes[i][1]);
-        }
-        suggest(matches);
-      }
-    },
-    operators: ['equal', 'not_equal', 'begins_with', 'not_begins_with', 'contains', 'not_contains',
-      'ends_with', 'not_ends_with', 'is_empty', 'is_not_empty'],
-  };
-
-  /////////////////////////////////////
-  // Initialzie QueryBuilder
-  //////////////////////////////////////
-  const glob_operators = [
-    "not_contains_glob", "whole_word", "begins_with_glob", "not_begins_with_glob",
-    "ends_with", "not_ends_with", "is_empty", 'is_not_empty', "my_regex", "word_regexp", "my_contains",
-  ];
-  const text_operators = [
-    "is_empty", "is_not_empty", "my_contains", "my_begins_with"
-  ];
-
-  const optGroups = {
-    "gr_signature": {
-      "en": "Inscription ID",
-      "sv": "Signatura",
-    },
-    "gr_texts": "Texts",
-    "other": "---",
-  };
-
-  const signature_text_autocomplete_cfg = {
-    minChars: 0,
-    delay: 50,
-    source: function(term, suggest) {
-      var matches = [];
-      for (i = 0; i < signaturesSelectize.length; i++) {
-        if (signaturesSelectize[i].text.startsWith(term)) {
-          matches.push(signaturesSelectize[i].text);
-          continue;
-        }
-        // do not do the search if we got a match already
-        if (signaturesSelectize[i].normalizedText.startsWith(term)) {
-          matches.push(signaturesSelectize[i].text);
-          continue;
-        }
-      }
-      suggest(matches);
-    },
-    menuClass: 'clusterize-content ',
-  };
-  const signature_text_selectize_cfg = {
-    plugins: ['remove_button'],
-    options: signaturesSelectize,
-    valueField: 'signature',
-    labelField: 'text',
-    searchField: 'normalizedText',
-    sortField: 'id',
-    create: false,
-    dropdownDirection: 'up',
-    delimiter: '|',
-    maxItems: null,
-  };
-
-  var queryBuilderFilters = [
-    // the order of items here defines the order of optgroups, place filters of at least each group in the order you like
-    // filters within a group will be sorted alphabetically
-    {
-      id: 'signature_text',
-      optgroup: "gr_signature",
-      field: 'signature_text',
-      label: humanNameForColumnName('signature_text'),
-      type: 'string',
-      plugin: 'selectize',
-      plugin_config: signature_text_selectize_cfg,
-      size: 40,
-      multiple: true,
-      operators: ['in', 'my_in_list', 'begins_with', "not_begins_with",
-        "contains", "not_contains", "ends_with", "not_ends_with", "my_regex"],
-      valueSetter: function (rule, value) {
-        let $input = rule.$el.find('.rule-value-container input');
-        if (rule.operator.type === 'in') {
-          if ($input.hasClass('autocomplete')) {
-            $input.autoComplete('destroy');
-          }
-          if (!$input.hasClass('selectized')) {
-            $input.selectize(signature_text_selectize_cfg);
-          }
-          $input[0].selectize.setValue(value);
-        } else {
-          if ($input.hasClass('selectized')) {
-            $input[0].selectize.destroy();
-          }
-          if (!$input.hasClass('autocomplete')) {
-            $input.autoComplete(signature_text_autocomplete_cfg);
-          }
-          // Ensure autoComplete is initialized before setting the value
-          if ($input[0].autoComplete) {
-            $input[0].autoComplete.setValue(value);
-          } else {
-            $input.val(value);
-          }
-          // $input[0].autoComplete.setValue(value);
-        }
-      },
-    },
-    prepareAutoComplete('normalisation_norse', {fieldId: 'normalisation_search_norse', operators: glob_operators, optgroup: "gr_texts"}),
-    prepareAutoComplete('normalisation_scandinavian', {fieldId: 'normalisation_search_scandinavian', operators: glob_operators, optgroup: "gr_texts"}),
-    prepareAutoComplete('english_translation', {
-      optgroup: "gr_texts",
-      operators: text_operators,
-    }),
-    prepareAutoComplete('swedish_translation', {
-      optgroup: "gr_texts",
-      operators: text_operators,
-    }),
-    prepareAutoComplete('transliteration', {fieldId: 'search_transliteration', operators: glob_operators, optgroup: "gr_texts"}),
-    prepareAutoComplete('carver'),
-    {
-      id: 'signature_country',
-      optgroup: "gr_signature",
-      field: 'signature_text',
-      label: 'Country or Swedish province',
-      type: 'string',
-      input: 'select',
-      multiple: true,
-      operators: ['in'],
-      valueSetter: function (rule, value) {
-        rule.$el.find('.rule-value-container select')[0].selectize.setValue(value);
-      },
-      plugin: 'selectize',
-      plugin_config: {
-        plugins: ['remove_button'],
-        options: [
-          {text: 'Sweden, whole', v: 'all_sweden'},
-          {text: 'Öland (Öl)', v: 'Öl '}, {text: 'Östergötland (Ög)', v: 'Ög '}, {text: 'Södermanland (Sö)', v: 'Sö '},
-          {text: 'Småland (Sm)', v: 'Sm '}, {text: 'Västergötland (Vg)', v: 'Vg '}, {text: 'Uppland (U)', v: 'U '},
-          {text: 'Västmanland (Vs)', v: 'Vs '}, {text: 'Närke (Nä)', v: 'Nä '}, {text: 'Värmland (Vr)', v: 'Vr '},
-          {text: 'Gästrikland (Gs)', v: 'Gs '}, {text: 'Hälsingland (Hs)', v: 'Hs '}, {text: 'Medelpad (M)', v: 'M '},
-          {text: 'Ångermanland (Ån)', v: 'Ån '}, {text: 'Dalarna (D)', v: 'D '}, {text: 'Härjedalen (Hr)', v: 'Hr '},
-          {text: 'Jämtland (J)', v: 'J '}, {text: 'Lappland (Lp)', v: 'Lp '}, {text: 'Dalsland (Ds)', v: 'Ds '},
-          {text: 'Bohuslän (Bo)', v: 'Bo '}, {text: 'Gotland (G)', v: 'G '}, {text: 'Sweden, other (SE)', v: 'SE '},
-          {text: 'Denmark (DR)', v: 'DR '}, {text: 'Norway (N)', v: 'N '}, {text: 'Faroe Islands (FR)', v: 'FR '},
-          {text: 'Greenland (GR)', v: 'GR '}, {text: 'Iceland (IS)', v: 'IS '}, {text: 'Finland (FI)', v: 'FI '},
-          {text: 'Shetland (Sh)', v: 'Sh '}, {text: 'Orkney (Or)', v: 'Or '}, {text: 'Scotland (Sc)', v: 'Sc '},
-          {text: 'England (E)', v: 'E '}, {text: 'Isle of Man (IM)', v: 'IM '}, {text: 'Ireland (IR)', v: 'IR '},
-          {text: 'France (F)', v: 'F '}, {text: 'Netherlands (NL)', v: 'NL '}, {text: 'Germany (DE)', v: 'DE '},
-          {text: 'Poland (PL)', v: 'PL '}, {text: 'Latvia (LV)', v: 'LV '}, {text: 'Russia (RU)', v: 'RU '},
-          {text: 'Ukraine (UA)', v: 'UA '}, {text: 'Byzantium (By)', v: 'By '}, {text: 'Italy (IT)', v: 'IT '},
-          {text: 'Other areas (X)', v: 'X '}],
-        valueField: 'v',
-        labelField: 'text',
-        searchField: 'text',
-        sortField: 'text',
-        create: false,
-        dropdownDirection: 'up',
-        maxItems: null,
-      },
-    },
-    prepareAutoComplete('found_location'),
-    prepareAutoComplete('parish'),
-    prepareAutoComplete('district'),
-    prepareAutoComplete('municipality'),
-    prepareAutoComplete('current_location'),
-    prepareAutoComplete('original_site'),
-    prepareAutoComplete('rune_type'),
-    prepareAutoComplete('dating'),
-    prepareIntegerField('year_from'),
-    prepareIntegerField('year_to'),
-    prepareAutoComplete('material'),
-    prepareAutoComplete('style'),
-    prepareAutoComplete('reference'),
-    prepareAutoComplete('additional'),
-    prepareAutoComplete('objectInfo'),
-    prepareAutoComplete('runes_personalname'),
-    prepareBooleanRule({'r':'has_personal_name', 'l':'Has personal name?', 'f':'num_names', 'v':1}),
-    {
-      id: 'alternatives',
-      label: 'Has alternative(s)?',
-      optgroup: "other",
-      type: 'integer',
-      input: 'radio',
-      field: 'signature_id',
-      values: [
-          {1: 'Yes'},
-          {0: 'No'}
-      ],
-      default_value: 1,
-      operators: ['alternatives_in'],
-    },
-    prepareBooleanRule({'r':'lost', 'l':'Is lost?'}),
-    prepareBooleanRule({'r':'new_reading', 'l':'New reading?'}),
-    {
-      id: 'num_crosses',
-      label: 'Number of crosses',
-      optgroup: "other",
-      type: 'integer',
-      input: 'number',
-      validation: {
-        min: 0,
-        max: maxCrosses,
-        step: 1,
-        allow_empty_value: false,
-      },
-      default_value: 0,
-      operators: ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal',
-        'between', 'not_between'],
-      size: 10,
-    },
-    {
-      id: 'cross_form',
-      label: 'Cross form',
-      type: 'string',
-      optgroup: "other",
-      operators: ['cross_form'],
-      input: function (rule, name) {
-        //let $container = rule.$el.find('.rule-value-container');
-        return '\
-          <select name="'+name+'_1">\
-          ' + allCrossForms +
-          '</select>\
-          <div>Certain?\
-            <label><input type="radio" name="'+name+'_2" value="0">No</label>\
-            <label><input type="radio" name="'+name+'_2" value="1" checked>Yes</label>\
-          </div>';
-      },
-      valueGetter: function (rule) {
-        let val1 = rule.$el.find('.rule-value-container [name$=_1]').val();
-        let val2 = rule.$el.find('.rule-value-container [name$=_2]:checked').val();
-        return {form: val1, is_certain: val2};
-      },
-      valueSetter: function (rule, value) {
-        $(rule.$el.find('.rule-value-container [name$=_1]')[0]).val(value.form);
-        var certainControls = rule.$el.find('.rule-value-container [name$=_2]');
-        if (value.is_certain == '1') {
-          $(certainControls[0]).prop('checked', false);
-          $(certainControls[1]).prop('checked', true);
-        } else {
-          $(certainControls[0]).prop('checked', true);
-          $(certainControls[1]).prop('checked', false);
-        }
-      },
-    },
-    materialTypeFilter,
-    prepareBooleanRule({'r':'ornamental', 'l':'Is pure ornamental?', 'v': 1}),
-  ];
-
-  // sort into groups
-  queryBuilderFilters = $.fn.queryBuilder.constructor.utils.groupSort(queryBuilderFilters, 'optgroup')
-  // sort within groups
-  queryBuilderFilters = sortFilters(queryBuilderFilters);
-
-  // swap two first filters, so that signature is on the first place!
-  const tmp = queryBuilderFilters[0];
-  queryBuilderFilters[0] = queryBuilderFilters[1];
-  queryBuilderFilters[1] = tmp;
-
-  $('#builder').queryBuilder({
-    display_empty_filter: false,
-    select_placeholder: '!!! Click here to choose search parameter !!!',
-    operators: $.fn.queryBuilder.constructor.DEFAULTS.operators.concat([
-      // Add to default operators
-      { type: 'alternatives_in',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'cross_form', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'begins_with_glob',      nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'not_begins_with_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'not_contains_glob',  nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_regex', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'word_regexp', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'whole_word', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_contains', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_not_contains', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_begins_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_not_begins_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_ends_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_not_ends_with', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_equal', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_not_equal', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-      { type: 'my_in_list', nb_inputs: 1, multiple: false, apply_to: ['string'] },
-    ]),
-
-    lang: {
-      operators: {
-        alternatives_in: ' ',
-        cross_form: ' ',
-        begins_with_glob: "begins with",
-        not_begins_with_glob: "doesn't begin with",
-        contains_glob: "contains",
-        not_contains_glob: "doesn't contain",
-        my_regex: 'matches expression',
-        word_regexp: 'matches across words',
-        whole_word: "contains whole word",
-        my_contains: "contains",
-        my_not_contains: "doesn't contain",
-        my_begins_with: "begins with",
-        my_ends_with: "ends with",
-        my_not_ends_with: "doesn't end with",
-        my_not_begins_with: "doesn't begin with",
-        my_equal: "equal",
-        my_not_equal: "not equal",
-        my_in_list: "is in |-separated list",
-      },
-      add_rule: 'Add search parameter',
-      add_group: 'Add search group',
-    },
-
-    // SQL export (first half)
-    sqlOperators: {
-      alternatives_in: { op: 'IN' },
-      cross_form: { op: 'IN' },
-      //like_glob: {op: 'GLOB'},
-      begins_with_glob: {op: 'GLOB ?', mod: '{0}*'},
-      not_begins_with_glob: {op: 'NOT GLOB ?', mod: '{0}*'},
-      contains_glob: { op: 'GLOB ?', mod: '*{0}*'},
-      not_contains_glob: { op: 'NOT GLOB ?', mod: '*{0}*'},
-      my_regex: { op: 'REGEXP ?', mod: '{0}'},
-      word_regexp: { op: 'wordRegexp(?)', mod: '{0}'},
-      whole_word: { op: 'regexp_new ?', mod: '\\b{0}\\b'},
-      my_contains: { op: 'regexp_new ?' },
-      my_not_contains: { op: 'not regexp_new ?'},
-      my_begins_with: { op: 'regexp_new ?', mod: '^{0}'},
-      my_not_begins_with: { op: 'not regexp_new ?', mod: '^{0}'},
-      my_ends_with: { op: 'regexp_new ?', mod: '{0}$'},
-      my_not_ends_with: { op: 'not regexp_new ?', mod: '{0}$'},
-      my_equal: { op: 'regexp_new ?', mod: '^{0}$'},
-      my_not_equal: { op: 'not regexp_new ?', mod: '^{0}$'},
-      my_in_list: { op: 'IN', mod: '{0}'},
-    },
-    plugins: {
-      'bt-tooltip-errors': null,
-      'sortable': null,
-      'not-group': null,
-      'bt-selectpicker': {liveSearch: true, liveSearchStyle: 'startsWith'},
-      'case-rule': null,
-    },
-
-    filters: queryBuilderFilters,
-    sort_filters: false,
-    templates: {
-      group: gQueryBuilderCustomGroup,
-    },
-    optgroups: optGroups,
-  })
-  // SQL export (second half)
-  .on('ruleToSQL.queryBuilder.filter', function (e, rule, sqlValue, sqlOperator) {
-    if (rule.operator === 'alternatives_in') {
-      if (rule.value == 1) {
-        e.value = rule.field + ' ' + sqlOperator() + ' signatures_with_children';
-      } else {
-        e.value = rule.field + ' IN root_signatures and ' + rule.field +
-          ' NOT ' + sqlOperator() + ' signatures_with_children';
-      }
-    }
-    if (rule.operator === 'cross_form') {
-      e.value = 'id IN (SELECT meta_id FROM crosses WHERE crosses.id in (SELECT cross_id FROM cross_definitions WHERE form_id="' + rule.value[0].form + '" AND is_certain="' + rule.value[0].is_certain + '"))';
-    }
-    if (rule.id === 'material_type') {
-      e.value = rule.field + ' IN (SELECT id FROM material_types WHERE name ' + sqlOperator(sqlValue) + ')';
-    }
-    if (rule.id === 'signature_country') {
-      e.value = "(" + rule.value.map(function (v, i) { return rule.field + " LIKE ('"+v+"%')"; }).join(' OR ') + ")";
-    }
-    if (rule.id === 'has_personal_name') {
-      if (rule.value == 1) {
-        e.value = rule.field + '> 0';
-      } else {
-        e.value = rule.field + '= 0';
-      }
-    }
-    if (rule.id === 'signature_text') {
-      if (rule.operator === 'my_regex') {
-        var csvData = Papa.parse(sqlValue, {
-          delimiter: '|',
-        });
-        var numEntries = csvData.data[0].length;
-        if (numEntries > 1) {
-          sqlValue = sqlValue.replace(/\\"/g, '"'); // unescape values
-          // trim individual signatures
-          var values = [];
-          for (var i = 0; i < numEntries; i++) {
-            var signature = csvData.data[0][i].trim();
-            values.push(signature);
-          }
-          sqlValue = values.join('|');
-        }
-      }
-      if (rule.operator === 'in' || rule.operator === 'my_in_list') {
-        // sqlValue contains ' and ' for some reason, like "'1,2'"
-        const values = sqlValue.slice(1, -1).split('|').map(v => `'${v}'`);
-
-        e.value = `signature_id IN (SELECT id FROM signatures WHERE ${rule.field} IN(${values.join(',')}))`;
-        return;
-      }
-      e.value = 'signature_id IN (SELECT id FROM signatures WHERE ' + rule.field + ' ' + sqlOperator(sqlValue) + ' OR id IN (SELECT parent_id FROM signatures WHERE '
-      + rule.field + ' ' + sqlOperator(sqlValue) + '))';
-    }
-    if (sqlOperator().indexOf('REGEXP') != -1) {
-      // Let's convert it to a function call. A better approach might exist,
-      // see ruleExpression in query-builder.standalone.js
-      e.value = `regexp(${sqlValue}, ${rule.field}) == 1`;
-    }
-    if (sqlOperator().indexOf('wordRegexp') != -1) {
-      e.value = `wordRegexp(${sqlValue}, ${rule.field}, id, '${rule.field}') == 1`;
-    }
-    if (sqlOperator().startsWith('regexp_new')) {
-      e.value = `regexp_new(${sqlValue}, ${rule.field}, signature_text, ${rule.ignoreCase}, '${rule.field}') == 1`;
-    }
-    if (sqlOperator().startsWith('not regexp_new')) {
-      e.value = `regexp_new(${sqlValue}, ${rule.field}, signature_text, ${rule.ignoreCase}, '${rule.field}') == -1`;
-    }
-  })
-  ;
-
-  $('#builder').on('afterCreateRuleInput.queryBuilder afterUpdateRuleOperator.queryBuilder', function(e, rule) {
-    if (rule.filter.id === 'signature_text') {
-      let $input = rule.$el.find('.rule-value-container input');
-
-      if (rule.operator.type === 'in') {
-        if (!$input.hasClass('selectized')) {
-          if ($input.hasClass('autocomplete')) {
-            $input.autoComplete('destroy');
-          }
-          $input.selectize(signature_text_selectize_cfg);
-        }
-      } else {
-        if ($input.hasClass('selectized')) {
-          $input[0].selectize.destroy();
-        }
-        if (!$input.hasClass('autocomplete')) {
-          $input.autoComplete(signature_text_autocomplete_cfg);
-        }
-      }
-    }
-  });
-
-  // if (!window.Selectize.prototype.positionDropdownOriginal) {
-  //   window.Selectize.prototype.positionDropdownOriginal = window.Selectize.prototype.positionDropdown;
-  //   window.Selectize.prototype.positionDropdown = function () {
-  //     this.settings.dropdownDirection = 'up';
-  //     if (this.settings.dropdownDirection === 'up') {
-  //       let $control = this.$control;
-  //       let offset = this.settings.dropdownParent === 'body' ? $control.offset() : $control.position();
-
-  //       this.$dropdown.css({
-  //         width: $control.outerWidth(),
-  //         top: offset.top - this.$dropdown.outerHeight(),
-  //         left: offset.left
-  //       });
-  //       this.$dropdown.addClass('direction-' + this.settings.dropdownDirection);
-  //       this.$control.addClass('direction-' + this.settings.dropdownDirection);
-  //       this.$wrapper.addClass('direction-' + this.settings.dropdownDirection);
-  //     } else {
-  //       window.Selectize.prototype.positionDropdownOriginal.apply(this, arguments);
-  //     }
-  //   };
-  // }
-
-  // button handlers
-  $('#btnApplyDisplayFormat').on('click', onDisplayFormatClicked);
-  $('#chkShowSelectedInscriptions').on('change', function() {
-    clearMarkers();
-    makeMarkers({preserveMapArea: true});
-  });
-  $('#chkShowOriginalLocation').on('change', function() {
-    clearMarkers();
-    makeMarkers({preserveMapArea: true});
-  });
-
-  // seems that the data has been loaded. Do not need this timer any more.
-  clearTimeout(gLoadingTimer);
-{% if search_data %}
-  // render search results
-  var shared_rules = JSON.parse(`{{ search_data | safe }}`);
-  modifySignatureTextRules(shared_rules);
-  $('#builder').queryBuilder('setRules', shared_rules, true);
-  doSearch();
-{% endif %}
 }
 
-function dismissAlert(alertId) {
-  if (alertId === undefined) {
-    alertId = '#alertObj';
-  }
-
-  if ($(alertId).is(":visible")) {
-    $(alertId).hide(500);
-  }
-}
-// Data provider for jsTree.
+/**
+ * Data provider for jsTree
+ * @param {Object} obj - an object being loaded
+ * @param {Function} cb - callback function to call with the children for that node
+ */
 function fetchTreeData(obj, cb) {
-  if (obj.id === '#') {
-    if (db === null) {
-        // we need to load the database first
-        return;
-    }
-
-    cb.call(this, gRootsJson);
-  }
-}
-
-function displaySignatureInfo() {
-  let indices = $('#jstree').jstree(true).get_selected();
-  if (indices.length == 0)
-    return;
-
-  if (gRenderInProgress) {
-    gRenderInProgress = false;
-    setTimeout(displaySignatureInfo, 300);
-    return;
-  }
-  let mainDisplayDom = document.getElementById('mainDisplay');
-  mainDisplayDom.innerHTML = "<img src='https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.7/themes/default-dark/throbber.gif'><br>";
-  gRenderInProgress = true;
-  setTimeout(renderSignatures, 100);
-}
-
-function renderSignatures() {
-  if (!gRenderInProgress)
-    return;
-
-  let html = inscriptions2markup();
-  let mainDisplayDom = document.getElementById('mainDisplay');
-  mainDisplayDom.innerHTML = html;
-  gRenderInProgress = false;
-}
-
-
-/* Once db is loaded convert all content to key-value object
-*/
-function convertDbToKeyMap() {
-  // Get all displayable column names and convert them to comma-separated string
-  let allDisplayColumns = displayFields();
-  allDisplayColumns.unshift({value: 'latitude', text: 'latitude'});
-  allDisplayColumns.unshift({value: 'longitude', text: 'longitude'});
-  allDisplayColumns.unshift({value: 'present_latitude', text: 'present_latitude'});
-  allDisplayColumns.unshift({value: 'present_longitude', text: 'present_longitude'});
-
-  allDisplayColumns.unshift({value: 'signature_id', text: 'some'});
-  allDisplayColumns.unshift({value: 'id', text: 'meta_id'});
-
-  allDisplayColumns = allDisplayColumns.reduce(function (result, field) {
-    if (field.value === 'images' || field.value === 'crosses')
-      return result;
-
-    if (field.value !== 'images') {
-      result.push(field.value);
-    }
-    return result;
-  }, []);
-
-  let contents = db.exec("SELECT " + allDisplayColumns + " FROM all_data");
-  let allRows = contents[0].values;
-  let dbMap = {};
-  let columns = contents[0].columns;
-  let signatureColumn = columns.indexOf('signature_text');
-  let metaColumn = columns.indexOf('id');
-  let numCrossesColumn = columns.indexOf('num_crosses');
-  let latitudeColumn = columns.indexOf('latitude');
-  let longitudeColumn = columns.indexOf('longitude');
-  const presentLatitudeColumn = columns.indexOf('present_latitude');
-  const presentLongitudeColumn = columns.indexOf('present_longitude');
-  const signatureIdColumn = columns.indexOf('id'); // it is actually meta ID
-
-  let customColumns = ['transliteration', 'english_translation', 'normalisation_scandinavian', 'normalisation_norse'];
-
-  for (var i = 0; i < allRows.length; i++) {
-    let row = allRows[i];
-    let rowObj = {};
-    let signatureId = row[signatureIdColumn];
-
-    for (var j = 0; j < allDisplayColumns.length; j++) {
-      let columnName = allDisplayColumns[j];
-
-      // we need to skip some columns
-      if (columnName === 'signature_id'
-          || columnName === 'latitude'
-          || columnName === 'longitude'
-          || columnName === 'present_latitude'
-          || columnName === 'present_longitude')
-        continue;
-
-      let humanName = humanNameForColumnName(columnName);
-      let columnData = row[j];
-
-      //columnData = escapeHtml(columnData);
-
-      if (columnName === 'signature_text') {
-        if (signatureId in gAliasByParent) {
-          columnData += ' (' + gAliasByParent[signatureId].join('|') + ')';
-          rowObj['aliases'] = gAliasByParent[signatureId].join(';');
-        } else {
-          rowObj['aliases'] = '';
-        }
-      }
-
-      rowObj[columnName] = columnData;
-      rowObj[columnName + 'html'] = escapeHtml(columnData);
-    }
-
-    /////////////////////////////////////
-    // fill in images
-    let directImagesQuery = db.exec("SELECT id, link_url, direct_url FROM runes_imagelink WHERE "
-      + "direct_url <> '' AND meta_id = " + row[metaColumn] + " LIMIT 9");
-    let indirectImagesQuery = [];
-    let directImagesValue = [];
-    let indirectImagesValue = [];
-
-    if (directImagesQuery.length > 0) {
-      let ids = directImagesQuery[0].values.map((v, i) => v[0]);
-      ids = ids.join(',');
-      indirectImagesQuery = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + row[metaColumn] + "' AND id NOT IN (" + ids + ")");
-      directImagesValue = directImagesQuery[0].values;
-    } else {
-      indirectImagesQuery = db.exec("SELECT link_url, direct_url FROM runes_imagelink WHERE meta_id = '" + row[metaColumn] + "'");
-    }
-
-    if (indirectImagesQuery.length > 0) {
-      indirectImagesValue = indirectImagesQuery[0].values;
-    }
-
-    let allImagesQuery = db.exec("SELECT link_url FROM runes_imagelink WHERE meta_id = " + row[metaColumn]);
-    let allImages = [];
-    if (allImagesQuery.length > 0) {
-      allImages = allImagesQuery[0].values;
-    }
-
-    rowObj['directImages'] = directImagesValue;
-    rowObj['indirectImages'] = indirectImagesValue;
-    let indirectImages = 'No images.';
-    if (rowObj['indirectImages'].length > 0) {
-      indirectImages = '<ul>';
-      rowObj['indirectImages'].map(function (v, i) {
-        indirectImages += `<li><a href="${v[0]}" contentEditable="false" target="_blank">${v[0]}</a></li>`;
-      });
-      indirectImages += '</ul>';
-    }
-    rowObj['indirectImageshtml'] = indirectImages;
-    rowObj['images'] = allImages;
-
-    // make image gallery of direct image links
-    let directImages = '';
-    if (rowObj['directImages'].length > 0) {
-      directImages = '<div class="container-fluid"><div class="row">';
-      rowObj['directImages'].map(function (v, i) {
-          if (i % 3 == 0) {
-            directImages += "</div>";
-            if (i < 9)
-              directImages += '<div class="row">';
-          }
-          directImages += `<div class="col-md-4"><a href="${v[1]}" contentEditable="false" target="_blank"><img src="${v[2]}" class="img-responsive"></a></div>`;
-      });
-      directImages += '</div></div>';
-    }
-    rowObj['directImageshtml'] = directImages;
-    /////////////////////////////////////
-
-    /////////////////////////////////////
-    // fill in crosses
-    let numCrosses = row[numCrossesColumn];
-    if (numCrosses > 0) {
-      rowObj['crosses'] = crossesForMeta(row[metaColumn]);
-    } else {
-      rowObj['crosses'] = [];
-    }
-    /////////////////////////////////////
-
-    rowObj['signature_text_raw'] = row[signatureColumn];
-    rowObj['latitude'] = row[latitudeColumn];
-    rowObj['longitude'] = row[longitudeColumn];
-    rowObj['present_latitude'] = row[presentLatitudeColumn];
-    rowObj['present_longitude'] = row[presentLongitudeColumn];
-
-    dbMap[signatureId] = rowObj;
-  }
-
-  return dbMap;
-}
-
-function clearMarkers() {
-  // get currently selected map area, so that we can restore it after clearing
-  markers.clearLayers();
-}
-
-function makeMarkers({preserveMapArea = false} = {}) {
-  let markersLatLon = [];
-  let sourceObj = gRootsJson;
-  const oldBounds = myMap.getBounds();
-
-  const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
-  const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
-  if (showSelected) {
-    let indices = $('#jstree').jstree(true).get_selected();
-    if (indices.length == 0) {
+  if (obj.id === "#") {
+    // root node
+    if (gSqlDb === null) {
+      // we need to load the database first
       return;
     }
-    sourceObj = [];
-    for (let i = 0; i < indices.length; i++) {
-      let needle = parseInt(indices[i], 10);
-      if (gRootIds.has(needle)) {
-        let idx = gRootIds.get(needle);
-        sourceObj.push(gRootsJson[idx]);
-      }
-    }
-  }
-
-  for (let i = 0; i < sourceObj.length; i++) {
-    let signatureName = sourceObj[i].signature;
-    let marker = '';
-    let row = `${sourceObj[i].id}-showOriginal_${showOriginalLocation}`;
-    let inscriptionData = gDbAsMap[sourceObj[i].id];
-    if (inscriptionData === undefined) {
-      console.log('Error: no data for ' + signatureName);
-      continue;
-    }
-
-    if (row in mapMarkers) {
-      marker = mapMarkers[row];
-    } else {
-      let lat = 0.0;
-      let lon = 0.0;
-      try {
-        lat = parseFloat(inscriptionData.latitude);
-        lon = parseFloat(inscriptionData.longitude);
-      } catch (e) {
-        console.log('Error parsing latitude/longitude for ' + signatureName);
-        console.log(`Latitude: ${inscriptionData.latitude}, Longitude: ${inscriptionData.longitude}`);
-        console.log(`Exception: ${e}`);
-      }
-      if (!showOriginalLocation) {
-        if (inscriptionData.present_latitude != '0' && inscriptionData.present_longitude != '0') {
-          lat = parseFloat(inscriptionData.present_latitude);
-          lon = parseFloat(inscriptionData.present_longitude);
-        }
-      }
-
-      if ((!isNaN(lat) && !isNaN(lon)) && (lat != 0 && lon != 0)) {
-        marker = new MarkerWithData([lat, lon], {
-          signature: signatureName,
-          id: gRootsJson[i].id,
-        });
-        let popupText = `${signatureName}<br>`;
-        if (isMobileDevice()) {
-          popupText += `<a href="${getGeoIntentURL(lat, lon)}" target="_self">Drive here!</a>`;
-        }
-        // Tooltip is simple and is always on, popup supports HTML and is opened  /closed by user
-        if (isMobileDevice()) {
-          marker.bindPopup(popupText, {autoClose: false});
-        }
-        marker.bindTooltip(signatureName, {permanent: true}).openTooltip();
-        mapMarkers[row] = marker;
-      }
-    }
-
-    if (marker instanceof Object) {
-      markers.addLayers(marker);
-      markersLatLon.push(marker.getLatLng());
-    }
-  }
-
-  if (markersLatLon.length > 0 && !preserveMapArea) {
-    let markersBounds = L.latLngBounds(markersLatLon);
-    myMap.fitBounds(markersBounds);
-  }
-  return markersLatLon;
-}
-
-/* Scroll to a signature selected in jsTree or simply to 0 top offset
- */
-function scrollToSelectedSignature() {
-  var nodes = $('#jstree').jstree(true).get_selected(true);
-  if (nodes === undefined || nodes.length == 0) {
-    gMainScrollArea.scrollTop = 0;
-    hideLoading();
-    return;
-  }
-
-  scrollToInscription(nodes[0].original.signature, nodes[0].id, true);
-}
-
-/* Scroll main display so that it shows the desired inscription.
- * signature is a textual signature, i.e. 'IR 3'
- * inscriptionId is a corresponding DB row ID. For example, 5.
- * updateTree is true or false. True - scrolls jsTree as well.
- */
-function scrollToInscription(signature, inscriptionId, updateTree) {
-  var section = document.getElementById(signature);
-  if (section) {
-    gMainScrollArea.scrollTop = section.offsetTop;
-  } else {
-  var el = document.getElementById(inscriptionId + '_anchor');
-    if (el) {
-      $('#jstree').scrollTop(el.offsetTop);
-    }
-
-    $('#jstree').jstree(true).deselect_all();
-    $('#jstree').jstree(true).select_node(inscriptionId);
+    cb.call(this, inscriptions2treeNodes(gViewModel.getActiveInscriptions()));
   }
 }
 
-// Next step in scrolling: determine which direction shall be scroll to
-function scrollToInscriptionStep2(rowClicked, signature, inscriptionId, updateTree) {
-  var visibleNodes = $('#mainDisplay > .inscription-section');
-  var firstVisibleId = document.getElementById($(visibleNodes[0]).attr('dbId'));
-  var rowVisible = $('.jstree-node').index(firstVisibleId);
-
-  if (rowVisible > rowClicked)
-    gClusterizeParams.direction = 'down';
-  if (gMainClusterize.getRowsAmount() > 3000) {
-    gClusterizeParams.seekFactor = 60;
-  }
-
-  scrollToInscriptionStep3(signature, inscriptionId, updateTree);
-}
-
-// Next step - scroll more in the desired direction
-function scrollToInscriptionStep3(signature, inscriptionId, updateTree) {
-  var shift = gMainClusterize.options.cluster_height * 0.5;
-  if (gClusterizeParams.direction === 'down')
-    shift = shift * -1;
-  var newTop = gMainScrollArea.scrollTop + shift;
-  gMainScrollArea.scrollTop = newTop;
-  gClusterizeParams.iteration++;
-
-  setTimeout(scrollToInscription, 2, signature, inscriptionId, updateTree);
-}
-
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-function getGeoIntentURL(lat, lng) {
-  if (isSafari()) {
-    return `http://maps.apple.com/?daddr=${lat},${lng}`;
-  }
-  else {
-    return `geo:${lat},${lng}?q=${lat},${lng}`;
-  }
-}
-
-// Get all inscriptions from jsTree and convert it to array of HTML tags,
-// which are ready for rendering.
-function inscriptions2markup() {
-
-  // array of all inscription IDs/signatures
-  let signatures = $('#jstree').jstree(true).get_selected();
-
-  // array of all inscription IDs/signatures
-  //let signatures = gRootsJson.map((obj, i) => obj.id);;
-
-  // we have no nodes in the tree
-  if (signatures.length == 0)
+function inscriptions2makup() {
+  // get selected inscriptions from multiselect `inpInscriptions`
+  /*const selectedOptions = Array.from(document.getElementById('inpInscriptions').selectedOptions);
+  if (selectedOptions.length === 0) {
     return [];
-
-  const showHeaders = $('#chkDisplayHeaders').is(":checked");
-  const displayInfo = displayFields();
-
-  // columnStyles is a dictionary where key is a column name and value is a CSS style
-  const columnStyles = displayInfo.reduce(function (result, field) {
-    if (field.css) {
-      result[field.value] = field.css;
-    }
-    return result;
-  }, {});
-
-  let markupData = [];
-
-  for (let i = 0; i < signatures.length; i++) {
-    let signatureId = signatures[i];
-
-    let inscriptionData = gDbAsMap[signatureId];
-    let signatureName = inscriptionData['signature_text_raw'];
-
-    let paragraph = `<article signature="${signatureName}" id="${signatureName}" dbId="${signatureId}" class="inscription-section">`;
-
-    for (let j = 0; j < userSelectedDisplay.length; j++) {
-      let columnName = userSelectedDisplay[j];
-      let humanName = humanNameForColumnName(columnName);
-      let columnData = '';
-      if (columnName in inscriptionData) {
-        columnData = inscriptionData[columnName];
-      }
-
-      if (showHeaders) {
-        paragraph += '<h4>' + humanName + '</h4>';
-      } else if (paragraph.length > 0 && columnData !== '') {
-        paragraph += '<br>';
-      }
-
-      //columnData = escapeHtml(columnData);
-
-      if (columnName === 'images') {
-        if (inscriptionData['directImages'].length == 0) {
-          paragraph += inscriptionData['indirectImageshtml'];
-          continue;
-        }
-        paragraph += inscriptionData['directImageshtml'];
-        if (inscriptionData['indirectImages'].length > 0) {
-          // add image links as they have not been added yet
-          paragraph += '<br>' + inscriptionData['indirectImageshtml'];
-        }
-
-        continue;
-      }
-
-      let cssStyle = '';
-      if (columnStyles.hasOwnProperty(columnName)) {
-        cssStyle = columnStyles[columnName];
-      }
-
-      // highlight text
-      if (gHighlights.hasOwnProperty(signatureName) && gHighlights[signatureName].hasOwnProperty(columnName)) {
-        let highlightIndices = gHighlights[signatureName][columnName];
-        console.log(`${signatureName} has ${highlightIndices.length} highlights`);
-        console.log(`They are: ${highlightIndices}`);
-
-        // highlightIndices is an array of tuples (arrays). Each element is an array of two elements
-        // where every two elements are start and end of the highlighted text.
-        // sort highlightIndices in ascending order by the first item in the tuple
-        highlightIndices = highlightIndices.sort(function (a, b) { return a[0] - b[0]; } );
-
-        // convert highlightIndices into consequative regions merging overlapping regions
-        // they may overlap in two cases:
-        // 1. one region is inside another
-        // 2. two regions overlap (one starts before another ends and continues after the end)
-        let regions = [highlightIndices[0]];
-        for (let k = 1; k < highlightIndices.length; k++) {
-          let region = highlightIndices[k];
-          if (region[0] <= regions[regions.length - 1][1]) {
-            // region starts before the last region ends
-            // let's see where it ends
-            if (region[1] > regions[regions.length - 1][1]) {
-              // it ends after the last region ends, so we need to extend the last region
-              regions[regions.length - 1][1] = region[1];
-            } else {
-              // it ends before the last region ends, so we do not need to do anything
-            }
-          } else {
-            // region starts after the last region ends, so we need to add it to the list
-            regions.push(region);
-          }
-        }
-
-        // replace all regions of texts in columnData with `<span class="highlighted">...</span>`
-        let highlightedStr = columnData;
-        console.log(`Column data: ${columnData}`);
-        for (let k = regions.length - 1; k >= 0; k--) {
-          const start_in_search = regions[k][0];
-          const end_in_search = regions[k][1];
-          let start = start_in_search;
-          let end = end_in_search;
-          if (columnName != "english_translation" && columnName != "swedish_translation" && gSearch2Original.hasOwnProperty(signatureName) && gSearch2Original[signatureName].hasOwnProperty(columnName)) {
-            start = gSearch2Original[signatureName][columnName][start_in_search];
-            end = gSearch2Original[signatureName][columnName][end_in_search];
-          }
-          // const start = gSearch2Original[signatureName]['transliteration'][start_in_search];
-          // const end = gSearch2Original[signatureName]['transliteration'][end_in_search];
-
-          const highlightedPart = highlightedStr.slice(start, end);
-          console.log(`highlightedPart: ${highlightedPart}`);
-
-          highlightedStr = highlightedStr.slice(0, start)
-            + '<span class="highlighted">'
-            + highlightedStr.slice(start, end)
-            + '</span>'
-            + highlightedStr.slice(end);
-        }
-        columnData = highlightedStr;
-      }
-
-      if (jQuery.inArray(columnName, customColumns) != -1) {
-        // Smiley is a special symbol: word substitute when word is not present
-        // We do not need to show it.
-        columnData = columnData.replace(/ ☺ /g, ' ');
-
-        if (~columnData.indexOf(paragraphSymbol)) {
-          let parts = columnData.split(paragraphSymbol);
-          let listHeader = '';
-          listHeader = "Sides or/and reading variants:"
-
-          paragraph += listHeader;
-          paragraph += '<ul>';
-          for (let k = 0; k < parts.length; k++) {
-            let part = parts[k];
-
-            if (!part.trim())
-              continue;
-
-            part = paragraphSymbol + part;
-            paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
-          }
-          paragraph += '</ul>';
-          continue;
-        } else {
-          // no parts in the columnData
-          paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
-          continue;
-        }
-      }
-
-      /*if (jQuery.inArray(columnName, customColumns) != -1) {
-        let cssStyle = 'normalization';
-        if (~columnName.indexOf('transliteration')) {
-          cssStyle = 'transliteration';
-        } else if (~columnName.indexOf('english_translation')) {
-          cssStyle = '';
-        }
-
-        if (columnName.indexOf('english_translation') == -1
-            && gMatchedWordIndices.hasOwnProperty(signatureId)) {
-          // this is one of the columns that should have highlighted data
-
-          columnData = columnData.trim();
-          // from set with word indices to array
-          let matchedWords = [...gMatchedWordIndices[signatureId]];
-          // sort in descending order
-          matchedWords = matchedWords.sort(function (a, b) { return b - a; } );
-          if (columnName.indexOf('transliteration') != -1) {
-            // double space have special meaning => it's designates a word that is not
-            // present in transliterated text, but is present in other texts. Very important!
-            columnData = columnData.replace(/\s{2}/g, ' &nbsp; ');
-          }
-          let words = getWordBoundaries(columnData, gWordSearchRegexEsc, gWordPunctuationRegexEsc);
-          var highlightedStr = columnData;
-          for (let k = 0; k < matchedWords.length; k++) {
-            let idx = matchedWords[k];
-            let wordStart = words[idx].start;
-            let wordEnd = words[idx].end;
-
-            if (words[idx].text[0] == '§') {
-              // this is a paragraph, do nothing
-              continue;
-            }
-
-            highlightedStr = columnData.slice(0, wordStart)
-              + '<span class="highlighted">'
-              + words[idx].text
-              + '</span>'
-              + highlightedStr.slice(wordEnd);
-          }
-          columnData = highlightedStr;
-        }
-
-        // Smiley is a special symbol: word substitute when word is not present
-        // We do not need to show it.
-        columnData = columnData.replace(/ ☺ /g, ' ');
-
-        if (~columnData.indexOf(paragraphSymbol)) {
-          let parts = columnData.split(paragraphSymbol);
-          let listHeader = '';
-          listHeader = "Sides or/and reading variants:"
-
-          paragraph += listHeader;
-          paragraph += '<ul>';
-          for (let k = 0; k < parts.length; k++) {
-            let part = parts[k];
-
-            if (!part.trim())
-              continue;
-
-            part = paragraphSymbol + part;
-            paragraph += '<li><span class="' + cssStyle + '">' + part + '</span></li>';
-          }
-          paragraph += '</ul>';
-        } else {
-          // no parts in the columnData
-          paragraph += '<span class="' + cssStyle + '">' + columnData + '</span>';
-        }
-        continue;
-      }*/
-
-      if (columnName === 'crosses') {
-        if (inscriptionData.num_crosses == 0) {
-          paragraph += 'No crosses.';
-          continue;
-        }
-
-        paragraph += '<table class="crosses" border="1">';
-        paragraph += '<thead><tr>';
-        paragraph += '<th>A</th>';
-        paragraph += '<th>B</th>';
-        paragraph += '<th>C</th>';
-        paragraph += '<th>D</th>';
-        paragraph += '<th>E</th>';
-        paragraph += '<th>F</th>';
-        paragraph += '<th>G</th>';
-        paragraph += '</th></thead>';
-        paragraph += '<tbody>';
-
-        let allCrosses = inscriptionData['crosses'];
-        for (let k = 0; k < allCrosses.length; k++) {
-          if (allCrosses[k][0].length > 0) {
-            // this is a cross from undefined group
-            paragraph += '<tr><td colspan="7">' + allCrosses[k][0][0].name + '</td></tr>';
-            continue;
-          }
-          paragraph += '<tr>';
-          // we have 8 groups in total, 0 being free-text and not a real group
-          for (let gr = 1; gr < 8; gr++) {
-            let crossForms = allCrosses[k][gr];
-            if (crossForms.length == 0) {
-              paragraph += '<td><span class="null">&#8709;</span></td>';
-              continue;
-            }
-            paragraph += '<td>';
-            paragraph += allCrosses[k][gr].map(function (v, i) {
-              let url = "{% static 'runes/images/cross_forms/' %}" + v.name + '.png';
-              let res = '<img src="' + url + '" alt="'+v.name+'" title="'+v.name+'" width="32" height="32">';
-              if (v.isCerain == 0) {
-                res += '?';
-              }
-              return res;
-            }).join(', ');
-            paragraph += '</td>';
-          }
-        }
-        paragraph += '</tbody></table>';
-        continue;
-      }
-
-      if ((columnData == '' || columnData == null) && showHeaders) {
-        columnData = '<i>Absent, not in the database.</i>';
-      }
-      paragraph += columnData;
-    }
-
-    // if (isMobileDevice()) {
-    //   // Add navigation link
-    //   const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
-    //   let lat = parseFloat(inscriptionData.latitude);
-    //   let lon = parseFloat(inscriptionData.longitude);
-    //   if (!showOriginalLocation) {
-    //     if (inscriptionData.present_latitude != '0' && inscriptionData.present_longitude != '0') {
-    //       lat = parseFloat(inscriptionData.present_latitude);
-    //       lon = parseFloat(inscriptionData.present_longitude);
-    //     }
-    //   }
-
-    //   // add <br/> to paragraph if it doesn't already end with it
-    //   if (paragraph.slice(-5) != '<br>') {
-    //     paragraph += '<br>';
-    //   }
-
-    //   const geoURL = getGeoIntentURL(lat, lon);
-    //   paragraph += `<a href="${geoURL}" target="_blank" contentEditable="false">Drive to inscription!</a><br>`;
-    // }
-    paragraph += '</article>';
-
-    markupData.push(paragraph);
   }
-
-  return markupData;
+  const showHeaders = $('#chkDisplayHeaders').is(":checked");*/
 }
 
-/* Find all crosses related to particular metaId.
- * Returned variable is a multidimensional array. Dimensions:
- * 1. First dimension contains individual crosses.
- * 2. Second dimension denotes cross form group. There could only be 8 groups.
- * 3. Third dimension contains objects with 2 data fields (name, isCertain). Each object represents a particular cross form in a group.
- *    Note that some groups can be empty.
- */
-function crossesForMeta(metaId) {
-  // we do not check that this meta contains any crosses. This should be done in parent call
-  let cc = db.exec("SELECT id FROM crosses WHERE meta_id = '" + metaId + "'");
-  let contents = db.exec("SELECT cross_id, cross_forms.id, cross_forms.name, cross_forms.group_id, cross_definitions.is_certain FROM cross_definitions INNER JOIN cross_forms ON (cross_definitions.form_id = cross_forms.id) WHERE cross_id IN (SELECT id FROM crosses WHERE meta_id = '" + metaId + "') ORDER BY cross_id");
-  if (!contents)
-    return [];
+function showMarkersWrapper({preserveMapArea = false} = {}) {
+  const showSelected = $('#chkShowSelectedInscriptions').is(':checked');
+  const showOriginalLocation = $('#chkShowOriginalLocation').is(':checked');
+  const inscriptionIds = showSelected ? $('#jstree').jstree('get_selected').map(node => parseInt(node, 10)) : gViewModel.getActiveInscriptionIds();
 
-  let lastCrossId = -1;
-  let crosses = [];
-
-  for (let i = 0; i < contents[0].values.length; i++) {
-    let crossId = parseInt(contents[0].values[i][0], 10);
-    if (crossId != lastCrossId) {
-      lastCrossId = crossId;
-      crosses.push(Array.apply(null, Array(8)).map(function() {return [];}));
-    }
-
-    let formName = contents[0].values[i][2];
-    let groupId = contents[0].values[i][3];
-    let isCertain = contents[0].values[i][4];
-
-    crosses[crosses.length - 1][parseInt(groupId, 10)].push({name: formName, isCertain: isCertain});
-  }
-  return crosses;
-}
-
-function displayFields() {
-  let displayOptions = [
-    {
-      value: 'signature_text',
-      text: 'Signature',
-    },
-    {
-      value: 'found_location',
-      text: 'Found location',
-    },
-    {
-      value: 'parish',
-      text: 'Parish',
-    },
-    {
-      value: 'district',
-      text: 'District',
-    },
-    {
-      value: 'municipality',
-      text: 'Municipality',
-    },
-    {
-      value: 'current_location',
-      text: 'Current location',
-    },
-    {
-      value: 'original_site',
-      text: 'Original site',
-    },
-    {
-      value: 'parish_code',
-      text: 'Parish code',
-    },
-    {
-      value: 'rune_type',
-      text: 'Rune type',
-    },
-    {
-      value: 'dating',
-      text: 'Dating',
-    },
-    {
-      value: 'year_from',
-      text: 'Year (from)',
-    },
-    {
-      value: 'year_to',
-      text: 'Year (to)',
-    },
-    {
-      value: 'style',
-      text: 'Style',
-    },
-    {
-      value: 'carver',
-      text: 'Carver',
-    },
-    {
-      value: 'material',
-      text: 'Material',
-    },
-    {
-      value: 'material_type',
-      text: 'Material type',
-    },
-    {
-      value: 'objectInfo',
-      text: 'Object information',
-    },
-    {
-      value: 'reference',
-      text: 'References',
-    },
-    {
-      value: 'additional',
-      text: 'Other information',
-    },
-    {
-      value: 'normalisation_norse',
-      text: 'Normalization to Old West Norse',
-      css: 'normalization',
-    },
-    {
-      value: 'normalisation_scandinavian',
-      text: 'Normalisation to Old Scandinavian',
-      css: 'normalization',
-    },
-    {
-      value: 'english_translation',
-      text: 'Translation to English',
-    },
-    {
-      value: 'swedish_translation',
-      text: 'Translation to Swedish',
-    },
-    {
-      value: 'transliteration',
-      text: 'Transliterated runic text',
-      css: 'transliteration',
-    },
-    {
-      value: 'num_crosses',
-      text: 'Number of crosses',
-    },
-    {
-      value: 'crosses',
-      text: 'Cross form',
-    },
-    {
-      value: 'images',
-      text: 'Images',
-    },
-  ];
-  let sortOrder = ['signature_text', 'transliteration', 'normalisation_scandinavian', 'normalisation_norse',
-    'english_translation', 'swedish_translation', 'found_location', 'parish', 'municipality', 'district', 'current_location',
-    'original_site', 'images', 'rune_type', 'carver', 'num_crosses', 'crosses', 'dating', 'style',
-    'material_type', 'material', 'objectInfo', 'reference', 'additional'];
-  let sortValue = 1;
-  if (storageAvailable('localStorage'))
-  {
-    var storage = window['localStorage'];
-    if (storage.getItem(gUserSelectedDisplayKey)) {
-      var savedItems = JSON.parse(storage.getItem(gUserSelectedDisplayKey));
-      savedItems.forEach(function (val) {
-        let idx = displayOptions.findIndex(o => o.value === val);
-        if (idx != -1) {
-          displayOptions[idx].sortValue = sortValue++;
-        }
-      });
-    }
-  }
-  sortOrder.forEach(function (val) {
-    let idx = displayOptions.findIndex(o => o.value === val);
-    if (idx != -1 && !displayOptions[idx].hasOwnProperty('sortValue')) {
-      displayOptions[idx].sortValue = sortValue;
-      sortValue += 1;
-    }
+  showMarkers({
+    preserveMapArea,
+    showOriginalLocation,
+    inscriptionIds,
+    allMarkers: gAllMarkers,
+    mapObject: gMyMap,
+    markersLayer: gMarkersLayer,
   });
-  return displayOptions;
 }
 
-function humanNames() {
-  const namesMap = [
-    {
-      value: 'runes_personalname',
-      text: 'Personal Name'
-    },
-    {
-      value: 'search_transliteration',
-      text: 'Transliterated runic text'
-    },
-    {
-      value: 'normalisation_search_norse',
-      text: 'Normalization to Old West Norse'
-    },
-    {
-      value: 'normalisation_search_scandinavian',
-      text: 'Normalisation to Old Scandinavian'
-    },
-    {
-      value: 'aliases',
-      text: 'Alternative signatures'
-    },
-  ];
-  return namesMap;
-}
-
-function humanNameForColumnName(columnName) {
-  let a = displayFields().find(x => x.value === columnName);
-  if (a) {
-    return a.text;
-  }
-  a = humanNames().find(x => x.value === columnName);
-  if (a) {
-    return a.text;
-  }
-  return columnName;
-}
-
-function initMultiselect() {
-  var displayOptions = displayFields();
-
-  $.each(displayOptions, function (i, item) {
-      if (jQuery.inArray(item.value, userSelectedDisplay) != -1) {
-        $('#multiselect_to').append($('<option>', {
-            value: item.value,
-            text : item.text,
-            sortValue: item.sortValue,
-        }));
-        return;
-      }
-      $('#multiselect').append($('<option>', {
-          value: item.value,
-          text : item.text,
-          sortValue: item.sortValue,
-      }));
-  });
-
-  $('#multiselect').multiselect({
-    keepRenderingSortRight: false,
-    skipInitSortRight: false,
-    sort: {
-      left: function (a, b) {
-        aValue = parseInt($(a).attr('sortValue'));
-        bValue = parseInt($(b).attr('sortValue'));
-
-        return aValue > bValue ? 1 : -1;
-      },
-      right: function (a, b) {
-        aValue = parseInt($(a).attr('sortValue'));
-        bValue = parseInt($(b).attr('sortValue'));
-
-        return aValue > bValue ? 1 : -1;
-      }
-    },
-    afterMoveUp: () => resortDisplayOptions(),
-    afterMoveDown: () => resortDisplayOptions(),
-    afterMoveToRight: () => resortDisplayOptions(),
-    afterMoveToLeft: () => resortDisplayOptions(),
-  });
-  formatDialog = $('#divFormatDialog');
-}
-
-/*
- * Preserve the sorting after user interacts with the display options
- */
-function resortDisplayOptions()
-{
-  var newSort = 0;
-  $('#multiselect_to option').each(function() { $(this).attr('sortValue', newSort++); });
-  $('#multiselect option').each(function() { $(this).attr('sortValue', newSort++); });
-  saveUserSelectedDisplay();
-}
-
-function setTooltip(btn, message) {
-  let that = $(btn);
-  that.attr('data-original-title', message).tooltip('show');
-  // do not care about multiple calls to setTimeout
-  setTimeout(function() {
-    that.tooltip('hide');
-  }, 900);
-}
-
-function doSearch() {
-  if (applyFilters()) {
-    clearMarkers();
-    makeMarkers();
-
-    // skip_loading, forget_state
-    $('#jstree').jstree(true).refresh(false, true);
-
-    displayStatistics();
-  }
-}
-
-function selectFirstSignature() {
-  let root = $('#jstree').jstree(true).get_node('#');
-  $('#jstree').jstree(true).select_node(root.children[0]);
-}
-
-// Import list of signatures provided from a file
-// Function argument fileContent is the actual file content.
-function importSignaturesHandler(fileContent) {
-  if (fileContent === null) {
-    return;
-  }
-  if (/[\x00-\x08\x0E-\x1F]/.test(fileContent)) {
-    alert("Seems like the file you've selected is not textual. Please select a different file.");
-    hideLoading();
-    return;
-  }
-
-  var csvData = Papa.parse(fileContent);
-  var numLines = csvData.data.length;
-  let firstDataRow = 0;
-  let signatureColumn = 0;
-  let multiline = false;
-  let numEntries = 0;
-  let values = [];
-
-  if (numLines == 2) {
-    // check if csvData.data[1] is a string or array
-    if (typeof csvData.data[1] === 'string') {
-      if (csvData.data[1].trim().length == 0) {
-        numLines = 1;
-      }
-    } else {
-      if (csvData.data[1][0].trim().length == 0) {
-        numLines = 1;
-      }
-    }
-  }
-
-  if (numLines > 1) {
-    let signatureCandidate = csvData.data[0].findIndex(item => 'signature' === item.toLowerCase());
-    if (signatureCandidate != -1) {
-      firstDataRow = 1;
-      signatureColumn = signatureCandidate;
-    }
-
-    numEntries = csvData.data.length;
-    for (var i = firstDataRow; i < numEntries; i++) {
-      // iterate over rows
-      if (!csvData.data[i][signatureColumn] || csvData.data[i][signatureColumn].trim().length == 0) {
-        continue;
-      }
-      values.push(csvData.data[i][signatureColumn].trim());
-    }
-  } else {
-    // single line, treat every value as a signature
-    numEntries = csvData.data[0].length;
-    for (var i = 0; i < numEntries; i++) {
-      // iterate over columns
-      if (!csvData.data[0][i] || csvData.data[0][i].trim().length == 0) {
-        continue;
-      }
-      values.push(csvData.data[0][i].trim());
-    }
-  }
-
-  var rule = [{
-    id: "signature_text",
-    field: "signature_text",
-    type: "string",
-    input: "text",
-    operator: "in",
-    value: values,
-    ignoreCase: false,
-  }];
-
-  var allRules = {
-    condition: 'OR',
-    rules: rule,
-    not: false,
-  };
-
-  $('#builder').queryBuilder('setRules', allRules, true);
-  doSearch();
-  hideLoading();
-}
-
-function showLoading() {
-  $('#loading').show();
-}
-
-function hideLoading() {
-  $('#loading').hide();
-}
-
-async function fetchAndDecompress(url) {
-  // Fetch the compressed file
-  const response = await fetch(url);
-  const reader = response.body.getReader();
-
-  // Create a ReadableStream that decompresses the data
-  const decompressor = new DecompressionStream('gzip');
-  const decompressedStream = new ReadableStream({
-      start(controller) {
-          reader.read().then(function process({ done, value }) {
-              if (done) {
-                  controller.close();
-                  return;
-              }
-              controller.enqueue(value);
-              return reader.read().then(process);
-          });
-      }
-  }).pipeThrough(decompressor);
-
-  // Read the decompressed data and convert it to a string
-  const textDecoder = new TextDecoder();
-  let result = '';
-  const decompressedReader = decompressedStream.getReader();
-  while (true) {
-      const { done, value } = await decompressedReader.read();
-      if (done) break;
-      result += textDecoder.decode(value);
-  }
-
-  // Parse the JSON data
-  const data = JSON.parse(result);
-  return data;
-}
-
-var clipboard = [];
-$(function() {
-
-  fetchAndDecompress("{% static 'runes/search2original.json.gzip' %}?v=1.1.4")
-    .then(data => { console.log('Got data from search2original.json.gzip OK!'); gSearch2Original = data; })
-    .catch(error => {
-      console.error(`Failed to get search2original.json.gzip: ${error}`);
-      $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
-      alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
-    });
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialization happens in 3 steps:
+  // 1. code here on page load
+  // 2. after db was loaded
+  // 3. after js-tree was populated, on 'ready.jstree'
 
   const sqlConfig = {
     locateFile: () => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm'
@@ -3083,8 +788,7 @@ $(function() {
     xhr.addEventListener("load", function() {
       console.log('we got sql data from server');
 
-      var uInt8Array = new Uint8Array(this.response);
-      db = new SQL.Database(uInt8Array);
+      gSqlDb = new SQL.Database(new Uint8Array(this.response));
       onDbLoaded();
     });
     xhr.send();
@@ -3093,281 +797,167 @@ $(function() {
   });
 
   initMultiselect();
-  formatDialog.hide();
-  $('#alertObj').hide();
 
-  $('.clip').each(function (i) {
-    // prepare buttons for clipboard library
-    $(this).attr('data-clipboard-text', $(this).html());
-  });
-  $('.clip').tooltip({
-    container: 'body',
-    placement: 'bottom',
-    title: 'Copied123!',
-    trigger: 'manual',
-    delay: 10,
-  });
-  clipboard = new ClipboardJS('.btn');
-  clipboard.on('success', function(e) {
-    setTooltip(e.trigger, 'Copied to clipboard!');
-  });
-  clipboard.on('error', function(e) {
-    setTooltip(e.trigger, 'Failed!');
+  $('#multiselect').on('displayUpdated', () => {
+    displaySignatureInfo();
   });
 
-  myMap = L.map('mapDisplay', {
-    fullscreenControl: true,
-  }).setView([56.607512, 16.439838], 8);
-  let osmAttrib = '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-      maxZoom: 18,
-      attribution: osmAttrib
-    }
-  ).addTo(myMap);
-  markers = L.markerClusterGroup({
-    showCoverageOnHover: true,
-    chunkedLoading: true,
-    maxClusterRadius: 60,
+  initClipboardButtons();
+  ({ map: gMyMap, markers: gMarkersLayer } = initMap("mapDisplay"));
+  document.getElementById('mHideMap').addEventListener('click', function() {
+    onHideMapClicked('mapDisplayWrapper', 'mHideMap');
   });
-  markers.on('click', function (e) {
-    scrollToInscription(e.layer.options.signature, e.layer.options.id);
-  });
-  markers.addTo(myMap);
-  myMap.on('fullscreenchange', function () {
-    gMainClusterize.refresh();
-    if (!myMap.isFullscreen()) {
-      gMainScrollArea.scrollTop = 0;
-    }
-  });
-  // add location control to global name space for testing only
-  // on a production site, omit the "lc = "!
-  lc = L.control
-    .locate({
-      strings: {
-        title: "My location"
-      }
-    })
-    .addTo(myMap);
 
-  // Next phase, jstree creation/initialization
-  $('#jstree')
-  .on('ready.jstree', function () {
-      // if (gMainClusterize === null) {
-      //   gMainClusterize = new Clusterize({
-      //     rows: inscriptions2markup(),
-      //     scrollId: 'mainScrollArea',
-      //     contentId: 'mainDisplay',
-      //     callbacks: {
-      //       clusterChanged: function () {
-      //       }
-      //     },
-      //   });
-      // } else {
-      //   gMainClusterize.update(inscriptions2markup());
-      // }
-
-      clearMarkers();
-      makeMarkers();
-      displayStatistics();
-
-      hideLoading();
-      // let's check if this is the first time user visits us
-      if (document.cookie.split(';').filter((item) => item.includes('visited=')).length == 0) {
-        // it is the first time
-        var about_url = "{% url 'runes:about' %}";
-        $('#alertObj').html('Looks like you are visiting Rundata.info for the first time. If this is the case, then it might be beneficial to read the <a href="http://rundata-net.rtfd.io/" target="_blank">help</a> and visit <a href="' + about_url + '" target="_blank">About</a> page BEFORE you continue!<br>If you have been here before, just ignore this message.<br>This message will disappear in one minute. <a href="#" onclick="dismissAlert(); return false;" title="Click to close this alert">Dismiss this message now!</button>');
-        $('#alertObj').show(500);
-        setTimeout(dismissAlert, 60000);
-        document.cookie = "visited=true; expires=Fri, 31 Dec 9999 23:59:59 GMT";
-      }
-      $('#jstree').jstree(true).select_node('1');
+  // Configure jsTree even before we have the data
+  $("#jstree")
+  .on('ready.jstree', function() {
+    showMarkersWrapper();
   })
   .on('refresh.jstree', function() {
-      $('#jstree').scrollTop(0);
-      selectFirstSignature();
+    $('#jstree').scrollTop(0);
+    selectFirstSignature();
   })
-  .on('changed.jstree', function(node, eventObj) {
+  .on('changed.jstree', (node, eventObj) => {
     if (eventObj.action == 'select_node') {
       if ($('#chkShowSelectedInscriptions').is(':checked')) {
-        clearMarkers();
-        makeMarkers();
+        showMarkersWrapper();
       }
       displaySignatureInfo();
     }
   })
   .jstree({
-      'core': {
-          'animation': 0,
-          'data': fetchTreeData,
-          'multiple': true,
-      }
-  });
-
-  $('#btnClearRules').on('click', function() {
-    $('#builder').queryBuilder('reset');
-  });
-
-  $('#btnRulesExport').on('click', function() {
-    var result = $('#builder').queryBuilder('getRules');
-
-    if (!$.isEmptyObject(result)) {
-      $('#ruleIo').val(JSON.stringify(result, null, 2));
+    'core': {
+      'animation': 0,
+      'data': fetchTreeData,
+      'multiple': true,
     }
   });
 
-  $('#btnRulesImport').on('click', function() {
-    var rules = JSON.parse($('#ruleIo').val());
-    modifySignatureTextRules(rules);
-    $('#builder').queryBuilder('setRules', rules, true);
+  // Button handlers
+  $('#chkShowSelectedInscriptions').on('change', function() {
+    showMarkersWrapper({preserveMapArea: true});
+  });
+  $('#chkShowOriginalLocation').on('change', function() {
+    showMarkersWrapper({preserveMapArea: true});
   });
 
-  $('#btnSearch').on('click', function() {
-    doSearch();
-  });
-  $('#btnResetSearch').on('click', function() {
-    gRootsJson = gOriginalData;
-    gRootIds = gOriginalIds;
-    resetSearchStats();
-    clearMarkers();
-    makeMarkers();
-
-    // skip_loading, forget_state
-    $('#jstree').jstree(true).refresh(false, true);
-
-    displayStatistics();
-  });
-
-  function onExportError(e) {
-    closeResultsIoModal();
-    hideLoading();
-    gExportInProgress = false;
-
-    $('#alertObj').html(`Export failed. Please <a href="https://github.com/fralik/rundata-net/issues" target="_blank">report</a> this issue.
-    <br>Include the following error details in your report: "${e.message}"<br>
-    This message will disappear in one minute. <a href="#" onclick="dismissAlert(); return false;" title="Click to close this alert">Dismiss this message now!</button>
-    `);
-    $('#alertObj').show(500);
-    setTimeout(dismissAlert, 60000);
-}
-
-  function onExportWorkerMessage(e) {
-    // Export to Excel
-    closeResultsIoModal();
-    hideLoading();
-    gExportInProgress = false;
-
-    const columns = e.data.columns;
-    const rows = e.data.rows;
-
-    try {
-      let workbook = XLSX.utils.book_new();
-      let worksheetData = [columns.map(humanNameForColumnName)];
-      worksheetData.push(...rows);
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
-
-      const searchRules = $('#builder').queryBuilder('getRules');
-      if (!$.isEmptyObject(searchRules)) {
-        const rulesString = JSON.stringify(searchRules, null, 2);
-        const worksheetRules = XLSX.utils.aoa_to_sheet([['Search rules'], [rulesString]]);
-        XLSX.utils.book_append_sheet(workbook, worksheetRules, 'Search rules');
-      }
-
-      XLSX.writeFile(workbook, 'rundata-net_results.xlsx');
-    } catch (e) {
-      onExportError(e);
+  document.getElementById('btnText2Rules').addEventListener('click', function() {
+    const text = document.getElementById('searchTextInput').value;
+    if (!text.trim()) {
+      showAlert('Please enter a search query first', 'danger');
+      return;
     }
-  }
 
-  $('#btnExportResults').on('click', function() {
+    showLoading("Converting your search query to search parameters");
+
+    // Send the text to the API endpoint
+    fetch('api/txt2rules', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: text }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      hideLoading();
+      console.log('Got rules from server:', data);
+      if (data && data.rules) {
+        console.log(data.rules);
+        $(`#${inpQueryBuilder}`).queryBuilder('setRules', JSON.parse(data.rules));
+        // After successfully setting the rules, trigger the search
+        document.getElementById('btnSearch').click();
+      } else {
+        showAlert('The server could not generate search rules from your text');
+      }
+    })
+    .catch(error => {
+      hideLoading();
+      console.error('Error:', error);
+      showAlert('Failed to process your search query. Please try again.');
+    });
+  });
+
+  document.getElementById('btnSearch').addEventListener('click', function() {
+    const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    const results = doSearch(rules, gViewModel.getAllInscriptions().values());
+    console.log(`Got ${results.length} results`);
+    gViewModel.setSearchResults(results);
+  });
+
+  document.getElementById('btnResetSearch').addEventListener('click', function() {
+    gViewModel.clearSearchResults();
+  });
+  document.getElementById('btnRulesExport').addEventListener('click', function() {
+    const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    if (!$.isEmptyObject(rules)) {
+      $('#ruleIo').val(JSON.stringify(rules, null, 2));
+    }
+  });
+  document.getElementById('btnRulesImport').addEventListener('click', function() {
+    const rules = JSON.parse($('#ruleIo').val());
+    $(`#${inpQueryBuilder}`).queryBuilder('setRules', rules, true);
+  });
+  document.getElementById('btnClearRules').addEventListener('click', function() {
+    $(`#${inpQueryBuilder}`).queryBuilder('reset');
+  });
+
+  // Export Excel button handler
+  document.getElementById('btnExportResults').addEventListener('click', function() {
     if (gExportInProgress) {
       return;
     }
     gExportInProgress = true;
     showLoading();
 
-    var exportWorker = new Worker("{% static 'runes/csv.worker.js' %}?v=0.0.3");
-    exportWorker.onmessage = onExportWorkerMessage;
-    exportWorker.postMessage({
-      inscriptions: gDbAsMap,
-      rows: gRootsJson,
-      columns: userSelectedDisplay.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']),
+    // Create a mapping of column names to human-readable names
+    const userSelectedFields =  getUserSelectedDisplay();
+    const columns = userSelectedFields.concat(['latitude', 'longitude', 'present_latitude', 'present_longitude']);
+    const columnMap = {};
+
+    columns.forEach(column => {
+      columnMap[column] = getHumanName(column);
     });
+
+    // Get the current search rules to include in the export
+    const searchRules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+
+    // Create worker and send data
+    const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}?v=0.0.1");
+    exportWorker.onmessage = onExportWorkerMessage;
     exportWorker.onerror = onExportError;
+
+    exportWorker.postMessage({
+      inscriptions: Array.from(gViewModel.getActiveInscriptions().values()),
+      columnMap: columnMap,
+      rules: searchRules
+    });
   });
 
-  let dropArea = document.getElementById('drop-area');
-  ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, preventDefaults, false)
-  })
-  ;['dragenter', 'dragover'].forEach(eventName => {
-    dropArea.addEventListener(eventName, highlight, false)
-  })
+  // Search statistics updates:
+  $(document).on('updateSignatureCount', function(event, data) {
+    document.getElementById('outNumSignaturesFound').textContent = data.count;
+  });
+  $(document).on('updateWordCount', function(event, data) {
+    document.getElementById('outNumWords').textContent = data.count;
+  });
+  $(document).on('updatePersonalNameCount', function(event, data) {
+    document.getElementById('outNumFoundNames').textContent = data.count;
+  });
+  $(document).on('viewModelUpdated', function(event, data) {
+    document.getElementById('mainDisplay').innerHTML = "";
+    $('#jstree').jstree(true).refresh(false, true);
+    showMarkersWrapper();
+    calcWordsAndPersonalNames(data.model.getActiveInscriptions());
+  });
 
-  ;['dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, unhighlight, false)
-  })
-  dropArea.addEventListener('drop', handleDrop, false)
-  document.getElementById('fileElem').addEventListener('change', handleImportWrapper, false);
-
-  function handleDrop(e) {
-    let dt = e.dataTransfer;
-    let files = dt.files;
-
-    handleFiles(files);
-    closeResultsIoModal();
-  }
-  // Event handler that stops event propagation. Used for drag and drop support
-  function preventDefaults (e) {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-  function highlight(e) {
-    dropArea.classList.add('highlight')
-  }
-
-  function unhighlight(e) {
-    dropArea.classList.remove('highlight')
-  }
-  function handleImportWrapper(evt) {
-    handleFiles(evt.target.files);
-    closeResultsIoModal();
-
-    // reset form, so that we can import the same file again if we need to
-    $('form#form-signature-import').get(0).reset();
-  }
-  function handleFiles(files) {
-    if (files.length == 0) {
-      return;
-    }
-    var fileReader = new FileReader();
-    var file = files[0]; // be sure to take just a single file
-    fileReader.onloadend = function(evt) {
-      if (evt.target.readyState == FileReader.DONE) {
-        $('#loading-sub-text').html('This dialog will disappear once data is ready');
-        showLoading();
-        setTimeout(importSignaturesHandler, 10, evt.target.result);
-      }
-    }
-    fileReader.readAsText(file);
-  }
-  function closeResultsIoModal() {
-    var obj = $('#modalResultsIo');
-    obj.modal('hide');
-  }
-
-  $('#mHideMap').on('click', onHideMapClicked);
-
+  initDragAndDrop();
 });
-
-// 90 sec timeout
-var gLoadingTimer = setTimeout(function() {
-  if ($('#loading').is(':visible')) {
-    $(document.body).html("Seems that something went wrong and the app is not usable. Try to refresh the page or come later.");
-    alert('Seems that something went wrong and the app is not usable. Try to refresh the page or come later.');
-  }
-}, 90000);
 
 </script>
 

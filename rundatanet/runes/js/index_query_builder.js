@@ -385,6 +385,7 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
   const operators = opt.operators || ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal', 'between', 'not_between'];
   const size = opt.size || 10;
   const optgroup = opt.optgroup || "other";
+  const inputType = opt.input || 'number';
 
   let config = {
     id: ruleId,
@@ -394,7 +395,7 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
     type: 'integer',
     size: size,
     operators: operators,
-    input: 'number'
+    input: inputType
   };
   const dataLimitValues = getMinMaxValues(dbMap, fieldId);
   opt.min = opt.min || (dataLimitValues && dataLimitValues.min);
@@ -599,6 +600,20 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       },
       plugin: 'tomSelect',
       plugin_config: signature_text_tomselect_cfg,
+    },
+    {
+      id: 'lost',
+      label: getHumanName('lost'),
+      field: 'lost',
+      optgroup: 'gr_inscription',
+      type: 'integer',
+      input: 'radio',
+      values: [
+        {0: 'No'},
+        {1: 'Yes'},
+      ],
+      default_value: 0,
+      operators: ['equal'],
     },
     // gr_texts filters
     createWordSearchRule({

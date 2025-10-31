@@ -179,6 +179,12 @@ export const schemaFieldsInfo = [
       en: 'Images',
     }
   },
+  {
+    schemaName: 'lost',
+    text: {
+      en: 'Is Lost?',
+    }
+  }
 ];
 
 const allButNames = /[\$\[\]\{\}\(\)\?<>\^`´\|¬°·:×¤\+÷']|¶+,\./g;
