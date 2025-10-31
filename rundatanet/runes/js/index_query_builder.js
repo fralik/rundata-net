@@ -385,6 +385,7 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
   const operators = opt.operators || ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal', 'between', 'not_between'];
   const size = opt.size || 10;
   const optgroup = opt.optgroup || "other";
+  const inputType = opt.input || 'number';
 
   let config = {
     id: ruleId,
@@ -394,7 +395,7 @@ function prepareIntegerRule(ruleId, dbMap, humanNameGetter, opt) {
     type: 'integer',
     size: size,
     operators: operators,
-    input: 'number'
+    input: inputType
   };
   const dataLimitValues = getMinMaxValues(dbMap, fieldId);
   opt.min = opt.min || (dataLimitValues && dataLimitValues.min);
@@ -577,6 +578,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
   };
 
   let queryBuilderFilters = [
+    // gr_inscription filters
     {
       id: 'inscription_id',
       optgroup: 'gr_inscription',
@@ -599,7 +601,50 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       plugin: 'tomSelect',
       plugin_config: signature_text_tomselect_cfg,
     },
-    prepareAutoComplete('carver', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    {
+      id: 'lost',
+      label: getHumanName('lost'),
+      field: 'lost',
+      optgroup: 'gr_inscription',
+      type: 'integer',
+      input: 'radio',
+      values: [
+        {0: 'No'},
+        {1: 'Yes'},
+      ],
+      default_value: 0,
+      operators: ['equal'],
+    },
+    // gr_texts filters
+    createWordSearchRule({
+      id: 'normalization_norse_to_transliteration',
+      field: 'normalization_norse',
+      label: 'Normalization Norse to Transliteration',
+      optgroup: 'gr_texts',
+    }),
+    createWordSearchRule({
+      id: 'normalization_scandinavian_to_transliteration',
+      field: 'normalisation_scandinavian',
+      label: 'Normalization Scandinavian to Transliteration',
+      optgroup: 'gr_texts',
+    }),
+    prepareAutoComplete('english_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
+    prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
+    {
+      id: 'has_personal_name',
+      label: "Has personal name(s)?",
+      field: 'num_names',
+      optgroup: 'gr_texts',
+      type: 'integer',
+      input: 'radio',
+      values: [
+        {0: 'No'},
+        {1: 'Yes'},
+      ],
+      default_value: 1,
+      operators: ['equal'],
+    },
+    // gr_location filters
     {
       id: 'inscription_country',
       optgroup: "gr_location",
@@ -640,21 +685,6 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
         $input.tomSelect('setValue', value);
       }
     },
-    createWordSearchRule({
-      id: 'normalization_norse_to_transliteration',
-      field: 'normalization_norse',
-      label: 'Normalization Norse to Transliteration',
-      optgroup: 'gr_texts',
-    }),
-    createWordSearchRule({
-      id: 'normalization_scandinavian_to_transliteration',
-      field: 'normalisation_scandinavian',
-      label: 'Normalization Scandinavian to Transliteration',
-      optgroup: 'gr_texts',
-    }),
-    prepareAutoComplete('english_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
-    prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
-
     prepareAutoComplete('full_address', dbMap, getHumanName, { optgroup: 'gr_location', operators: ['contains'] }),
     prepareAutoComplete('found_location', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('parish', dbMap, getHumanName, { optgroup: 'gr_location' }),
@@ -663,17 +693,25 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     prepareAutoComplete('current_location', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('original_site', dbMap, getHumanName, { optgroup: 'gr_location' }),
     prepareAutoComplete('parish_code', dbMap, getHumanName, { optgroup: 'gr_location' }),
-    prepareAutoComplete('rune_type', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    // gr_time_period filters
     prepareAutoComplete('dating', dbMap, getHumanName, { optgroup: 'gr_time_period' }),
     prepareIntegerRule('year_from', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_time_period' }),
     prepareIntegerRule('year_to', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_time_period' }),
     prepareAutoComplete('style', dbMap, getHumanName, { optgroup: 'gr_time_period' }),
+    // gr_design filters
+    prepareAutoComplete('carver', dbMap, getHumanName, { optgroup: 'gr_design' }),
+    prepareAutoComplete('rune_type', dbMap, getHumanName, { optgroup: 'gr_design' }),
     prepareAutoComplete('material', dbMap, getHumanName, { optgroup: 'gr_design' }),
     prepareAutoComplete('material_type', dbMap, getHumanName, { optgroup: 'gr_design' }),
     prepareAutoComplete('objectInfo', dbMap, getHumanName, { optgroup: 'gr_design' }),
-    prepareAutoComplete('reference', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
-    prepareAutoComplete('additional', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
-    prepareIntegerRule('num_crosses', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_design' }),
+    prepareIntegerRule('num_crosses', dbMap, getHumanName,
+      {
+        operators: ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal', 'between'],
+        optgroup: 'gr_design',
+        default_value: 0,
+        step: 1,
+      }
+    ),
     {
       id: 'cross_form',
       field: 'crosses',
@@ -714,20 +752,9 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
         rule.$el.find(`.rule-value-container [name$=_2][value=${value.is_certain}]`).prop('checked', true);
       },
     },
-    {
-      id: 'has_personal_name',
-      label: "Has personal name(s)?",
-      field: 'num_names',
-      optgroup: 'gr_texts',
-      type: 'integer',
-      input: 'radio',
-      values: [
-        {0: 'No'},
-        {1: 'Yes'},
-      ],
-      default_value: 1,
-      operators: ['equal'],
-    }
+    // gr_more_info filters
+    prepareAutoComplete('reference', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
+    prepareAutoComplete('additional', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
   ];
 
   const my_rule_template = ({ rule_id, icons, settings, translate, builder }) => {
@@ -751,13 +778,10 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
   </div>`;
   };
 
-  // sort groups
+  // Filters are already sorted in the correct order to match optGroups.
+  // The sortGroupsByOrder function is kept for redundancy to ensure alphabetical
+  // sorting within each group.
   queryBuilderFilters = sortGroupsByOrder(queryBuilderFilters, Object.keys(optGroups));
-
-  // swap two first filters, so that signature is on the first place!
-  const tmp = queryBuilderFilters[0];
-  queryBuilderFilters[0] = queryBuilderFilters[1];
-  queryBuilderFilters[1] = tmp;
 
   queryBuilder.queryBuilder({
     display_empty_filter: false,
