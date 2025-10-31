@@ -704,7 +704,14 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     prepareAutoComplete('material', dbMap, getHumanName, { optgroup: 'gr_design' }),
     prepareAutoComplete('material_type', dbMap, getHumanName, { optgroup: 'gr_design' }),
     prepareAutoComplete('objectInfo', dbMap, getHumanName, { optgroup: 'gr_design' }),
-    prepareIntegerRule('num_crosses', dbMap, getHumanName, { operators: ['equal', 'less', 'greater', 'between'], optgroup: 'gr_design' }),
+    prepareIntegerRule('num_crosses', dbMap, getHumanName,
+      {
+        operators: ['equal', 'not_equal', 'less', 'less_or_equal', 'greater', 'greater_or_equal', 'between'],
+        optgroup: 'gr_design',
+        default_value: 0,
+        step: 1,
+      }
+    ),
     {
       id: 'cross_form',
       field: 'crosses',
