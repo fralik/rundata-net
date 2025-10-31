@@ -15,7 +15,7 @@ repos:
         # quiet: whether to only show output in the case of an error
         # -s B113: skip testing for timeouts in request calls.
         args: ["-ll", "--quiet", "-s", "B113"]
-        stages: [commit, manual]
+        stages: [pre-commit, manual]
 
       # Django-upgrade
       - id: django-upgrade
@@ -23,7 +23,7 @@ repos:
         entry: django-upgrade
         language: python
         types: [python]
-        stages: [commit, manual]
+        stages: [pre-commit, manual]
         args: [--target-version, "5.0"]   # Replace with Django version
 
       # Python-code autoformat with minimum configuration
@@ -32,7 +32,7 @@ repos:
         entry: black
         language: python
         types_or: [python, pyi]
-        stages: [commit, manual]
+        stages: [pre-commit, manual]
         args: ["--line-length=120"]
 
       # Python-imports sorting. Settings are set in .isort.cfg
@@ -42,7 +42,7 @@ repos:
         language: python
         types_or: [python, pyi]
         args: ["--settings=.isort.cfg"]
-        stages: [commit, manual]
+        stages: [pre-commit, manual]
 
       # This hook trims trailing whitespace:
       - id: trailing-whitespace-fixer
@@ -50,7 +50,7 @@ repos:
         entry: trailing-whitespace-fixer
         language: python
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
         exclude: .*/notebooks/|config/
       # Forces LF over CRLF
       - id: mixed-line-ending
@@ -58,19 +58,19 @@ repos:
         entry: mixed-line-ending
         language: python
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
         args: ["--fix=lf"]
       # checks for files that would conflict in case-insensitive filesystems.
       - id: check-case-conflict
         name: Local check-case-conflict
         entry: check-case-conflict
         language: python
-        stages: [commit]
+        stages: [pre-commit]
       #  ensures that a file is either empty, or ends with one newline.
       - id: end-of-file-fixer
         name: Local end-of-file-fixer
         entry: end-of-file-fixer
         language: python
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
         exclude: .*js|.*css
