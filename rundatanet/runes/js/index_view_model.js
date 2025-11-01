@@ -75,10 +75,10 @@ export class RunicViewModel {
       this.searchRules = null;
       return;
     }
-    
+
     // Store the search rules
     this.searchRules = searchRules;
-    
+
     // Convert array to Map for O(1) lookups
     this.searchResults = new Map();
     results.forEach(result => {
