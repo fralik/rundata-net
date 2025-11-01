@@ -62,19 +62,19 @@ export const schemaFieldsInfo = [
   {
     schemaName: 'dating',
     text: {
-      en: 'Dating',
+      en: 'Dating period (U, V, or M)',
     }
   },
   {
     schemaName: 'year_from',
     text: {
-      en: 'Year (from)',
+      en: 'Year from',
     },
   },
   {
     schemaName: 'year_to',
     text: {
-      en: 'Year (to)',
+      en: 'Year to',
     },
   },
   {
