@@ -600,6 +600,41 @@ export function getWordSearchFunction(searchMode, options = {}) {
 
 
 /**
+ * Check if search rules contain any translation field searches
+ * @param {Object} rules - Rules object from jQuery QueryBuilder's getRules() method
+ * @returns {boolean} True if the search involves translation fields
+ */
+export function isTranslationSearch(rules) {
+  if (!rules || !rules.rules) {
+    return false;
+  }
+
+  const translationFields = ['english_translation', 'swedish_translation'];
+  
+  function checkRules(ruleGroup) {
+    if (!ruleGroup.rules) {
+      return false;
+    }
+
+    for (const rule of ruleGroup.rules) {
+      // If this is a nested group, recursively check it
+      if (rule.rules) {
+        if (checkRules(rule)) {
+          return true;
+        }
+      }
+      // If this is a rule with a field, check if it's a translation field
+      else if (rule.field && translationFields.includes(rule.field)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  return checkRules(rules);
+}
+
+/**
  * Perform a search using QueryBuilder rules
  * @param {Object} rules - Rules object from jQuery QueryBuilder's getRules() method
  * @param {Array|Iterable} dbMap - Data to search through
@@ -617,10 +652,13 @@ export function doSearch(rules, dbMap) {
   return results;
 }
 
-export function calcWordsAndPersonalNames(dbMap) {
+export function calcWordsAndPersonalNames(dbMap, searchRules = null) {
   let totalWordMatches = 0;
   let totalPersonalNames = 0;
   let totalSignatures = 0;
+
+  // Check if this is a translation search
+  const isTranslation = searchRules && isTranslationSearch(searchRules);
 
   try {
     const entries = dbMap.values();
@@ -641,8 +679,15 @@ export function calcWordsAndPersonalNames(dbMap) {
   }
 
   $(document).trigger('updateSignatureCount', { count: totalSignatures });
-  $(document).trigger('updateWordCount', { count: totalWordMatches });
-  $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames });
+  // Don't show word and personal name counts for translation searches
+  if (!isTranslation) {
+    $(document).trigger('updateWordCount', { count: totalWordMatches });
+    $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames });
+  } else {
+    // Hide the counts for translation searches
+    $(document).trigger('updateWordCount', { count: null });
+    $(document).trigger('updatePersonalNameCount', { count: null });
+  }
 }
 
 export function highlightWordsFromWordBoundaries(str, wordBoundaries) {

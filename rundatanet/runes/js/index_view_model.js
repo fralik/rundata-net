@@ -4,6 +4,7 @@ export class RunicViewModel {
     this.dbMap = dbMap;            // Original data source
     this.searchResults = null;     // Last search results (or null if no search active)
     this.currentSelectionIds = []; // Currently selected IDs
+    this.searchRules = null;       // Last search rules (or null if no search active)
     this.allCrossForms = new Set();
 
     for (const inscription of dbMap.values()) {
@@ -68,11 +69,15 @@ export class RunicViewModel {
   }
 
   // Update search results
-  setSearchResults(results) {
+  setSearchResults(results, searchRules = null) {
     if (!results) {
       this.searchResults = null;
+      this.searchRules = null;
       return;
     }
+    
+    // Store the search rules
+    this.searchRules = searchRules;
     
     // Convert array to Map for O(1) lookups
     this.searchResults = new Map();
@@ -87,20 +92,28 @@ export class RunicViewModel {
     $(document).trigger('viewModelUpdated', { 
       source: 'search',
       count: this.searchResults.size,
-      model: this
+      model: this,
+      searchRules: this.searchRules
     });
   }
 
   // Clear search results
   clearSearchResults() {
     this.searchResults = null;
+    this.searchRules = null;
     //this.currentSelectionIds = Array.from(this.dbMap.keys());
     
     $(document).trigger('viewModelUpdated', { 
       source: 'reset',
       count: this.dbMap.size,
-      model: this
+      model: this,
+      searchRules: null
     });
+  }
+
+  // Get current search rules
+  getSearchRules() {
+    return this.searchRules;
   }
   
   // Update current selections

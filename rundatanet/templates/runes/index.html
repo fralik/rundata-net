@@ -887,7 +887,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
     const results = doSearch(rules, gViewModel.getAllInscriptions().values());
     console.log(`Got ${results.length} results`);
-    gViewModel.setSearchResults(results);
+    gViewModel.setSearchResults(results, rules);
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
@@ -944,16 +944,30 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('outNumSignaturesFound').textContent = data.count;
   });
   $(document).on('updateWordCount', function(event, data) {
-    document.getElementById('outNumWords').textContent = data.count;
+    const wordCountElement = document.getElementById('outNumWords');
+    const wordCountContainer = wordCountElement.parentElement;
+    if (data.count === null) {
+      wordCountContainer.style.display = 'none';
+    } else {
+      wordCountContainer.style.display = '';
+      wordCountElement.textContent = data.count;
+    }
   });
   $(document).on('updatePersonalNameCount', function(event, data) {
-    document.getElementById('outNumFoundNames').textContent = data.count;
+    const nameCountElement = document.getElementById('outNumFoundNames');
+    const nameCountContainer = nameCountElement.parentElement;
+    if (data.count === null) {
+      nameCountContainer.style.display = 'none';
+    } else {
+      nameCountContainer.style.display = '';
+      nameCountElement.textContent = data.count;
+    }
   });
   $(document).on('viewModelUpdated', function(event, data) {
     document.getElementById('mainDisplay').innerHTML = "";
     $('#jstree').jstree(true).refresh(false, true);
     showMarkersWrapper();
-    calcWordsAndPersonalNames(data.model.getActiveInscriptions());
+    calcWordsAndPersonalNames(data.model.getActiveInscriptions(), data.searchRules);
   });
 
   initDragAndDrop();

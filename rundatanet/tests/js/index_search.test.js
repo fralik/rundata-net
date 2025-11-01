@@ -1,11 +1,148 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { doSearch, highlightWordsFromWordBoundaries } from '../../runes/js/index_search.js';
+import { doSearch, highlightWordsFromWordBoundaries, isTranslationSearch } from '../../runes/js/index_search.js';
 import { mockDb } from './mockDb.js';
 import { convertDbToKeyMap } from '../../runes/js/index_scripts.js';
 
 // Process mockDb once at the module level
 const dbMap = convertDbToKeyMap(mockDb);
+
+// Test suite for isTranslationSearch function
+test('isTranslationSearch with english_translation field', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'english_translation',
+        field: 'english_translation',
+        type: 'string',
+        input: 'text',
+        operator: 'contains',
+        value: 'horse'
+      }
+    ],
+    valid: true
+  };
+  const result = isTranslationSearch(rules);
+  assert.is(result, true, 'Should return true for english_translation search');
+});
+
+test('isTranslationSearch with swedish_translation field', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'swedish_translation',
+        field: 'swedish_translation',
+        type: 'string',
+        input: 'text',
+        operator: 'contains',
+        value: 'häst'
+      }
+    ],
+    valid: true
+  };
+  const result = isTranslationSearch(rules);
+  assert.is(result, true, 'Should return true for swedish_translation search');
+});
+
+test('isTranslationSearch with non-translation field', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'transliteration',
+        field: 'transliteration',
+        type: 'string',
+        input: 'text',
+        operator: 'contains',
+        value: 'test'
+      }
+    ],
+    valid: true
+  };
+  const result = isTranslationSearch(rules);
+  assert.is(result, false, 'Should return false for non-translation search');
+});
+
+test('isTranslationSearch with nested rules containing translation field', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        condition: 'OR',
+        rules: [
+          {
+            id: 'english_translation',
+            field: 'english_translation',
+            type: 'string',
+            input: 'text',
+            operator: 'contains',
+            value: 'horse'
+          },
+          {
+            id: 'transliteration',
+            field: 'transliteration',
+            type: 'string',
+            input: 'text',
+            operator: 'contains',
+            value: 'test'
+          }
+        ]
+      }
+    ],
+    valid: true
+  };
+  const result = isTranslationSearch(rules);
+  assert.is(result, true, 'Should return true for nested rules with translation field');
+});
+
+test('isTranslationSearch with nested rules without translation field', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        condition: 'OR',
+        rules: [
+          {
+            id: 'transliteration',
+            field: 'transliteration',
+            type: 'string',
+            input: 'text',
+            operator: 'contains',
+            value: 'test'
+          },
+          {
+            id: 'signature_text',
+            field: 'signature_text',
+            type: 'string',
+            input: 'text',
+            operator: 'contains',
+            value: 'test2'
+          }
+        ]
+      }
+    ],
+    valid: true
+  };
+  const result = isTranslationSearch(rules);
+  assert.is(result, false, 'Should return false for nested rules without translation field');
+});
+
+test('isTranslationSearch with null rules', () => {
+  const result = isTranslationSearch(null);
+  assert.is(result, false, 'Should return false for null rules');
+});
+
+test('isTranslationSearch with empty rules', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [],
+    valid: true
+  };
+  const result = isTranslationSearch(rules);
+  assert.is(result, false, 'Should return false for empty rules');
+});
 
 // Test suite for highlightWordsFromWordBoundaries function
 test('highlightWordsFromWordBoundaries with single word', () => {
