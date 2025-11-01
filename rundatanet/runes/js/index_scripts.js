@@ -2,7 +2,7 @@ export const schemaFieldsInfo = [
   {
     schemaName: 'signature_text',
     text: {
-      'en': 'Inscription'
+      'en': 'Inscription ID'
     },
   },
   {
