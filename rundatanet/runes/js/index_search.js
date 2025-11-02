@@ -644,14 +644,9 @@ export function calcWordsAndPersonalNames(dbMap) {
     console.error('Error calculating words and personal names:', error);
   }
 
-  let countType;
-  if (isGeneral && isWordSpecific) {
-    countType = 'mixed';
-  } else if (isWordSpecific) {
-    countType = 'word-specific';
-  } else {
-    countType = 'general';
-  }
+  const countType = (isGeneral && isWordSpecific)
+    ? 'mixed'
+    : (isWordSpecific ? 'word-specific' : 'general');
 
   $(document).trigger('updateSignatureCount', { count: totalSignatures });
   $(document).trigger('updateWordCount', { count: totalWordMatches, type: countType });
