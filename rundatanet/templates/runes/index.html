@@ -439,8 +439,8 @@
 
     <div class="row">
       <div class="col-md-auto">Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
-      <div class="col-md-auto">Number of words: <span id="outNumWords">0</span></div>
-      <div class="col-md-auto">Number of personal names: <span id="outNumFoundNames">0</span></div>
+      <div class="col-md-auto"><span id="outNumWordsLabel">Number of words:</span> <span id="outNumWords">0</span></div>
+      <div class="col-md-auto"><span id="outNumFoundNamesLabel">Number of personal names:</span> <span id="outNumFoundNames">0</span></div>
     </div>
     <div class="row">
       <div class="col-xs-12">&nbsp;</div>
@@ -886,7 +886,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
     const results = doSearch(rules, gViewModel.getAllInscriptions().values());
-    console.log(`Got ${results.length} results`);
+    //console.log(`Got ${results.length} results`);
     gViewModel.setSearchResults(results);
   });
 
@@ -945,9 +945,27 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   $(document).on('updateWordCount', function(event, data) {
     document.getElementById('outNumWords').textContent = data.count;
+    // can be: 'mixed', 'word-specific', 'general'
+    const countType = data.type;
+    if (countType === 'word-specific') {
+      document.getElementById('outNumWordsLabel').textContent = 'Number of matching words:';
+    } else if (countType === 'mixed') {
+      document.getElementById('outNumWordsLabel').textContent = 'Number of words (mixed):';
+    } else {
+      document.getElementById('outNumWordsLabel').textContent = 'Number of words:';
+    }
   });
   $(document).on('updatePersonalNameCount', function(event, data) {
     document.getElementById('outNumFoundNames').textContent = data.count;
+    // can be: 'mixed', 'word-specific', 'general'
+    const countType = data.type;
+    if (countType === 'word-specific') {
+      document.getElementById('outNumFoundNamesLabel').textContent = 'Number of matching names:';
+    } else if (countType === 'mixed') {
+      document.getElementById('outNumFoundNamesLabel').textContent = 'Number of names (mixed):';
+    } else {
+      document.getElementById('outNumFoundNamesLabel').textContent = 'Number of names:';
+    }
   });
   $(document).on('viewModelUpdated', function(event, data) {
     document.getElementById('mainDisplay').innerHTML = "";
