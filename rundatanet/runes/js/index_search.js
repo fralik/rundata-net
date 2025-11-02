@@ -6,7 +6,7 @@ This file contains code to do search in the inscriptions
  * Normalizes whitespace in a string by replacing all whitespace characters
  * (including non-breaking spaces, tabs, etc.) with regular spaces.
  * This ensures consistent matching regardless of the type of whitespace used.
- * 
+ *
  * @param {*} value - The value to normalize
  * @returns {string} The normalized string
  */
@@ -621,6 +621,8 @@ export function calcWordsAndPersonalNames(dbMap) {
   let totalWordMatches = 0;
   let totalPersonalNames = 0;
   let totalSignatures = 0;
+  let isWordSpecific = false;
+  let isGeneral = false;
 
   try {
     const entries = dbMap.values();
@@ -628,11 +630,13 @@ export function calcWordsAndPersonalNames(dbMap) {
       if (entry.matchDetails && entry.matchDetails.wordIndices) {
         totalWordMatches += entry.matchDetails.wordIndices.length;
         totalPersonalNames += entry.matchDetails.numPersonalNames;
+        isWordSpecific = true;
       } else {
         totalWordMatches += entry.normalisation_norse_word_boundaries.length;
         entry.normalisation_norse_word_boundaries.forEach(boundary => {
           totalPersonalNames += boundary.isPersonal;
         });
+        isGeneral = true;
       }
       totalSignatures++;
     }
@@ -640,9 +644,13 @@ export function calcWordsAndPersonalNames(dbMap) {
     console.error('Error calculating words and personal names:', error);
   }
 
+  const countType = (isGeneral && isWordSpecific)
+    ? 'mixed'
+    : (isWordSpecific ? 'word-specific' : 'general');
+
   $(document).trigger('updateSignatureCount', { count: totalSignatures });
-  $(document).trigger('updateWordCount', { count: totalWordMatches });
-  $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames });
+  $(document).trigger('updateWordCount', { count: totalWordMatches, type: countType });
+  $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames, type: countType });
 }
 
 export function highlightWordsFromWordBoundaries(str, wordBoundaries) {
