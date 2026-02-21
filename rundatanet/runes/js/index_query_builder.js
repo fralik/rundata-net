@@ -846,8 +846,8 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     <div class="rule-filter-container flex-shrink-0"></div>
     <div class="rule-operator-container flex-shrink-0"></div>
     <div class="rule-value-container flex-grow-1 me-2"></div>
-    <div class="rule-footer d-flex align-items-center ms-auto">
-      <div class="btn-group flex-shrink-0 rule-actions">
+    <div class="rule-footer d-flex flex-wrap align-items-center gap-1 ms-auto">
+      <div class="d-flex flex-wrap gap-1 rule-actions">
         <button type="button" class="btn btn-sm btn-danger" data-delete="rule">
           <i class="${icons.remove_rule}"></i> ${translate("delete_rule")}
         </button>
