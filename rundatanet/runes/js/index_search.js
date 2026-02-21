@@ -14,10 +14,44 @@ function normalizeWhitespace(value) {
   return String(value).replace(/\s/g, ' ');
 }
 
-// Standard comparison operators that can be used both in QueryBuilderParser and custom search functions
+/**
+ * Prepares a string for comparison by normalizing whitespace and optionally lowercasing.
+ * @param {*} value - The value to prepare
+ * @param {boolean} ignoreCase - Whether to lowercase the string
+ * @returns {string} The prepared string
+ */
+function prepareForComparison(value, ignoreCase) {
+  const s = normalizeWhitespace(value);
+  return ignoreCase ? s.toLowerCase() : s;
+}
+
+/**
+ * Strips editorial special symbols from a string so that searches can match
+ * text regardless of annotation markers.
+ *
+ * Handles both literal characters (as typed by users) and HTML-entity forms
+ * (as they appear in the _html / _words arrays built from escaped DB values):
+ *   &quot; -> "  (personal-name marker)
+ *   &lt;  -> <
+ *   &gt;  -> >
+ * Plus literal characters: " | [ ] ( ) { } ^ ´ < > ?
+ *
+ * @param {string} str - The string to strip
+ * @returns {string} The string with special symbols removed
+ */
+export function stripSpecialSymbols(str) {
+  return String(str)
+    .replace(/&quot;/g, '')  // HTML entity for "
+    .replace(/&lt;/g, '')    // HTML entity for <
+    .replace(/&gt;/g, '')    // HTML entity for >
+    .replace(/["<>|[\](){}^\u00b4?]/g, '');  // literal chars
+}
+
+// Standard comparison operators that can be used both in QueryBuilderParser and custom search functions.
+// String-based operators accept an optional third argument `ignoreCase` (default false).
 export const operators = {
-  equal: (a, b) => a == b,
-  not_equal: (a, b) => a != b,
+  equal: (a, b, ignoreCase) => ignoreCase ? String(a).toLowerCase() == String(b).toLowerCase() : a == b,
+  not_equal: (a, b, ignoreCase) => ignoreCase ? String(a).toLowerCase() != String(b).toLowerCase() : a != b,
   in: (a, b) => b.includes(a),
   not_in: (a, b) => !b.includes(a),
   less: (a, b) => a < b,
@@ -26,12 +60,12 @@ export const operators = {
   greater_or_equal: (a, b) => a >= b,
   between: (a, b) => b[0] <= a && a <= b[1],
   not_between: (a, b) => !(b[0] <= a && a <= b[1]),
-  begins_with: (a, b) => normalizeWhitespace(a).startsWith(normalizeWhitespace(b)),
-  not_begins_with: (a, b) => !normalizeWhitespace(a).startsWith(normalizeWhitespace(b)),
-  contains: (a, b) => normalizeWhitespace(a).includes(normalizeWhitespace(b)),
-  not_contains: (a, b) => !normalizeWhitespace(a).includes(normalizeWhitespace(b)),
-  ends_with: (a, b) => normalizeWhitespace(a).endsWith(normalizeWhitespace(b)),
-  not_ends_with: (a, b) => !normalizeWhitespace(a).endsWith(normalizeWhitespace(b)),
+  begins_with: (a, b, ignoreCase) => prepareForComparison(a, ignoreCase).startsWith(prepareForComparison(b, ignoreCase)),
+  not_begins_with: (a, b, ignoreCase) => !prepareForComparison(a, ignoreCase).startsWith(prepareForComparison(b, ignoreCase)),
+  contains: (a, b, ignoreCase) => prepareForComparison(a, ignoreCase).includes(prepareForComparison(b, ignoreCase)),
+  not_contains: (a, b, ignoreCase) => !prepareForComparison(a, ignoreCase).includes(prepareForComparison(b, ignoreCase)),
+  ends_with: (a, b, ignoreCase) => prepareForComparison(a, ignoreCase).endsWith(prepareForComparison(b, ignoreCase)),
+  not_ends_with: (a, b, ignoreCase) => !prepareForComparison(a, ignoreCase).endsWith(prepareForComparison(b, ignoreCase)),
   is_empty: (a) => a === '' || a === null || a === undefined || (Array.isArray(a) && a.length === 0),
   is_not_empty: (a) => a !== '' && a !== null && a !== undefined && (!Array.isArray(a) || a.length > 0),
   is_null: (a) => a === null || a === undefined,
@@ -209,6 +243,7 @@ export class QueryBuilderParser {
     const field = rule.field || rule.id;
     const operatorName = rule.operator;
     const isMultiFieldRule = rule.data && rule.data.multiField === true;
+    const ignoreCase = !!rule.ignoreCase;
 
     // Fast path: handle custom search functions first
     if (rule.id &&
@@ -217,7 +252,7 @@ export class QueryBuilderParser {
 
       // For custom functions, provide field value or entire record as needed
       const valueToCheck = isMultiFieldRule ? record : record[field];
-      const result = this.customSearchFunctions[rule.id][operatorName](valueToCheck, rule.value);
+      const result = this.customSearchFunctions[rule.id][operatorName](valueToCheck, rule.value, rule);
 
       // Normalize the result to always have match and details properties
       return typeof result === 'object' && 'match' in result ?
@@ -256,8 +291,8 @@ export class QueryBuilderParser {
       return { match: false };
     }
 
-    // Apply the operator and normalize the result
-    const result = this.operators[operatorName](fieldValue, ruleValue);
+    // Apply the operator and normalize the result, passing ignoreCase for string operators
+    const result = this.operators[operatorName](fieldValue, ruleValue, ignoreCase);
     const isMatch = Boolean(result);
 
     return {
@@ -302,7 +337,7 @@ const searchViaList = (fieldValue, ruleValue) => {
  * @param {boolean} [negate=false] - Whether to negate the result
  * @returns {Object} Result object with match property
  */
-const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false) => {
+const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false, ignoreCase = false) => {
   // Get the main signature text
   const signatureText = record.signature_text;
 
@@ -322,7 +357,7 @@ const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false) =
 
   // Apply the operator function to check if any signature matches any item
   let match = allSignatures.some(sig =>
-    items.some(item => operatorFn(sig, item))
+    items.some(item => operatorFn(sig, item, ignoreCase))
   );
 
   // Negate the result if needed
@@ -333,8 +368,8 @@ const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false) =
   return { match };
 };
 
-const doWordSearch = (entry, ruleValue, searchDirection, searchMode) => {
-  const isAHit = getWordSearchFunction(searchMode);
+const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase = false, includeSpecialSymbols = false) => {
+  const isAHit = getWordSearchFunction(searchMode, { ignoreCase, includeSpecialSymbols });
   // key names defined in valueGetter, e.g. normalization_norse_to_transliteration
   const normalisationQuery = ruleValue['normalization'];
   const transliterationQuery = ruleValue['transliteration'];
@@ -467,46 +502,46 @@ const searchCountryOrProvince = (entry, ruleValues) => {
 
 const customSearchFunctions = {
   inscription_id: {
-    in: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
-    in_separated_list: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
-    begins_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.begins_with),
-    not_begins_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.begins_with, true),
-    ends_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.ends_with),
-    not_ends_with: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.ends_with, true),
-    contains: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.contains),
-    not_contains: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.contains, true),
-    equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.equal),
-    not_equal: (record, ruleValue) => searchSignatureWrapper(record, ruleValue, operators.not_equal),
+    in: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.equal, false, !!rule.ignoreCase),
+    in_separated_list: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.equal, false, !!rule.ignoreCase),
+    begins_with: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.begins_with, false, !!rule.ignoreCase),
+    not_begins_with: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.begins_with, true, !!rule.ignoreCase),
+    ends_with: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.ends_with, false, !!rule.ignoreCase),
+    not_ends_with: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.ends_with, true, !!rule.ignoreCase),
+    contains: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.contains, false, !!rule.ignoreCase),
+    not_contains: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.contains, true, !!rule.ignoreCase),
+    equal: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.equal, false, !!rule.ignoreCase),
+    not_equal: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.not_equal, false, !!rule.ignoreCase),
   },
   inscription_country: {
     in: searchCountryOrProvince,
   },
   normalization_norse_to_transliteration: {
-    contains: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'includes');
+    contains: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'includes', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
-    equal: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'exact');
+    equal: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'exact', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
-    begins_with: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'beginsWith');
+    begins_with: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'beginsWith', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
-    ends_with: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'endsWith');
+    ends_with: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'norseToTransliteration', 'endsWith', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
   },
   normalization_scandinavian_to_transliteration: {
-    contains: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'includes');
+    contains: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'includes', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
-    equal: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'exact');
+    equal: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'exact', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
-    begins_with: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'beginsWith');
+    begins_with: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'beginsWith', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
-    ends_with: (fieldValue, ruleValue) => {
-      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'endsWith');
+    ends_with: (fieldValue, ruleValue, rule) => {
+      return doWordSearch(fieldValue, ruleValue, 'scandinavianToTransliteration', 'endsWith', !!rule.ignoreCase, !!rule.includeSpecialSymbols);
     },
   },
   cross_form: {
@@ -526,16 +561,23 @@ const customSearchFunctions = {
  * @param {string} searchMode - The search mode ('exact', 'beginsWith', 'endsWith', 'regex', 'includes')
  * @param {Object} options - Additional options
  * @param {boolean} [options.ignoreCase=false] - Whether to ignore case when searching
+ * @param {boolean} [options.includeSpecialSymbols=false] - When false (default), editorial symbols
+ *   are stripped from both the data word and the query before comparison.
+ *   When true, symbols are kept and matched literally.
  * @returns {Function} A search function that takes (word, query) parameters
  * @throws {Error} When an invalid regex pattern is provided in regex mode
  */
 export function getWordSearchFunction(searchMode, options = {}) {
-  const { ignoreCase = false } = options;
+  const { ignoreCase = false, includeSpecialSymbols = false } = options;
 
-  // Create a function to handle case sensitivity
-  const prepareString = ignoreCase
-    ? str => String(str).toLowerCase()
-    : str => String(str);
+  // Create a function to prepare strings for comparison:
+  // optionally strip editorial symbols, then optionally lowercase.
+  const prepareString = (str) => {
+    let s = String(str);
+    if (!includeSpecialSymbols) s = stripSpecialSymbols(s);
+    if (ignoreCase) s = s.toLowerCase();
+    return s;
+  };
 
   const prepareWord = (word) => {
     // Check if this might be a list of personal names (divided by HTML escaped / symbol)

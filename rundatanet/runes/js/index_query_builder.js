@@ -8,7 +8,8 @@ const queryBuilderPlugins = {
   'bt-tooltip-errors': null,
   'sortable': null,
   'not-group': null,
-  // 'case-rule': null,
+  'case-rule': null,
+  'special-symbols-rule': null,
 };
 
 const optGroups = {
@@ -52,16 +53,15 @@ $.fn.queryBuilder.define('case-rule', function(options) {
   });
 
   this.on('afterCreateRuleInput.filter', function(e, rule) {
-    // Show plugin's button only for text fields
-    if (!rule.filter || typeof rule.filter.input !== 'string') {
-      rule.$el.find(cssSelectorPluginCaseRule).hide();
-      return;
-    }
-
-    if (rule.filter.input.indexOf('text') === -1) {
-      rule.$el.find(cssSelectorPluginCaseRule).hide();
-    } else {
+    // Show plugin's button only for normalization and transliteration filters
+    const caseRuleFilterIds = [
+      'normalization_norse_to_transliteration',
+      'normalization_scandinavian_to_transliteration',
+    ];
+    if (rule.filter && caseRuleFilterIds.includes(rule.filter.id)) {
       rule.$el.find(cssSelectorPluginCaseRule).show();
+    } else {
+      rule.$el.find(cssSelectorPluginCaseRule).hide();
     }
   });
 
@@ -126,6 +126,84 @@ $.fn.queryBuilder.extend({
       this.trigger('afterUpdateRuleCaseSelector', rule);
 
       this.trigger('rulesChanged');
+  }
+});
+
+// QueryBuilder plugin for including/excluding special editorial symbols in search
+// Applies to normalisation and transliteration filters only.
+// When includeSpecialSymbols is false (default), the search engine strips editorial
+// symbols (e.g. " [ ] ( ) { } | ^ ´ < > ?) from both the data words and the query
+// before comparing, making symbols invisible to the search.
+// When true, symbols are included as-is in the comparison.
+const specialSymbolsFilterIds = [
+  'normalization_norse_to_transliteration',
+  'normalization_scandinavian_to_transliteration',
+];
+
+$.fn.queryBuilder.define('special-symbols-rule', function(options) {
+  let self = this;
+
+  this.on('afterInit', function() {
+    self.$el.on('click.queryBuilder', '[data-special-symbols=rule]', function() {
+      let $rule = $(this).closest($.fn.queryBuilder.constructor.selectors.rule_container);
+      let rule = self.getModel($rule);
+      rule.includeSpecialSymbols = !rule.includeSpecialSymbols;
+    });
+
+    self.model.on('update', function(e, node, field) {
+      if (node instanceof $.fn.queryBuilder.constructor.Rule && field === 'includeSpecialSymbols') {
+        self.updateRuleSpecialSymbols(node);
+      }
+    });
+  });
+
+  // Default: strip special symbols (includeSpecialSymbols = false)
+  this.on('afterAddRule', function(e, rule) {
+    rule.__.includeSpecialSymbols = false;
+  });
+
+  this.on('afterCreateRuleInput.filter', function(e, rule) {
+    if (rule.filter && specialSymbolsFilterIds.includes(rule.filter.id)) {
+      rule.$el.find(cssSelectorPluginSpecialSymbolsRule).show();
+    } else {
+      rule.$el.find(cssSelectorPluginSpecialSymbolsRule).hide();
+    }
+  });
+
+  if (!options.disable_template) {
+    this.on('getRuleTemplate.filter', function(h) {
+      var $h = $($.parseHTML(h.value));
+      $h.find($.fn.queryBuilder.constructor.selectors.rule_actions).prepend(
+          '\n<button type="button" class="btn btn-xs btn-default" data-special-symbols="rule">' +
+          '<i class="' + options.icon + '"></i> ' +
+          '<span class="special-symbols-rule-text">' + self.translate('Ignore symbols') + '</span>' +
+          '</button>'
+      );
+      h.value = $h.prop('outerHTML');
+    });
+  }
+
+  this.on('ruleToJson.filter', function(e, rule) {
+    e.value.includeSpecialSymbols = rule.includeSpecialSymbols;
+  });
+
+  this.on('jsonToRule.filter', function(e, json) {
+    e.value.includeSpecialSymbols = !!json.includeSpecialSymbols;
+  });
+}, {
+  icon: 'bi bi-asterisk',
+  disable_template: false
+});
+
+$.fn.queryBuilder.constructor.utils.defineModelProperties($.fn.queryBuilder.constructor.Rule, ['includeSpecialSymbols']);
+
+const cssSelectorPluginSpecialSymbolsRule = $.fn.queryBuilder.constructor.selectors.rule_actions + ' [data-special-symbols=rule]';
+
+$.fn.queryBuilder.extend({
+  updateRuleSpecialSymbols: function(rule) {
+    rule.$el.find(cssSelectorPluginSpecialSymbolsRule + ' > .special-symbols-rule-text')
+        .text(this.translate(rule.includeSpecialSymbols ? 'Include symbols' : 'Ignore symbols'));
+    this.trigger('rulesChanged');
   }
 });
 
@@ -768,8 +846,8 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     <div class="rule-filter-container flex-shrink-0"></div>
     <div class="rule-operator-container flex-shrink-0"></div>
     <div class="rule-value-container flex-grow-1 me-2"></div>
-    <div class="rule-footer d-flex align-items-center ms-auto">
-      <div class="btn-group flex-shrink-0 rule-actions">
+    <div class="rule-footer d-flex flex-wrap align-items-center gap-1 ms-auto">
+      <div class="d-flex flex-wrap gap-1 rule-actions">
         <button type="button" class="btn btn-sm btn-danger" data-delete="rule">
           <i class="${icons.remove_rule}"></i> ${translate("delete_rule")}
         </button>
