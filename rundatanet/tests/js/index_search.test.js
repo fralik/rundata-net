@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { doSearch, highlightWordsFromWordBoundaries } from '../../runes/js/index_search.js';
+import { doSearch, highlightWordsFromWordBoundaries, stripSpecialSymbols, getWordSearchFunction } from '../../runes/js/index_search.js';
 import { mockDb } from './mockDb.js';
 import { convertDbToKeyMap } from '../../runes/js/index_scripts.js';
 
@@ -349,5 +349,144 @@ test('search by style begins_with Pr 4 should find Öl 4', () => {
   assert.ok(results.length > 100, `Should find many results (found ${results.length})`);
 });
 
+
+
+// ── stripSpecialSymbols ───────────────────────────────────────────────────────
+
+test('stripSpecialSymbols removes HTML entities &quot; &lt; &gt;', () => {
+  assert.is(stripSpecialSymbols('&quot;hello&quot;'), 'hello', 'Should remove &quot; entities');
+  assert.is(stripSpecialSymbols('&lt;hello&gt;'), 'hello', 'Should remove &lt; and &gt; entities');
+});
+
+test('stripSpecialSymbols removes literal special characters', () => {
+  assert.is(stripSpecialSymbols('"text"'), 'text', 'Should remove literal double quotes');
+  assert.is(stripSpecialSymbols('[text]'), 'text', 'Should remove square brackets');
+  assert.is(stripSpecialSymbols('(text)'), 'text', 'Should remove parentheses');
+  assert.is(stripSpecialSymbols('{text}'), 'text', 'Should remove curly braces');
+  assert.is(stripSpecialSymbols('a|b'), 'ab', 'Should remove pipe character');
+  assert.is(stripSpecialSymbols('a^b'), 'ab', 'Should remove caret');
+  assert.is(stripSpecialSymbols('<text>'), 'text', 'Should remove angle brackets');
+  assert.is(stripSpecialSymbols('text?'), 'text', 'Should remove question mark');
+});
+
+test('stripSpecialSymbols preserves regular text and special Nordic characters', () => {
+  assert.is(stripSpecialSymbols('hello'), 'hello', 'Should preserve plain text');
+  assert.is(stripSpecialSymbols('Þórr'), 'Þórr', 'Should preserve Nordic characters');
+});
+
+// ── getWordSearchFunction – ignoreCase ────────────────────────────────────────
+
+test('getWordSearchFunction exact mode is case-sensitive by default', () => {
+  const fn = getWordSearchFunction('exact');
+  assert.is(fn('Hello', 'hello'), false, 'Case-sensitive exact match should fail for different cases');
+  assert.is(fn('Hello', 'Hello'), true, 'Case-sensitive exact match should succeed for same case');
+});
+
+test('getWordSearchFunction exact mode is case-insensitive when ignoreCase=true', () => {
+  const fn = getWordSearchFunction('exact', { ignoreCase: true });
+  assert.is(fn('Hello', 'hello'), true, 'Case-insensitive exact match should succeed');
+  assert.is(fn('HELLO', 'hello'), true, 'Case-insensitive exact match should succeed for all-caps');
+});
+
+test('getWordSearchFunction includes mode is case-sensitive by default', () => {
+  const fn = getWordSearchFunction('includes');
+  assert.is(fn('Hello World', 'hello'), false, 'Case-sensitive includes should fail for different cases');
+  assert.is(fn('Hello World', 'Hello'), true, 'Case-sensitive includes should succeed for same case');
+});
+
+test('getWordSearchFunction includes mode is case-insensitive when ignoreCase=true', () => {
+  const fn = getWordSearchFunction('includes', { ignoreCase: true });
+  assert.is(fn('Hello World', 'hello'), true, 'Case-insensitive includes should succeed');
+  assert.is(fn('HELLO WORLD', 'hello world'), true, 'Case-insensitive includes should succeed for all-caps');
+});
+
+test('getWordSearchFunction beginsWith mode respects ignoreCase', () => {
+  const fnSensitive = getWordSearchFunction('beginsWith');
+  const fnInsensitive = getWordSearchFunction('beginsWith', { ignoreCase: true });
+  assert.is(fnSensitive('Hello', 'hel'), false, 'Case-sensitive beginsWith should fail for different cases');
+  assert.is(fnInsensitive('Hello', 'hel'), true, 'Case-insensitive beginsWith should succeed');
+});
+
+test('getWordSearchFunction endsWith mode respects ignoreCase', () => {
+  const fnSensitive = getWordSearchFunction('endsWith');
+  const fnInsensitive = getWordSearchFunction('endsWith', { ignoreCase: true });
+  assert.is(fnSensitive('Hello', 'LLO'), false, 'Case-sensitive endsWith should fail for different cases');
+  assert.is(fnInsensitive('Hello', 'LLO'), true, 'Case-insensitive endsWith should succeed');
+});
+
+// ── getWordSearchFunction – includeSpecialSymbols ─────────────────────────────
+
+test('getWordSearchFunction strips special symbols by default (includeSpecialSymbols=false)', () => {
+  const fn = getWordSearchFunction('exact');
+  // Word has &quot; markup (personal-name marker); query has no markup.
+  // Both sides are stripped before comparison, so they should match.
+  assert.is(fn('&quot;Þórr&quot;', 'Þórr'), true, 'Stripped word should match stripped query');
+  assert.is(fn('[word]', 'word'), true, 'Literal brackets stripped – should match bare word');
+});
+
+test('getWordSearchFunction preserves special symbols when includeSpecialSymbols=true', () => {
+  const fn = getWordSearchFunction('exact', { includeSpecialSymbols: true });
+  // With symbols kept, "&quot;Þórr&quot;" differs from "Þórr".
+  assert.is(fn('&quot;Þórr&quot;', 'Þórr'), false, 'With symbols, annotated word should not match bare query');
+  // But an exact query that includes the entities should match.
+  assert.is(fn('&quot;Þórr&quot;', '&quot;Þórr&quot;'), true, 'Entity-for-entity query should match');
+});
+
+test('getWordSearchFunction includes mode strips symbols by default', () => {
+  const fn = getWordSearchFunction('includes');
+  assert.is(fn('&quot;Þórr&quot;', 'Þórr'), true, 'includes with stripped symbols should find the word');
+});
+
+test('getWordSearchFunction includes mode preserves symbols when includeSpecialSymbols=true', () => {
+  const fn = getWordSearchFunction('includes', { includeSpecialSymbols: true });
+  // With symbols kept, "[hello]world" does NOT contain "helloworld" as a literal substring.
+  // (stripping brackets would make it match; keeping them means it does not)
+  assert.is(fn('[hello]world', 'helloworld'), false, 'includes with symbols kept should not match when query is only valid after stripping');
+});
+
+// ── doSearch – ignoreCase integration ─────────────────────────────────────────
+
+test('doSearch case-insensitive search finds results regardless of case', () => {
+  // The carver field contains "Nilsson" (capital N); searching lowercase should still match.
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'carver',
+        field: 'carver',
+        type: 'string',
+        operator: 'contains',
+        value: 'nilsson',
+        ignoreCase: true,
+      }
+    ],
+    not: false,
+    valid: true
+  };
+  const result = doSearch(rules, dbMap.values());
+  assert.ok(result.length > 0, 'Case-insensitive search should find results');
+  assert.ok(result.every(r => r.carver.toLowerCase().includes('nilsson')), 'Every result should contain "nilsson" (case-insensitive)');
+});
+
+test('doSearch case-sensitive search does not find results with wrong case', () => {
+  // "nilsson" (all lowercase) does not appear in the carver field – only "Nilsson" does.
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'carver',
+        field: 'carver',
+        type: 'string',
+        operator: 'contains',
+        value: 'nilsson',
+        ignoreCase: false,
+      }
+    ],
+    not: false,
+    valid: true
+  };
+  const result = doSearch(rules, dbMap.values());
+  assert.is(result.length, 0, 'Case-sensitive search should not find results when case does not match');
+});
 
 test.run();
