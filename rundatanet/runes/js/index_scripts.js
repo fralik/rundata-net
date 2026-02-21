@@ -782,6 +782,9 @@ export function inscriptions2markup(inscriptions) {
       columnData = columnData.replace(/ ☺ /g, ' ');
 
       if (columnName === 'images') {
+        if (!showHeaders && paragraph.length > 0) {
+          paragraph += "<br>";
+        }
         if (inscriptionData['directImages'].length == 0) {
           paragraph += inscriptionData['indirectImages'];
           continue;
