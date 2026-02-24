@@ -491,7 +491,7 @@ export function convertDbToKeyMap(db) {
       objSignature["indirectImages"] = imagesMarkup.indirectImages;
     } else {
       objSignature["directImages"] = "";
-      objSignature["indirectImages"] = "No images.";
+      objSignature["indirectImages"] = "";
     }
 
     /////////////////////////////////////
@@ -549,7 +549,7 @@ export function fetchAllImages(db) {
 
 export function makeImagesMarkup(signatureImageLinks) {
   let directImages = "";
-  let indirectImages = "No images.";
+  let indirectImages = "";
 
   // make image gallery of direct image links
   const galleryLinks = signatureImageLinks.links.slice(0, 9);
@@ -774,7 +774,10 @@ export function inscriptions2markup(inscriptions) {
       if (showHeaders) {
         paragraph += `<h4>${humanName}</h4>`;
       } else if (paragraph.length > 0 && columnData !== "") {
-        paragraph += "<br>";
+        // only add if there is some content to show and this is not the first field. Otherwise, we do not want to have empty lines in the beginning of the inscription info.
+        if (paragraph.slice(-7) === "</span>") {
+          paragraph += "<br>";
+        }
       }
 
       // Smiley is a special symbol: word substitute when word is not present
@@ -782,10 +785,11 @@ export function inscriptions2markup(inscriptions) {
       columnData = columnData.replace(/ ☺ /g, ' ');
 
       if (columnName === 'images') {
-        if (!showHeaders && paragraph.length > 0) {
-          paragraph += "<br>";
+        if (!showHeaders && (inscriptionData['directImages'].length == 0 || inscriptionData['indirectImages'].length == 0)) {
+          // early stop if no headers and no images
+          continue;
         }
-        if (inscriptionData['directImages'].length == 0) {
+        if (inscriptionData['directImages'].length == 0 && inscriptionData['indirectImages'].length > 0) {
           paragraph += inscriptionData['indirectImages'];
           continue;
         }
@@ -793,6 +797,10 @@ export function inscriptions2markup(inscriptions) {
         if (inscriptionData['indirectImages'].length > 0) {
           // add image links as they have not been added yet
           paragraph += '<br>' + inscriptionData['indirectImages'];
+        } else {
+          if (showHeaders) {
+            paragraph += '<i>No images.</i>';
+          }
         }
 
         continue;
@@ -805,7 +813,9 @@ export function inscriptions2markup(inscriptions) {
 
       if (columnName === "crosses") {
         if (inscriptionData['num_crosses'] == 0) {
-          paragraph += '<i>No crosses.</i>';
+          if (showHeaders) {
+            paragraph += '<i>No crosses.</i>';
+          }
           continue;
         }
 
