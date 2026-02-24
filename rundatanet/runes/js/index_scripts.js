@@ -860,6 +860,11 @@ export function inscriptions2markup(inscriptions) {
         continue;
       }
 
+      if (columnName == "reference") {
+        paragraph += `<div class="${cssStyle}">${columnData}</div>`;
+        continue;
+      }
+
       columnData = escapeHtml(columnData);
 
       if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails !== null && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
