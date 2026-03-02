@@ -76,6 +76,19 @@ class Cross(models.Model):
         db_table = "crosses"
 
 
+class Reference(models.Model):
+    """A single bibliographic reference entry, e.g. 'SRI 1 plansch IV fig. 3'."""
+
+    text = models.CharField(max_length=1500, unique=True)
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        db_table = "references"
+        ordering = ["text"]
+
+
 class MaterialType(models.Model):
     name = models.TextField(blank=False, unique=True)
 
@@ -141,8 +154,10 @@ class MetaInformation(models.Model):
 
     # alternative signature is managed externally
 
-    # Referens
+    # Referens (legacy plain-text field, kept during migration)
     reference = models.TextField(blank=True)
+    # Normalised references (M2M)
+    references = models.ManyToManyField(Reference, blank=True, related_name="meta_informations")
 
     # Bildlänk is managed externally
 
