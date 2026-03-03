@@ -106,7 +106,7 @@ export function initMultiselect() {
     'signature_text', 'transliteration', 'normalisation_scandinavian', 'normalisation_norse',
     'english_translation', 'swedish_translation', 'found_location', 'parish', 'municipality', 'district', 'current_location',
     'original_site', 'images', 'rune_type', 'carver', 'num_crosses', 'crosses', 'dating', 'style',
-    'material_type', 'material', 'objectInfo', 'reference', 'additional'
+    'material_type', 'material', 'objectInfo', 'references_normalized', 'additional'
   ];
 
   const savedSelected = localStorage.getItem(gUserSelectedDisplayKey);
@@ -115,7 +115,7 @@ export function initMultiselect() {
   const showHeaders = savedShowHeaders ? savedShowHeaders === 'true' : true;
 
   setMultiselectOptions(selectedValues, showHeaders);
- 
+
   $('#multiselect').multiselect({
     keepRenderingSortRight: false,
     skipInitSortRight: false,

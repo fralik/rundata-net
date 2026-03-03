@@ -831,7 +831,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       },
     },
     // gr_more_info filters
-    prepareAutoComplete('reference', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
+    prepareAutoComplete('references_normalized', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
     prepareAutoComplete('additional', dbMap, getHumanName, { optgroup: 'gr_more_info' }),
   ];
 

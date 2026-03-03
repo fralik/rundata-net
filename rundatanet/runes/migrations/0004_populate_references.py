@@ -7,10 +7,10 @@ from django.db import migrations
 
 
 def _build_riksarkivet_link(inscription_id: str) -> str:
-    """Return an HTML anchor tag linking to the Riksarkivet DocList for *inscription_id*."""
+    """Return a URL linking to the Riksarkivet DocList for *inscription_id*."""
     quoted_id = urllib.parse.quote(inscription_id)
     url = f"https://riksarkivet.x-ref.se/DocList?find=RUNSIG%20%22{quoted_id}%22"
-    return f'<a href="{url}" contenteditable="false" target="_blank">Riksarkivet</a> '
+    return url
 
 
 def populate_references(apps, schema_editor):
@@ -24,8 +24,8 @@ def populate_references(apps, schema_editor):
 
     # Phase 2 – add a Riksarkivet link for every inscription
     for meta in MetaInformation.objects.select_related("signature").all():
-        link_html = _build_riksarkivet_link(meta.signature.signature_text)
-        ref_obj, _ = Reference.objects.get_or_create(text=link_html)
+        link_url = _build_riksarkivet_link(meta.signature.signature_text)
+        ref_obj, _ = Reference.objects.get_or_create(text=link_url)
         meta.references.add(ref_obj)
 
 

@@ -108,7 +108,7 @@ export const schemaFieldsInfo = [
     },
   },
   {
-    schemaName: 'reference',
+    schemaName: 'references_normalized',
     text: {
       en: 'References',
     },
@@ -860,8 +860,26 @@ export function inscriptions2markup(inscriptions) {
         continue;
       }
 
-      if (columnName == "reference") {
-        paragraph += `<div class="${cssStyle}">${columnData}</div>`;
+      if (columnName == "references_normalized") {
+        if (columnData && columnData.trim() !== '') {
+          const refs = columnData.split('|').map(r => r.trim()).filter(r => r.length > 0);
+          if (refs.length > 0) {
+            paragraph += `<ul class="${cssStyle}">`;
+            refs.forEach(ref => {
+              if (ref.includes('https://')) {
+                const name = ref.includes('riksarkivet') ? "Riksarkivet" : ref;
+                paragraph += `<li><a href="${ref}" target="_blank" contenteditable="false">${name}</a></li>`;
+              } else {
+                paragraph += `<li>${escapeHtml(ref)}</li>`;
+              }
+            });
+            paragraph += '</ul>';
+          } else if (showHeaders) {
+            paragraph += '<i>Absent, not in the database.</i>';
+          }
+        } else if (showHeaders) {
+          paragraph += '<i>Absent, not in the database.</i>';
+        }
         continue;
       }
 
