@@ -34,6 +34,15 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("text", models.CharField(max_length=1500, unique=True)),
+                (
+                    "kind",
+                    models.CharField(
+                        choices=[("text", "Text"), ("link", "Link")],
+                        default="text",
+                        max_length=10,
+                    ),
+                ),
+                ("label", models.CharField(blank=True, max_length=300)),
             ],
             options={
                 "db_table": "references",

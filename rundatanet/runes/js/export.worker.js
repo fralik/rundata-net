@@ -1,6 +1,6 @@
 /**
  * Web Worker for exporting inscription data to Excel format
- * 
+ *
  * Input: e.data is a dictionary with fields:
  *   inscriptions - Array of inscription objects from gViewModel.getActiveInscriptions()
  *   columns - Object mapping column names to human-readable names
@@ -21,29 +21,29 @@ onmessage = function(e) {
     // Extract column names and human names from the column map
     const columns = Object.keys(columnMap);
     const humanNames = columns.map(col => columnMap[col]);
-    
+
     // Process the data and generate Excel data
     const processedData = processDataForExcel(inscriptions, columns);
-    
+
     // Create workbook and main worksheet
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.aoa_to_sheet([
       humanNames, // Header row with human-readable column names
       ...processedData
     ]);
-    
+
     // Add the main data worksheet
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
-    
+
     // If search rules are provided, add them to a separate sheet
     if (rules && !isEmpty(rules)) {
       const rulesSheet = createRulesWorksheet(rules);
       XLSX.utils.book_append_sheet(workbook, rulesSheet, 'Search Parameters');
     }
-    
+
     // Generate the XLSX file as an ArrayBuffer
     const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
-    
+
     // Send the processed data back to the main thread
     postMessage({
       buffer: excelBuffer,
@@ -61,7 +61,7 @@ onmessage = function(e) {
 
 /**
  * Process inscription data for Excel export
- * 
+ *
  * @param {Array} inscriptions - Array of inscription objects
  * @param {Array} columns - Array of column names to include
  * @returns {Array} Array of arrays with processed data
@@ -97,6 +97,14 @@ function processDataForExcel(inscriptions, columns) {
         colData = processCrosses(inscription[columnName]);
       }
 
+      // Strip label:::url encoding in references for clean flat text in Excel
+      if (columnName === 'references_combined' && typeof colData === 'string') {
+        colData = colData.split(' | ').map(ref => {
+          const sep = ref.indexOf(':::');
+          return sep !== -1 ? ref.substring(0, sep) + ': ' + ref.substring(sep + 3) : ref;
+        }).join(' | ');
+      }
+
       // Convert arrays to strings
       if (Array.isArray(colData)) {
         colData = colData.join(';');
@@ -113,7 +121,7 @@ function processDataForExcel(inscriptions, columns) {
 
 /**
  * Process cross data for Excel format
- * 
+ *
  * @param {Array} crosses - Array of cross data
  * @returns {String} Formatted cross data as string
  */
@@ -137,7 +145,7 @@ function processCrosses(crosses) {
     // Process each group
     for (let gId = 1; gId < crossObj.length; gId++) {
       const groupItems = crossObj[gId];
-      
+
       if (!groupItems || groupItems.length === 0) {
         oneCross.push('');
         continue;
@@ -152,10 +160,10 @@ function processCrosses(crosses) {
           oneGroup.push(`${crossForm.name} ?`);
         }
       }
-      
+
       oneCross.push(oneGroup.join(',')); // Join individual cross forms with comma
     }
-    
+
     crossData.push(oneCross.join(';')); // Join groups with semicolon
   }
 
@@ -164,7 +172,7 @@ function processCrosses(crosses) {
 
 /**
  * Create a worksheet for search rules
- * 
+ *
  * @param {Object} rules - Query builder rules object
  * @returns {Object} XLSX worksheet
  */
@@ -178,13 +186,13 @@ function createRulesWorksheet(rules) {
   rulesData.push(['Generated on', new Date().toLocaleString()]);
   rulesData.push(['']); // Empty row for spacing
   rulesData.push([rulesString]);
-  
+
   return XLSX.utils.aoa_to_sheet(rulesData);
 }
 
 /**
  * Check if an object is empty
- * 
+ *
  * @param {Object} obj - Object to check
  * @returns {boolean} True if object is empty, false otherwise
  */

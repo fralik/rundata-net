@@ -108,7 +108,7 @@ export const schemaFieldsInfo = [
     },
   },
   {
-    schemaName: 'references_normalized',
+    schemaName: 'references_combined',
     text: {
       en: 'References',
     },
@@ -860,15 +860,21 @@ export function inscriptions2markup(inscriptions) {
         continue;
       }
 
-      if (columnName == "references_normalized") {
+      if (columnName == "references_combined") {
         if (columnData && columnData.trim() !== '') {
           const refs = columnData.split('|').map(r => r.trim()).filter(r => r.length > 0);
           if (refs.length > 0) {
             paragraph += `<ul class="${cssStyle}">`;
             refs.forEach(ref => {
-              if (ref.includes('https://')) {
-                const name = ref.includes('riksarkivet') ? "Riksarkivet" : ref;
-                paragraph += `<li><a href="${ref}" target="_blank" contenteditable="false">${name}</a></li>`;
+              const sep = ref.indexOf(':::');
+              if (sep !== -1) {
+                // Encoded link: "<label>:::<url>"
+                const label = ref.substring(0, sep);
+                const url = ref.substring(sep + 3);
+                paragraph += `<li><a href="${url}" target="_blank" contenteditable="false">${escapeHtml(label)}</a></li>`;
+              } else if (ref.includes('https://')) {
+                // Legacy unencoded URL (no label stored)
+                paragraph += `<li><a href="${ref}" target="_blank" contenteditable="false">${ref}</a></li>`;
               } else {
                 paragraph += `<li>${escapeHtml(ref)}</li>`;
               }

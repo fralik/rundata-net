@@ -1,5 +1,5 @@
-"""Data migration: populate Reference objects from legacy ``reference`` field
-and add a Riksarkivet link for every inscription."""
+"""Data migration: populate Reference objects from legacy ``reference`` field,
+add a Riksarkivet link for every inscription, and add ``kind``/``label`` fields."""
 
 import urllib.parse
 
@@ -25,7 +25,7 @@ def populate_references(apps, schema_editor):
     # Phase 2 – add a Riksarkivet link for every inscription
     for meta in MetaInformation.objects.select_related("signature").all():
         link_url = _build_riksarkivet_link(meta.signature.signature_text)
-        ref_obj, _ = Reference.objects.get_or_create(text=link_url)
+        ref_obj, _ = Reference.objects.get_or_create(text=link_url, defaults={"kind": "link", "label": "Riksarkivet"})
         meta.references.add(ref_obj)
 
 

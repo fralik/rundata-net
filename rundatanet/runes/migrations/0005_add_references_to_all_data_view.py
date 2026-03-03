@@ -2,7 +2,9 @@
 
 Drops the existing view and re-creates it with:
 - ``full_address`` computed column
-- ``references_normalized`` – pipe-separated reference texts from the M2M table
+- ``references_combined`` – pipe-separated reference texts from the M2M table;
+  link-type references are encoded as ``<label>:::<url>`` so the frontend can
+  recover the display name without pattern-matching on the URL.
 """
 
 from django.db import migrations
@@ -18,7 +20,7 @@ CREATE VIEW all_data AS SELECT
     meta_information.*,
     ifnull(t1.num_names, 0) AS num_names,
     ifnull(t2.num_crosses, 0) AS num_crosses,
-    ifnull(t3.references_text, '') AS references_normalized,
+    ifnull(t3.references_text, '') AS references_combined,
     material_types.name AS "material_type",
     normalisation_norse.value AS normalisation_norse,
     normalisation_norse.search_value AS normalisation_search_norse,
@@ -46,7 +48,14 @@ LEFT OUTER JOIN (
     GROUP BY crosses.meta_id
 ) AS t2 ON (t2.meta_id = meta_information.id)
 LEFT OUTER JOIN (
-    SELECT mr.metainformation_id, GROUP_CONCAT(r.text, ' | ') AS references_text
+    SELECT mr.metainformation_id,
+        GROUP_CONCAT(
+            CASE WHEN r.kind = 'link' AND r.label != ''
+                THEN r.label || ':::' || r.text
+                ELSE r.text
+            END,
+            ' | '
+        ) AS references_text
     FROM meta_information_references mr
     INNER JOIN "references" r ON r.id = mr.reference_id
     GROUP BY mr.metainformation_id
