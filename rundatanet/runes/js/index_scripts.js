@@ -108,7 +108,7 @@ export const schemaFieldsInfo = [
     },
   },
   {
-    schemaName: 'reference',
+    schemaName: 'references_combined',
     text: {
       en: 'References',
     },
@@ -860,8 +860,37 @@ export function inscriptions2markup(inscriptions) {
         continue;
       }
 
-      if (columnName == "reference") {
-        paragraph += `<div class="${cssStyle}">${columnData}</div>`;
+      if (columnName == "references_combined") {
+        if (columnData && columnData.trim() !== '') {
+          const refs = columnData.split('|').map(r => r.trim()).filter(r => r.length > 0);
+          if (refs.length > 0) {
+            paragraph += `<ul class="${cssStyle}">`;
+            refs.forEach(ref => {
+              const sep = ref.indexOf(':::');
+              if (sep !== -1) {
+                // Encoded link: "<label>:::<url-or-blob-filename>"
+                const label = ref.substring(0, sep);
+                const urlOrBlob = ref.substring(sep + 3);
+                // If the value is not an absolute URL it is a bare blob filename;
+                // prepend the configured base URL to make it a full link.
+                const url = (urlOrBlob.startsWith('http://') || urlOrBlob.startsWith('https://'))
+                  ? urlOrBlob
+                  : (window.BLOB_BASE_URL ? window.BLOB_BASE_URL.replace(/\/$/, '') + '/' + urlOrBlob : urlOrBlob);
+                paragraph += `<li><a href="${url}" target="_blank" contenteditable="false">${escapeHtml(label)}</a></li>`;
+              } else if (ref.includes('https://')) {
+                // Legacy unencoded URL (no label stored)
+                paragraph += `<li><a href="${ref}" target="_blank" contenteditable="false">${ref}</a></li>`;
+              } else {
+                paragraph += `<li>${escapeHtml(ref)}</li>`;
+              }
+            });
+            paragraph += '</ul>';
+          } else if (showHeaders) {
+            paragraph += '<i>Absent, not in the database.</i>';
+          }
+        } else if (showHeaders) {
+          paragraph += '<i>Absent, not in the database.</i>';
+        }
         continue;
       }
 

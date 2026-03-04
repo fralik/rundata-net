@@ -76,6 +76,34 @@ class Cross(models.Model):
         db_table = "crosses"
 
 
+class Reference(models.Model):
+    """A single bibliographic reference entry.
+
+    Text references are plain bibliographic strings, e.g. 'SRI 1 plansch IV fig. 3'.
+    Link references are URLs with a human-readable label, e.g. label='Riksarkivet'.
+    In the flat DB view, links are encoded as '<label>:::<url>' so the frontend and
+    export layer can recover the display name without pattern-matching on the URL.
+    """
+
+    class Kind(models.TextChoices):
+        TEXT = "text", "Text"
+        LINK = "link", "Link"
+
+    text = models.CharField(max_length=1500, unique=True)
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.TEXT)
+    # Human-readable display name; only meaningful when kind=LINK.
+    label = models.CharField(max_length=300, blank=True)
+
+    def __str__(self):
+        if self.kind == self.Kind.LINK and self.label:
+            return f"{self.label}: {self.text}"
+        return self.text
+
+    class Meta:
+        db_table = "references"
+        ordering = ["text"]
+
+
 class MaterialType(models.Model):
     name = models.TextField(blank=False, unique=True)
 
@@ -141,8 +169,10 @@ class MetaInformation(models.Model):
 
     # alternative signature is managed externally
 
-    # Referens
+    # Referens (legacy plain-text field, kept during migration)
     reference = models.TextField(blank=True)
+    # Normalised references (M2M)
+    references = models.ManyToManyField(Reference, blank=True, related_name="meta_informations")
 
     # Bildlänk is managed externally
 
