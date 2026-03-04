@@ -868,9 +868,14 @@ export function inscriptions2markup(inscriptions) {
             refs.forEach(ref => {
               const sep = ref.indexOf(':::');
               if (sep !== -1) {
-                // Encoded link: "<label>:::<url>"
+                // Encoded link: "<label>:::<url-or-blob-filename>"
                 const label = ref.substring(0, sep);
-                const url = ref.substring(sep + 3);
+                const urlOrBlob = ref.substring(sep + 3);
+                // If the value is not an absolute URL it is a bare blob filename;
+                // prepend the configured base URL to make it a full link.
+                const url = (urlOrBlob.startsWith('http://') || urlOrBlob.startsWith('https://'))
+                  ? urlOrBlob
+                  : (window.BLOB_BASE_URL ? window.BLOB_BASE_URL.replace(/\/$/, '') + '/' + urlOrBlob : urlOrBlob);
                 paragraph += `<li><a href="${url}" target="_blank" contenteditable="false">${escapeHtml(label)}</a></li>`;
               } else if (ref.includes('https://')) {
                 // Legacy unencoded URL (no label stored)

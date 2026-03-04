@@ -199,6 +199,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
+                "rundatanet.runes.context_processors.azure_blob_base_url",
             ],
         },
     },
@@ -253,3 +254,16 @@ USE_GA = env.bool("USE_GA", False)
 
 # Azure Model API key
 MODEL_KEY = env("MODEL_KEY", default="")
+
+# Azure Blob Storage (PDF files)
+# Single source of truth for both the frontend (window.BLOB_BASE_URL) and the
+# upload command (account URL + container are derived by parsing this value).
+# Format:
+#   Production:  https://<account>.blob.core.windows.net/<container>
+#   Azurite:     http://127.0.0.1:10000/devstoreaccount1/<container>
+AZURE_BLOB_BASE_URL = env("AZURE_BLOB_BASE_URL", default="")
+# Optional connection string for local development with the Azurite emulator.
+# When set, takes precedence over DefaultAzureCredential (production).
+# Example (Azurite defaults):
+#   DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
+AZURE_BLOB_CONNECTION_STRING = env("AZURE_BLOB_CONNECTION_STRING", default="")
