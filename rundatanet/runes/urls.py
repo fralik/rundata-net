@@ -1,14 +1,34 @@
 from django.contrib.sitemaps.views import sitemap
-from django.urls import path
+from django.urls import path, register_converter
 from django.views.generic import TemplateView
 
 from . import views
-from .sitemaps import AboutPageSitemap, MainPageSitemap, StaticViewSitemap
+from .sitemaps import AboutPageSitemap, InscriptionSitemap, MainPageSitemap, StaticViewSitemap
+
+
+class SignatureConverter:
+    """URL converter that accepts any characters except forward slash.
+
+    This allows both normalized slugs (ol-1) and raw Unicode signatures
+    (Öl 1, URL-encoded as %C3%96l%201) to match the same route.
+    """
+
+    regex = r"[^/]+"
+
+    def to_python(self, value: str) -> str:
+        return value
+
+    def to_url(self, value: str) -> str:
+        return value
+
+
+register_converter(SignatureConverter, "sig")
 
 sitemaps = {
     "static": StaticViewSitemap,
     "main": MainPageSitemap,
     "about": AboutPageSitemap,
+    "inscriptions": InscriptionSitemap,
 }
 
 app_name = "runes"
@@ -19,5 +39,6 @@ urlpatterns = [
     path("about/", TemplateView.as_view(template_name="runes/about.html"), name="about"),
     path("references/", TemplateView.as_view(template_name="runes/references.html"), name="references"),
     path("eda/", TemplateView.as_view(template_name="runes/eda.html"), name="eda"),
+    path("inscription/<sig:slug>/", views.inscription_detail, name="inscription_detail"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
 ]

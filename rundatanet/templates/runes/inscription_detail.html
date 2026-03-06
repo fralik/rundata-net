@@ -1,0 +1,301 @@
+{% load static %}
+{% load settings %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Runic inscription {{ signature }} — Rundata.info">
+    <meta property="og:title" content="{{ signature }} — Rundata.info">
+    <meta property="og:description" content="Runic inscription {{ display_signature }}{% if meta.found_location %}, found at {{ meta.found_location }}{% endif %}">
+    <meta property="og:type" content="article">
+    <link rel="stylesheet" href="{% static 'css/runinskrifter_style.css' %}" />
+    {% get_from_settings 'USE_GA' as use_ga %}
+    {% if use_ga %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6M319VSZGS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-6M319VSZGS');
+    </script>
+    {% endif %}
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+    <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
+
+    <style type="text/css">
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 1em;
+      }
+      .inscription-header {
+        border-bottom: 2px solid #333;
+        padding-bottom: 0.5em;
+        margin-bottom: 1em;
+      }
+      .inscription-header h1 {
+        margin-bottom: 0.2em;
+      }
+      .aliases {
+        color: #666;
+        font-style: italic;
+      }
+      .section {
+        margin-bottom: 1.5em;
+      }
+      .section h2 {
+        font-size: 1.2em;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 0.3em;
+        margin-bottom: 0.5em;
+      }
+      table.info {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table.info th {
+        text-align: left;
+        padding: 0.4em 1em 0.4em 0;
+        vertical-align: top;
+        width: 200px;
+        color: #555;
+      }
+      table.info td {
+        padding: 0.4em 0;
+        vertical-align: top;
+      }
+      .text-block {
+        margin-bottom: 0.8em;
+      }
+      .text-block .label {
+        font-weight: bold;
+        color: #555;
+        display: block;
+        margin-bottom: 0.2em;
+      }
+      .text-block .value {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+      }
+      .back-link {
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid #ccc;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.15em 0.5em;
+        font-size: 0.85em;
+        border-radius: 3px;
+        margin-left: 0.5em;
+      }
+      .badge-lost {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .badge-new-reading {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .map-link {
+        font-size: 0.9em;
+      }
+      .image-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1em;
+      }
+      .image-gallery a {
+        display: block;
+      }
+      .references-list {
+        list-style: none;
+        padding-left: 0;
+      }
+      .references-list li {
+        margin-bottom: 0.3em;
+      }
+    </style>
+    <title>{{ signature }} — Rundata.info</title>
+  </head>
+  <body>
+    <div class="inscription-header">
+      <h1>
+        {{ signature }}
+        {% if meta.lost %}<span class="badge badge-lost" title="Inscription has been lost">†</span>{% endif %}
+        {% if meta.new_reading %}<span class="badge badge-new-reading" title="New reading or interpretation">$</span>{% endif %}
+      </h1>
+      {% if aliases %}
+      <p class="aliases">Also known as: {{ aliases|join:", " }}</p>
+      {% endif %}
+    </div>
+
+    {# Location information #}
+    <div class="section">
+      <h2>Location</h2>
+      <table class="info">
+        {% if meta.found_location %}
+        <tr><th>Found location</th><td>{{ meta.found_location }}</td></tr>
+        {% endif %}
+        {% if meta.parish %}
+        <tr><th>Parish</th><td>{{ meta.parish }}</td></tr>
+        {% endif %}
+        {% if meta.district %}
+        <tr><th>District</th><td>{{ meta.district }}</td></tr>
+        {% endif %}
+        {% if meta.municipality %}
+        <tr><th>Municipality</th><td>{{ meta.municipality }}</td></tr>
+        {% endif %}
+        {% if meta.current_location %}
+        <tr><th>Current location</th><td>{{ meta.current_location }}</td></tr>
+        {% endif %}
+        {% if meta.original_site %}
+        <tr><th>Original site</th><td>{{ meta.original_site }}</td></tr>
+        {% endif %}
+        {% if meta.latitude and meta.longitude and meta.latitude != 0 and meta.longitude != 0 %}
+        <tr>
+          <th>Coordinates</th>
+          <td>
+            {{ meta.latitude }}, {{ meta.longitude }}
+            <span class="map-link">
+              (<a href="https://www.google.com/maps?q={{ meta.latitude }},{{ meta.longitude }}" target="_blank" rel="noopener">show on map</a>)
+            </span>
+          </td>
+        </tr>
+        {% endif %}
+        {% if meta.parish_code %}
+        <tr><th>Parish code</th><td>{{ meta.parish_code }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+
+    {# Classification & dating #}
+    <div class="section">
+      <h2>Classification</h2>
+      <table class="info">
+        {% if meta.rune_type %}
+        <tr><th>Rune type</th><td>{{ meta.rune_type }}</td></tr>
+        {% endif %}
+        {% if meta.dating %}
+        <tr><th>Dating</th><td>{{ meta.dating }}</td></tr>
+        {% endif %}
+        {% if meta.year_from or meta.year_to %}
+        <tr>
+          <th>Year range</th>
+          <td>
+            {% if meta.year_from %}{{ meta.year_from }}{% endif %}
+            {% if meta.year_from and meta.year_to %} – {% endif %}
+            {% if meta.year_to %}{{ meta.year_to }}{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+        {% if meta.style %}
+        <tr><th>Style</th><td>{{ meta.style }}</td></tr>
+        {% endif %}
+        {% if meta.carver %}
+        <tr><th>Carver</th><td>{{ meta.carver }}</td></tr>
+        {% endif %}
+        {% if meta.materialType %}
+        <tr><th>Material type</th><td>{{ meta.materialType }}</td></tr>
+        {% endif %}
+        {% if meta.material %}
+        <tr><th>Material</th><td>{{ meta.material }}</td></tr>
+        {% endif %}
+        {% if meta.objectInfo %}
+        <tr><th>Object</th><td>{{ meta.objectInfo }}</td></tr>
+        {% endif %}
+        {% if data.crosses %}
+        <tr><th>Crosses</th><td>{{ data.crosses }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+
+    {# Runic texts #}
+    {% if data.runic_texts %}
+    <div class="section">
+      <h2>Texts</h2>
+      {% for text in data.runic_texts %}
+      <div class="text-block">
+        <span class="label">
+          {% if text.language_code == "run" %}Transliteration
+          {% elif text.language_code == "fvn" %}Normalisation (Old Norse)
+          {% elif text.language_code == "rsv" %}Normalisation (Scandinavian)
+          {% elif text.language_code == "eng" %}Translation (English)
+          {% elif text.language_code == "swe" %}Translation (Swedish)
+          {% else %}{{ text.language_code }}
+          {% endif %}
+        </span>
+        <span class="value">{{ text.value }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Additional information #}
+    {% if meta.additional %}
+    <div class="section">
+      <h2>Additional information</h2>
+      <p>{{ meta.additional }}</p>
+    </div>
+    {% endif %}
+
+    {# References #}
+    {% if meta.references.all %}
+    <div class="section">
+      <h2>References</h2>
+      <ul class="references-list">
+        {% for ref in meta.references.all %}
+        <li>
+          {% if ref.kind == "LINK" or ref.kind == 1 %}
+            <a href="{{ ref.value }}" target="_blank" rel="noopener">{{ ref.title }}</a>
+          {% else %}
+            {{ ref.title }}{% if ref.value %}: {{ ref.value }}{% endif %}
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {# Legacy reference field #}
+    {% if meta.reference %}
+    <div class="section">
+      <h2>Reference (legacy)</h2>
+      <p>{{ meta.reference }}</p>
+    </div>
+    {% endif %}
+
+    {# Images #}
+    {% if meta.images.all %}
+    <div class="section">
+      <h2>Images</h2>
+      <div class="image-gallery">
+        {% for img in meta.images.all %}
+        <a href="{{ img.link_url }}" target="_blank" rel="noopener">
+          {% if img.direct_url %}
+          <img src="{{ img.direct_url }}" alt="Image of {{ signature }}" style="max-width: 300px; height: auto;">
+          {% else %}
+          View image
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="back-link">
+      <a href="{% url 'runes:index' %}">← Back to search</a>
+    </div>
+
+    <footer class="footer">
+      <p>© 2018, 2024 Vadim Frolov, <a href="mailto:mail@vadimfrolov.com">mail@vadimfrolov.com</a>.</p>
+    </footer>
+  </body>
+</html>
