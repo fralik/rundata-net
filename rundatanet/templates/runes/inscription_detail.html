@@ -45,6 +45,7 @@
     <style>
       /* ── Light palette (default) ── */
       :root, [data-theme="light"] {
+        color-scheme: light;
         --ink: #2c2a25;
         --ink-light: #78593E;
         --ink-faint: #9a9184;
@@ -69,6 +70,7 @@
 
       /* ── Dark palette ── */
       [data-theme="dark"] {
+        color-scheme: dark;
         --ink: #F3F4F6;
         --ink-light: #9CA3AF;
         --ink-faint: #6B7280;
@@ -112,13 +114,40 @@
       }
 
       /* ── breadcrumb ── */
-      .breadcrumb {
+      .top-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin: 0 0 28px;
+        gap: 16px;
+      }
+      .breadcrumb {
+        margin: 0;
         font-size: 0.88rem;
         color: var(--ink-faint);
       }
       .breadcrumb a { text-decoration: none; }
       .breadcrumb a:hover { text-decoration: underline; }
+
+      .search-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .search-container input {
+        background-color: var(--bg);
+        color: var(--ink);
+        border: 1px solid var(--ink-faint);
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        color-scheme: inherit;
+      }
+      .search-container input:focus {
+        outline: none;
+        border-color: var(--ink);
+      }
 
       /* ── title block ── */
       .title-block {
@@ -428,9 +457,15 @@
       <i class="bi bi-sun-fill"></i><i class="bi bi-moon-fill"></i>
     </button>
     <div class="page">
-      <nav class="breadcrumb" aria-label="Back navigation">
-        <a href="{% url 'runes:index' %}">← Home</a>
-      </nav>
+      <div class="top-nav">
+        <nav class="breadcrumb" aria-label="Back navigation">
+          <a href="{% url 'runes:index' %}">← Home</a>
+        </nav>
+        <div class="search-container">
+          <input type="text" id="signatureSearch" list="signatureList" autocomplete="off" placeholder="Search inscription..." aria-label="Search by inscription ID">
+          <datalist id="signatureList"></datalist>
+        </div>
+      </div>
 
       <header class="title-block">
         <h1 class="inscription-title">
@@ -683,6 +718,51 @@
         var next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('rd-theme', next);
+      });
+
+      /* ── Autocomplete search ── */
+      document.addEventListener("DOMContentLoaded", async () => {
+        const dataListElement = document.getElementById("signatureList");
+        const searchInput = document.getElementById("signatureSearch");
+
+        try {
+          // Fetch the options from the API endpoint
+          const response = await fetch('/api/search_options');
+          const signatures = await response.json();
+
+          // Populate the datalist element efficiently
+          const fragment = document.createDocumentFragment();
+          signatures.forEach(sig => {
+            const option = document.createElement("option");
+            option.value = sig.title;
+            // Add both title and slug to text content so datalist matches against both in all browsers
+            option.textContent = `${sig.title} (${sig.slug})`;
+            option.dataset.slug = sig.slug;
+            fragment.appendChild(option);
+          });
+          dataListElement.appendChild(fragment);
+
+          // Listen for selection and redirect
+          searchInput.addEventListener("change", (e) => {
+            const val = e.target.value;
+            // Find matched option by value or by slug if they typed it exactly
+            const selectedOpt = Array.from(dataListElement.options).find(opt =>
+              opt.value === val || opt.dataset.slug === val.toLowerCase()
+            );
+            if (selectedOpt) {
+              const urlParts = window.location.pathname.split('/');
+              // Replace the slug token and redirect
+              if (urlParts.length >= 3 && urlParts[1] === 'inscription') {
+                urlParts[2] = encodeURIComponent(selectedOpt.dataset.slug);
+                window.location.href = urlParts.join('/');
+              } else {
+                window.location.href = `/inscription/${encodeURIComponent(selectedOpt.dataset.slug)}/`;
+              }
+            }
+          });
+        } catch (error) {
+          console.error("Failed to load signatures for autocomplete:", error);
+        }
       });
 
       (function initDetailMap() {
