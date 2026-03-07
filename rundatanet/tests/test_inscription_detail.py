@@ -1,7 +1,8 @@
+from django.template import Context, Template
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from rundatanet.runes.models import MetaInformation, Signature
+from rundatanet.runes.models import MetaInformation, Reference, Signature
 from rundatanet.runes.normalization import SlugIndex, normalize_signature
 
 
@@ -271,3 +272,92 @@ class TestInscriptionDetailAPI(TestCase):
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data
+
+
+class TestMakeBlobUrlFilter(TestCase):
+    """Unit tests for the make_blob_url template filter."""
+
+    def _render(self, text, base_url):
+        tpl = Template(
+            "{% load settings %}{{ text|make_blob_url:base_url }}"
+        )
+        return tpl.render(Context({"text": text, "base_url": base_url}))
+
+    def test_returns_absolute_url_unchanged(self):
+        url = "https://example.com/some/path.pdf"
+        assert self._render(url, "https://files.rundata.info/sr") == url
+
+    def test_blob_filename_prepends_base_url(self):
+        result = self._render("Öl_1.pdf", "https://files.rundata.info/sr")
+        assert result == "https://files.rundata.info/sr/Öl_1.pdf"
+
+    def test_trailing_slash_on_base_url_is_stripped(self):
+        result = self._render("Gs_1.pdf", "https://files.rundata.info/sr/")
+        assert result == "https://files.rundata.info/sr/Gs_1.pdf"
+
+    def test_empty_base_url_returns_text_unchanged(self):
+        assert self._render("Öl_1.pdf", "") == "Öl_1.pdf"
+
+    def test_none_base_url_returns_text_unchanged(self):
+        assert self._render("Öl_1.pdf", None) == "Öl_1.pdf"
+
+    def test_returns_http_url_unchanged(self):
+        url = "http://example.com/file.pdf"
+        assert self._render(url, "https://files.rundata.info/sr") == url
+
+
+class TestInscriptionDetailPdfLink(TestCase):
+    """Integration test: PDF blob references render with AZURE_BLOB_BASE_URL."""
+
+    databases = {"default", "runes_db"}
+
+    def setUp(self):
+        SlugIndex.reset()
+        self.sig = Signature.objects.using("runes_db").create(signature_text="Gs 1")
+        self.meta = MetaInformation.objects.using("runes_db").create(
+            signature=self.sig,
+            found_location="Gästrikland",
+        )
+        self.pdf_ref = Reference.objects.using("runes_db").create(
+            text="Gs_1.pdf",
+            kind=Reference.Kind.LINK,
+            label="Sveriges runinskrifter PDF",
+        )
+        self.meta.references.add(self.pdf_ref)
+
+    def tearDown(self):
+        SlugIndex.reset()
+
+    @override_settings(AZURE_BLOB_BASE_URL="https://files.rundata.info/sveriges_runinskrifter")
+    def test_pdf_link_uses_blob_base_url(self):
+        url = reverse("runes:inscription_detail", kwargs={"slug": "gs-1"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        assert 'href="https://files.rundata.info/sveriges_runinskrifter/Gs_1.pdf"' in content
+
+    @override_settings(AZURE_BLOB_BASE_URL="https://files.rundata.info/sveriges_runinskrifter/")
+    def test_pdf_link_strips_trailing_slash_from_base_url(self):
+        url = reverse("runes:inscription_detail", kwargs={"slug": "gs-1"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        assert 'href="https://files.rundata.info/sveriges_runinskrifter/Gs_1.pdf"' in content
+
+    @override_settings(AZURE_BLOB_BASE_URL="")
+    def test_pdf_link_without_blob_base_url_shows_filename(self):
+        url = reverse("runes:inscription_detail", kwargs={"slug": "gs-1"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        assert 'href="Gs_1.pdf"' in content
+
+    def test_absolute_link_ref_rendered_as_is(self):
+        """A reference with an absolute URL should not be modified."""
+        abs_ref = Reference.objects.using("runes_db").create(
+            text="https://riksarkivet.example.com/doc",
+            kind=Reference.Kind.LINK,
+            label="Riksarkivet",
+        )
+        self.meta.references.add(abs_ref)
+        url = reverse("runes:inscription_detail", kwargs={"slug": "gs-1"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        assert 'href="https://riksarkivet.example.com/doc"' in content
