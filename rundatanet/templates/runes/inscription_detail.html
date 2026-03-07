@@ -5,11 +5,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Runic inscription {{ signature }} — Rundata.info">
-    <meta property="og:title" content="{{ signature }} — Rundata.info">
+    <meta name="description" content="Runic inscription {{ signature }} — Rundata-net">
+    <meta property="og:title" content="{{ signature }} — Rundata-net">
     <meta property="og:description" content="Runic inscription {{ display_signature }}{% if meta.found_location %}, found at {{ meta.found_location }}{% endif %}">
     <meta property="og:type" content="article">
-    <link rel="stylesheet" href="{% static 'css/runinskrifter_style.css' %}" />
+    <title>{{ signature }} — Rundata-net</title>
+
     {% get_from_settings 'USE_GA' as use_ga %}
     {% if use_ga %}
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-6M319VSZGS"></script>
@@ -21,6 +22,10 @@
     </script>
     {% endif %}
 
+    <link rel="stylesheet" href="{% static 'css/runinskrifter_style.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
@@ -28,274 +33,722 @@
     <meta name="msapplication-TileColor" content="#2b5797">
     <meta name="theme-color" content="#ffffff">
 
-    <style type="text/css">
+    <script>
+      /* Apply saved theme before first paint to prevent flash */
+      (function() {
+        var t = localStorage.getItem('rd-theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
+    <style>
+      /* ── Light palette (default) ── */
+      :root, [data-theme="light"] {
+        --ink: #2c2a25;
+        --ink-light: #78593E;
+        --ink-faint: #9a9184;
+        --bg: #ffffff;
+        --rule: #e0dbd2;
+        --accent: #6b4b2a;
+        --heading: #273C2C;
+        --heading-border: #273C2C;
+        --footer-border: #273C2C;
+        --link-hover: #3d2a14;
+        --ref-link: #1a5c8a;
+        --badge-lost-bg: #f0e0dc;
+        --badge-lost-fg: #7e3d33;
+        --badge-new-bg: #dfebd9;
+        --badge-new-fg: #36583c;
+        --transliteration: inherit;
+        --normalization: inherit;
+        --popup-bg: #fffdf8;
+        --found-color: #7b5333;
+        --present-color: #3d6d6a;
+      }
+
+      /* ── Dark palette ── */
+      [data-theme="dark"] {
+        --ink: #F3F4F6;
+        --ink-light: #9CA3AF;
+        --ink-faint: #6B7280;
+        --bg: #1E2024;
+        --rule: #33363d;
+        --accent: #EAB308;
+        --heading: #C24141;
+        --heading-border: #C24141;
+        --footer-border: #C24141;
+        --link-hover: #fbbf24;
+        --ref-link: #60a5fa;
+        --badge-lost-bg: #3d2020;
+        --badge-lost-fg: #EF4444;
+        --badge-new-bg: #1a3320;
+        --badge-new-fg: #4ade80;
+        --transliteration: #EF4444;
+        --normalization: #EAB308;
+        --popup-bg: #282a2f;
+        --found-color: #7b5333;
+        --present-color: #3d6d6a;
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+
       body {
-        font-family: Arial, Helvetica, sans-serif;
-        max-width: 960px;
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 1.05rem/1.72 "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: var(--accent); }
+      a:hover { color: var(--link-hover); }
+
+      /* ── page wrapper ── */
+      .page {
+        max-width: 820px;
         margin: 0 auto;
-        padding: 1em;
+        padding: 36px 24px 64px;
       }
-      .inscription-header {
-        border-bottom: 2px solid #333;
-        padding-bottom: 0.5em;
-        margin-bottom: 1em;
+
+      /* ── breadcrumb ── */
+      .breadcrumb {
+        margin: 0 0 28px;
+        font-size: 0.88rem;
+        color: var(--ink-faint);
       }
-      .inscription-header h1 {
-        margin-bottom: 0.2em;
+      .breadcrumb a { text-decoration: none; }
+      .breadcrumb a:hover { text-decoration: underline; }
+
+      /* ── title block ── */
+      .title-block {
+        margin-bottom: 8px;
       }
-      .aliases {
-        color: #666;
-        font-style: italic;
-      }
-      .section {
-        margin-bottom: 1.5em;
-      }
-      .section h2 {
-        font-size: 1.2em;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 0.3em;
-        margin-bottom: 0.5em;
-      }
-      table.info {
-        border-collapse: collapse;
-        width: 100%;
-      }
-      table.info th {
-        text-align: left;
-        padding: 0.4em 1em 0.4em 0;
-        vertical-align: top;
-        width: 200px;
-        color: #555;
-      }
-      table.info td {
-        padding: 0.4em 0;
-        vertical-align: top;
-      }
-      .text-block {
-        margin-bottom: 0.8em;
-      }
-      .text-block .label {
-        font-weight: bold;
-        color: #555;
-        display: block;
-        margin-bottom: 0.2em;
-      }
-      .text-block .value {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        line-height: 1.6;
-      }
-      .back-link {
-        margin-top: 2em;
-        padding-top: 1em;
-        border-top: 1px solid #ccc;
+      .inscription-title {
+        margin: 0;
+        font-size: clamp(2.4rem, 6vw, 3.6rem);
+        font-weight: 400;
+        line-height: 1.1;
+        letter-spacing: -0.01em;
+        color: var(--heading);
       }
       .badge {
         display: inline-block;
-        padding: 0.15em 0.5em;
-        font-size: 0.85em;
-        border-radius: 3px;
-        margin-left: 0.5em;
+        vertical-align: super;
+        font-size: 0.42em;
+        padding: 0.2em 0.5em;
+        border-radius: 4px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        position: relative;
+        top: -0.15em;
       }
-      .badge-lost {
-        background-color: #f8d7da;
-        color: #721c24;
+      .badge-lost { background: var(--badge-lost-bg); color: var(--badge-lost-fg); }
+      .badge-new  { background: var(--badge-new-bg); color: var(--badge-new-fg); }
+
+      .aliases {
+        margin: 6px 0 0;
+        color: var(--ink-light);
+        font-size: 0.95rem;
+        font-style: italic;
       }
-      .badge-new-reading {
-        background-color: #d4edda;
-        color: #155724;
-      }
-      .map-link {
-        font-size: 0.9em;
-      }
-      .image-gallery {
+
+      /* ── meta ribbon ── */
+      .meta-ribbon {
         display: flex;
         flex-wrap: wrap;
-        gap: 1em;
+        gap: 6px 20px;
+        padding: 14px 0;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+        margin: 16px 0 32px;
+        font-size: 0.9rem;
+        color: var(--ink-light);
       }
-      .image-gallery a {
+      .meta-ribbon dt {
         display: block;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        color: var(--ink-faint);
       }
-      .references-list {
+      .meta-ribbon dd {
+        display: block;
+        margin: 0;
+        color: var(--ink);
+      }
+      .meta-ribbon dd::after {
+        content: none;
+      }
+      .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      /* ── sections ── */
+      .section { margin-bottom: 36px; }
+      .section:last-child { margin-bottom: 0; }
+
+      .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--heading);
+        margin: 0 0 14px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--heading-border);
+      }
+
+      /* ── definition rows ── */
+      .def-list {
+        margin: 0;
+        padding: 0;
+      }
+      .def-row {
+        display: flex;
+        gap: 12px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      .def-row:last-child { border-bottom: none; }
+      .def-term {
+        flex: 0 0 170px;
+        display: block;
+        color: var(--ink-light);
+        font-size: 0.92rem;
+        font-weight: normal;
+      }
+      .def-detail {
+        flex: 1;
+        min-width: 0;
+        display: block;
+        color: var(--ink);
+      }
+      .def-detail::after {
+        content: none;
+      }
+
+      /* ── map ── */
+      .map-wrap {
+        margin-bottom: 18px;
+      }
+      .detail-map {
+        height: 320px;
+        border-radius: 8px;
+        border: 1px solid var(--rule);
+        overflow: hidden;
+      }
+      .map-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 8px;
+        font-size: 0.84rem;
+        color: var(--ink-light);
+      }
+      .map-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .swatch-found  { background: var(--found-color); }
+      .swatch-present { background: var(--present-color); }
+
+      .coords-link {
+        font-size: 0.88rem;
+        margin-left: 6px;
+        white-space: nowrap;
+      }
+
+      /* ── two-column layout for classification + location details ── */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+      }
+
+      /* ── texts ── */
+      .text-entry {
+        margin-bottom: 16px;
+      }
+      .text-entry:last-child { margin-bottom: 0; }
+      .text-kind {
+        display: block;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink-faint);
+        margin-bottom: 4px;
+      }
+      .text-body {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .text-body.transliteration {
+        font-weight: bold;
+        color: var(--transliteration);
+      }
+      .text-body.normalization {
+        font-style: italic;
+        font-weight: normal;
+        color: var(--normalization);
+      }
+
+      /* ── references ── */
+      .ref-list {
+        margin: 0;
+        padding: 0;
         list-style: none;
-        padding-left: 0;
       }
-      .references-list li {
-        margin-bottom: 0.3em;
+      .ref-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      .ref-list li:last-child { border-bottom: none; }
+      .ref-list a {
+        color: var(--ref-link);
+        font-weight: normal;
+        font-size: 0.95rem;
+      }
+      .ref-list .bi {
+        font-size: 0.7em;
+        margin-left: 3px;
+        vertical-align: super;
+      }
+
+      /* ── images ── */
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .image-grid a {
+        display: block;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .image-grid img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4/3;
+        object-fit: cover;
+      }
+      .image-grid span {
+        display: block;
+        padding: 6px 8px;
+        font-size: 0.85rem;
+        color: var(--ink-light);
+      }
+
+      /* ── footer ── */
+      .page-footer {
+        margin-top: 48px;
+        padding: 20px 0;
+        border-top: 2px solid var(--footer-border);
+        font-size: 0.88rem;
+        color: var(--ink-light);
+      }
+      .page-footer .cite-label {
+        display: block;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.78rem;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+
+      .leaflet-popup-content-wrapper,
+      .leaflet-popup-tip {
+        background: var(--popup-bg);
+        color: var(--ink);
+      }
+      .leaflet-container {
+        font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+      }
+
+      /* ── theme toggle ── */
+      .theme-toggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 1000;
+        background: var(--rule);
+        border: 1px solid var(--ink-faint);
+        color: var(--ink);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+        padding: 0;
+        line-height: 1;
+      }
+      .theme-toggle:hover {
+        background: var(--ink-faint);
+        color: var(--bg);
+      }
+      [data-theme="dark"] .theme-toggle .bi-sun-fill { display: inline; }
+      [data-theme="dark"] .theme-toggle .bi-moon-fill { display: none; }
+      [data-theme="light"] .theme-toggle .bi-sun-fill,
+      :root:not([data-theme]) .theme-toggle .bi-sun-fill { display: none; }
+      [data-theme="light"] .theme-toggle .bi-moon-fill,
+      :root:not([data-theme]) .theme-toggle .bi-moon-fill { display: inline; }
+
+      @media (max-width: 680px) {
+        .page { padding: 20px 16px 48px; }
+        .two-col { grid-template-columns: 1fr; gap: 0; }
+        .def-row { flex-direction: column; gap: 2px; }
+        .def-term { flex: none; }
       }
     </style>
-    <title>{{ signature }} — Rundata.info</title>
   </head>
   <body>
-    <div class="inscription-header">
-      <h1>
-        {{ signature }}
-        {% if meta.lost %}<span class="badge badge-lost" title="Inscription has been lost">†</span>{% endif %}
-        {% if meta.new_reading %}<span class="badge badge-new-reading" title="New reading or interpretation">$</span>{% endif %}
-      </h1>
-      {% if aliases %}
-      <p class="aliases">Also known as: {{ aliases|join:", " }}</p>
-      {% endif %}
-    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark mode">
+      <i class="bi bi-sun-fill"></i><i class="bi bi-moon-fill"></i>
+    </button>
+    <div class="page">
+      <nav class="breadcrumb" aria-label="Back navigation">
+        <a href="{% url 'runes:index' %}">← Home</a>
+      </nav>
 
-    {# Location information #}
-    <div class="section">
-      <h2>Location</h2>
-      <table class="info">
+      <header class="title-block">
+        <h1 class="inscription-title">
+          {{ signature }}
+          {% if meta.lost %}<span class="badge badge-lost" title="Lost">†</span>{% endif %}
+          {% if meta.new_reading %}<span class="badge badge-new" title="New reading">$</span>{% endif %}
+        </h1>
+        {% if aliases %}
+        <p class="aliases">Also known as: {{ aliases|join:", " }}</p>
+        {% endif %}
+      </header>
+
+      <dl class="meta-ribbon">
         {% if meta.found_location %}
-        <tr><th>Found location</th><td>{{ meta.found_location }}</td></tr>
-        {% endif %}
-        {% if meta.parish %}
-        <tr><th>Parish</th><td>{{ meta.parish }}</td></tr>
-        {% endif %}
-        {% if meta.district %}
-        <tr><th>District</th><td>{{ meta.district }}</td></tr>
-        {% endif %}
-        {% if meta.municipality %}
-        <tr><th>Municipality</th><td>{{ meta.municipality }}</td></tr>
+        <div class="meta-item">
+          <dt>Found</dt>
+          <dd>{{ meta.found_location }}</dd>
+        </div>
         {% endif %}
         {% if meta.current_location %}
-        <tr><th>Current location</th><td>{{ meta.current_location }}</td></tr>
-        {% endif %}
-        {% if meta.original_site %}
-        <tr><th>Original site</th><td>{{ meta.original_site }}</td></tr>
-        {% endif %}
-        {% if meta.latitude and meta.longitude and meta.latitude != 0 and meta.longitude != 0 %}
-        <tr>
-          <th>Coordinates</th>
-          <td>
-            {{ meta.latitude }}, {{ meta.longitude }}
-            <span class="map-link">
-              (<a href="https://www.google.com/maps?q={{ meta.latitude }},{{ meta.longitude }}" target="_blank" rel="noopener">show on map</a>)
-            </span>
-          </td>
-        </tr>
-        {% endif %}
-        {% if meta.parish_code %}
-        <tr><th>Parish code</th><td>{{ meta.parish_code }}</td></tr>
-        {% endif %}
-      </table>
-    </div>
-
-    {# Classification & dating #}
-    <div class="section">
-      <h2>Classification</h2>
-      <table class="info">
-        {% if meta.rune_type %}
-        <tr><th>Rune type</th><td>{{ meta.rune_type }}</td></tr>
+        <div class="meta-item">
+          <dt>Current</dt>
+          <dd>{{ meta.current_location }}</dd>
+        </div>
         {% endif %}
         {% if meta.dating %}
-        <tr><th>Dating</th><td>{{ meta.dating }}</td></tr>
+        <div class="meta-item">
+          <dt>Dating</dt>
+          <dd>{{ meta.dating }}</dd>
+        </div>
         {% endif %}
-        {% if meta.year_from or meta.year_to %}
-        <tr>
-          <th>Year range</th>
-          <td>
-            {% if meta.year_from %}{{ meta.year_from }}{% endif %}
-            {% if meta.year_from and meta.year_to %} – {% endif %}
-            {% if meta.year_to %}{{ meta.year_to }}{% endif %}
-          </td>
-        </tr>
+        {% if meta.materialType or meta.material %}
+        <div class="meta-item">
+          <dt>Material</dt>
+          <dd>{% if meta.materialType %}{{ meta.materialType }}{% endif %}{% if meta.materialType and meta.material %}, {% endif %}{% if meta.material %}{{ meta.material }}{% endif %}</dd>
+        </div>
         {% endif %}
-        {% if meta.style %}
-        <tr><th>Style</th><td>{{ meta.style }}</td></tr>
+        {% if meta.rune_type %}
+        <div class="meta-item">
+          <dt>Rune type</dt>
+          <dd>{{ meta.rune_type }}</dd>
+        </div>
         {% endif %}
-        {% if meta.carver %}
-        <tr><th>Carver</th><td>{{ meta.carver }}</td></tr>
+      </dl>
+
+      <main>
+        {# ── Map ── #}
+        {% if meta.latitude and meta.longitude and meta.latitude != 0 and meta.longitude != 0 or meta.present_latitude and meta.present_longitude and meta.present_latitude != 0 and meta.present_longitude != 0 %}
+        <section class="section">
+          <div class="map-wrap">
+            <div id="detailMap" class="detail-map" aria-label="Map of inscription locations"></div>
+            <div class="map-legend">
+              {% if meta.latitude and meta.longitude and meta.latitude != 0 and meta.longitude != 0 %}
+              <span class="map-legend-item"><span class="swatch swatch-found" aria-hidden="true"></span> Found</span>
+              {% endif %}
+              {% if meta.present_latitude and meta.present_longitude and meta.present_latitude != 0 and meta.present_longitude != 0 %}
+              <span class="map-legend-item"><span class="swatch swatch-present" aria-hidden="true"></span> Present</span>
+              {% endif %}
+            </div>
+          </div>
+        </section>
         {% endif %}
-        {% if meta.materialType %}
-        <tr><th>Material type</th><td>{{ meta.materialType }}</td></tr>
+
+        {# ── Location & Classification side-by-side ── #}
+        <div class="two-col">
+          <section class="section">
+            <h2 class="section-title">Location</h2>
+            <dl class="def-list">
+              {% if meta.found_location %}
+              <div class="def-row"><dt class="def-term">Found location</dt><dd class="def-detail">{{ meta.found_location }}</dd></div>
+              {% endif %}
+              {% if meta.parish %}
+              <div class="def-row"><dt class="def-term">Parish</dt><dd class="def-detail">{{ meta.parish }}</dd></div>
+              {% endif %}
+              {% if meta.district %}
+              <div class="def-row"><dt class="def-term">District</dt><dd class="def-detail">{{ meta.district }}</dd></div>
+              {% endif %}
+              {% if meta.municipality %}
+              <div class="def-row"><dt class="def-term">Municipality</dt><dd class="def-detail">{{ meta.municipality }}</dd></div>
+              {% endif %}
+              {% if meta.current_location %}
+              <div class="def-row"><dt class="def-term">Current location</dt><dd class="def-detail">{{ meta.current_location }}</dd></div>
+              {% endif %}
+              {% if meta.original_site %}
+              <div class="def-row"><dt class="def-term">Original site</dt><dd class="def-detail">{{ meta.original_site }}</dd></div>
+              {% endif %}
+              {% if meta.latitude and meta.longitude and meta.latitude != 0 and meta.longitude != 0 %}
+              <div class="def-row">
+                <dt class="def-term">Original coordinates</dt>
+                <dd class="def-detail">{{ meta.latitude }}, {{ meta.longitude }}</dd>
+              </div>
+              {% endif %}
+              {% if meta.present_latitude and meta.present_longitude and meta.present_latitude != 0 and meta.present_longitude != 0 %}
+              <div class="def-row">
+                <dt class="def-term">Current coordinates</dt>
+                <dd class="def-detail">{{ meta.present_latitude }}, {{ meta.present_longitude }}</dd>
+              </div>
+              {% endif %}
+              {% if meta.parish_code %}
+              <div class="def-row"><dt class="def-term">Parish code</dt><dd class="def-detail">{{ meta.parish_code }}</dd></div>
+              {% endif %}
+            </dl>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Classification</h2>
+            <dl class="def-list">
+              {% if meta.rune_type %}
+              <div class="def-row"><dt class="def-term">Rune type</dt><dd class="def-detail">{{ meta.rune_type }}</dd></div>
+              {% endif %}
+              {% if meta.dating %}
+              <div class="def-row"><dt class="def-term">Dating</dt><dd class="def-detail">{{ meta.dating }}</dd></div>
+              {% endif %}
+              {% if meta.year_from or meta.year_to %}
+              <div class="def-row">
+                <dt class="def-term">Year range</dt>
+                <dd class="def-detail">{% if meta.year_from %}{{ meta.year_from }}{% endif %}{% if meta.year_from and meta.year_to %} – {% endif %}{% if meta.year_to %}{{ meta.year_to }}{% endif %}</dd>
+              </div>
+              {% endif %}
+              {% if meta.style %}
+              <div class="def-row"><dt class="def-term">Style</dt><dd class="def-detail">{{ meta.style }}</dd></div>
+              {% endif %}
+              {% if meta.carver %}
+              <div class="def-row"><dt class="def-term">Carver</dt><dd class="def-detail">{{ meta.carver }}</dd></div>
+              {% endif %}
+              {% if meta.materialType %}
+              <div class="def-row"><dt class="def-term">Material type</dt><dd class="def-detail">{{ meta.materialType }}</dd></div>
+              {% endif %}
+              {% if meta.material %}
+              <div class="def-row"><dt class="def-term">Material</dt><dd class="def-detail">{{ meta.material }}</dd></div>
+              {% endif %}
+              {% if meta.objectInfo %}
+              <div class="def-row"><dt class="def-term">Object</dt><dd class="def-detail">{{ meta.objectInfo }}</dd></div>
+              {% endif %}
+              {% if data.crosses %}
+              <div class="def-row"><dt class="def-term">Crosses</dt><dd class="def-detail">{{ data.crosses }}</dd></div>
+              {% endif %}
+            </dl>
+          </section>
+        </div>
+
+        {# ── Texts ── #}
+        {% if data.runic_texts %}
+        <section class="section">
+          <h2 class="section-title">Texts</h2>
+          {% for text in data.runic_texts %}
+          <div class="text-entry">
+            <span class="text-kind">
+              {% if text.language_code == "run" %}Transliteration
+              {% elif text.language_code == "fvn" %}Normalisation (Old Norse)
+              {% elif text.language_code == "rsv" %}Normalisation (Scandinavian)
+              {% elif text.language_code == "eng" %}Translation (English)
+              {% elif text.language_code == "swe" %}Translation (Swedish)
+              {% else %}{{ text.language_code }}
+              {% endif %}
+            </span>
+            <p class="text-body{% if text.language_code == 'run' %} transliteration{% elif text.language_code == 'fvn' or text.language_code == 'rsv' %} normalization{% endif %}">{{ text.value }}</p>
+          </div>
+          {% endfor %}
+        </section>
         {% endif %}
-        {% if meta.material %}
-        <tr><th>Material</th><td>{{ meta.material }}</td></tr>
+
+        {# ── Additional ── #}
+        {% if meta.additional %}
+        <section class="section">
+          <h2 class="section-title">Additional information</h2>
+          <p style="margin:0; white-space:pre-wrap;">{{ meta.additional }}</p>
+        </section>
         {% endif %}
-        {% if meta.objectInfo %}
-        <tr><th>Object</th><td>{{ meta.objectInfo }}</td></tr>
+
+        {# ── References ── #}
+        {% if meta.references.all %}
+        <section class="section">
+          <h2 class="section-title">References</h2>
+          <ul class="ref-list">
+            {% for ref in meta.references.all %}
+            <li>
+              {% if ref.kind == "link" %}
+                <a href="{{ ref.text }}" target="_blank" rel="noopener">{% if ref.label %}{{ ref.label }}{% else %}{{ ref.text }}{% endif %} <i class="bi bi-box-arrow-up-right"></i></a>
+              {% else %}
+                {{ ref.text }}
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
         {% endif %}
-        {% if data.crosses %}
-        <tr><th>Crosses</th><td>{{ data.crosses }}</td></tr>
+
+        {# ── Images ── #}
+        {% if meta.images.all %}
+        <section class="section">
+          <h2 class="section-title">Images</h2>
+          <ul class="image-grid">
+            {% for img in meta.images.all %}
+            <li>
+              <a href="{{ img.link_url }}" target="_blank" rel="noopener">
+                {% if img.direct_url %}
+                <img src="{{ img.direct_url }}" alt="Image of {{ signature }}">
+                {% endif %}
+                <span>{% if img.direct_url %}View{% else %}Open{% endif %}</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
         {% endif %}
-      </table>
+      </main>
+
+      <footer class="page-footer">
+        <span class="cite-label">Cite this inscription</span>
+        <p style="margin:0;">Runic inscription {{ display_signature }} in the latest (<script>document.write(new Date().toLocaleDateString('en-CA'))</script>) edition of the Rundata-net database. <a href="{% url 'runes:inscription_detail' slug=canonical_slug %}">{{ request.build_absolute_uri }}</a></p>
+      </footer>
     </div>
 
-    {# Runic texts #}
-    {% if data.runic_texts %}
-    <div class="section">
-      <h2>Texts</h2>
-      {% for text in data.runic_texts %}
-      <div class="text-block">
-        <span class="label">
-          {% if text.language_code == "run" %}Transliteration
-          {% elif text.language_code == "fvn" %}Normalisation (Old Norse)
-          {% elif text.language_code == "rsv" %}Normalisation (Scandinavian)
-          {% elif text.language_code == "eng" %}Translation (English)
-          {% elif text.language_code == "swe" %}Translation (Swedish)
-          {% else %}{{ text.language_code }}
-          {% endif %}
-        </span>
-        <span class="value">{{ text.value }}</span>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+      function isSafari() {
+        return navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1;
+      }
 
-    {# Additional information #}
-    {% if meta.additional %}
-    <div class="section">
-      <h2>Additional information</h2>
-      <p>{{ meta.additional }}</p>
-    </div>
-    {% endif %}
+      function getGeoIntentURL(lat, lng) {
+        if (isSafari()) {
+          return `http://maps.apple.com/?daddr=${lat},${lng}`;
+        }
+        return `geo:${lat},${lng}?q=${lat},${lng}`;
+      }
 
-    {# References #}
-    {% if meta.references.all %}
-    <div class="section">
-      <h2>References</h2>
-      <ul class="references-list">
-        {% for ref in meta.references.all %}
-        <li>
-          {% if ref.kind == "LINK" or ref.kind == 1 %}
-            <a href="{{ ref.value }}" target="_blank" rel="noopener">{{ ref.title }}</a>
-          {% else %}
-            {{ ref.title }}{% if ref.value %}: {{ ref.value }}{% endif %}
-          {% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
+      function buildLocationMarker(map, config) {
+        const marker = L.circleMarker([config.lat, config.lng], {
+          radius: 9,
+          color: config.stroke,
+          weight: 2,
+          fillColor: config.fill,
+          fillOpacity: 0.9,
+        }).addTo(map);
 
-    {# Legacy reference field #}
-    {% if meta.reference %}
-    <div class="section">
-      <h2>Reference (legacy)</h2>
-      <p>{{ meta.reference }}</p>
-    </div>
-    {% endif %}
+        const popupParts = [`<strong>${config.label}</strong>`];
+        if (config.place) {
+          popupParts.push(`<div>${config.place}</div>`);
+        }
+        popupParts.push(`<div>${config.lat.toFixed(6)}, ${config.lng.toFixed(6)}</div>`);
+        popupParts.push(`<div><a href="${getGeoIntentURL(config.lat, config.lng)}" target="_self">Navigate</a></div>`);
+        marker.bindPopup(popupParts.join(''));
+        return marker;
+      }
 
-    {# Images #}
-    {% if meta.images.all %}
-    <div class="section">
-      <h2>Images</h2>
-      <div class="image-gallery">
-        {% for img in meta.images.all %}
-        <a href="{{ img.link_url }}" target="_blank" rel="noopener">
-          {% if img.direct_url %}
-          <img src="{{ img.direct_url }}" alt="Image of {{ signature }}" style="max-width: 300px; height: auto;">
-          {% else %}
-          View image
-          {% endif %}
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
+      /* ── Theme toggle ── */
+      document.getElementById('themeToggle').addEventListener('click', function() {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('rd-theme', next);
+      });
 
-    <div class="back-link">
-      <a href="{% url 'runes:index' %}">← Back to search</a>
-    </div>
+      (function initDetailMap() {
+        const mapContainer = document.getElementById('detailMap');
+        if (!mapContainer) {
+          return;
+        }
 
-    <footer class="footer">
-      <p>© 2018, 2024 Vadim Frolov, <a href="mailto:mail@vadimfrolov.com">mail@vadimfrolov.com</a>.</p>
-    </footer>
+        const locationPoints = [];
+        const originalLat = Number('{{ meta.latitude|default:"0" }}');
+        const originalLng = Number('{{ meta.longitude|default:"0" }}');
+        const presentLat = Number('{{ meta.present_latitude|default:"0" }}');
+        const presentLng = Number('{{ meta.present_longitude|default:"0" }}');
+
+        if (originalLat !== 0 && originalLng !== 0) {
+          locationPoints.push({
+            lat: originalLat,
+            lng: originalLng,
+            label: 'Original or found location',
+            place: '{{ meta.found_location|default:""|escapejs }}',
+            stroke: '#5d3e27',
+            fill: '#7b5333',
+          });
+        }
+
+        if (presentLat !== 0 && presentLng !== 0) {
+          locationPoints.push({
+            lat: presentLat,
+            lng: presentLng,
+            label: 'Current or present location',
+            place: '{{ meta.current_location|default:""|escapejs }}',
+            stroke: '#2f5d5a',
+            fill: '#3d6d6a',
+          });
+        }
+
+        if (!locationPoints.length) {
+          mapContainer.remove();
+          return;
+        }
+
+        const map = L.map('detailMap', {
+          scrollWheelZoom: false,
+          attributionControl: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const bounds = [];
+        locationPoints.forEach((point) => {
+          const marker = buildLocationMarker(map, point);
+          bounds.push(marker.getLatLng());
+        });
+
+        if (bounds.length === 1) {
+          map.setView(bounds[0], 11);
+        } else {
+          map.fitBounds(bounds, { padding: [36, 36] });
+        }
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 0);
+      })();
+    </script>
   </body>
 </html>

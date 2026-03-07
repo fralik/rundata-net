@@ -173,6 +173,51 @@ class TestInscriptionDetailView(TestCase):
         content = response.content.decode()
         assert "Sö Alt145" in content
 
+    def test_map_is_hidden_without_coordinates(self):
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        assert 'id="detailMap"' not in content
+        assert "Original coordinates" not in content
+        assert "Current coordinates" not in content
+
+    def test_map_renders_both_location_sets(self):
+        self.meta.latitude = 59.123456
+        self.meta.longitude = 17.654321
+        self.meta.present_latitude = 59.987654
+        self.meta.present_longitude = 18.123456
+        self.meta.current_location = "Museum storehouse"
+        self.meta.original_site = "Ancient bridge crossing"
+        self.meta.save(using="runes_db")
+
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+
+        assert 'id="detailMap"' in content
+        assert "Original coordinates" in content
+        assert "Current coordinates" in content
+        assert "Original or found location" in content
+        assert "Current or present location" in content
+        assert "59.123456, 17.654321" in content
+        assert "59.987654, 18.123456" in content
+        assert "Museum storehouse" in content
+
+    def test_map_renders_with_present_only_coordinates(self):
+        self.meta.present_latitude = 58.765432
+        self.meta.present_longitude = 16.234567
+        self.meta.current_location = "Regional museum"
+        self.meta.save(using="runes_db")
+
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+
+        assert 'id="detailMap"' in content
+        assert "Current coordinates" in content
+        assert "58.765432, 16.234567" in content
+        assert "Regional museum" in content
+
     def test_unicode_input_redirects(self):
         """Raw Unicode signature in URL should 301-redirect to the canonical slug."""
         response = self.client.get("/inscription/S\u00f6 145/")

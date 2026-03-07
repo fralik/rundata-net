@@ -9,7 +9,7 @@ pre-commit-hooks
 
 # Testing
 # ------------------------------------------------------------------------------
-#pytest==3.5.0  # https://github.com/pytest-dev/pytest
+pytest  # https://github.com/pytest-dev/pytest
 #pytest-sugar==0.9.1  # https://github.com/Frozenball/pytest-sugar
 
 # Code quality
@@ -29,4 +29,4 @@ django-upgrade
 #django-debug-toolbar==1.9.1  # https://github.com/jazzband/django-debug-toolbar
 #django-extensions==3.2.3  # https://github.com/django-extensions/django-extensions
 #django-coverage-plugin==1.5.0  # https://github.com/nedbat/django_coverage_plugin
-#pytest-django==3.2.1  # https://github.com/pytest-dev/pytest-django
+pytest-django  # https://github.com/pytest-dev/pytest-django
