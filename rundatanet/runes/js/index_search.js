@@ -3,7 +3,6 @@ import {
   getWordSearchFunction,
   isPersonalName,
   prepareForComparison,
-  stripSpecialSymbols,
 } from './search_core.js';
 
 export {
