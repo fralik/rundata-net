@@ -743,15 +743,14 @@
           dataListElement.appendChild(fragment);
 
           // Listen for selection and redirect
-          searchInput.addEventListener("change", (e) => {
-            const val = e.target.value;
-            // Find matched option by value or by slug if they typed it exactly
+          function navigateToMatch(val) {
+            // Safari fills the input with textContent instead of option.value,
+            // so match against textContent as well.
             const selectedOpt = Array.from(dataListElement.options).find(opt =>
-              opt.value === val || opt.dataset.slug === val.toLowerCase()
+              opt.value === val || opt.textContent === val || opt.dataset.slug === val.toLowerCase()
             );
             if (selectedOpt) {
               const urlParts = window.location.pathname.split('/');
-              // Replace the slug token and redirect
               if (urlParts.length >= 3 && urlParts[1] === 'inscription') {
                 urlParts[2] = encodeURIComponent(selectedOpt.dataset.slug);
                 window.location.href = urlParts.join('/');
@@ -759,7 +758,10 @@
                 window.location.href = `/inscription/${encodeURIComponent(selectedOpt.dataset.slug)}/`;
               }
             }
-          });
+          }
+          searchInput.addEventListener("change", (e) => navigateToMatch(e.target.value));
+          // Safari may not fire 'change' on datalist selection; 'input' covers that case.
+          searchInput.addEventListener("input", (e) => navigateToMatch(e.target.value));
         } catch (error) {
           console.error("Failed to load signatures for autocomplete:", error);
         }
