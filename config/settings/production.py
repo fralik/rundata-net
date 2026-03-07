@@ -24,14 +24,12 @@ if "AZURE_POSTGRESQL_CONNECTIONSTRING" in env:
     # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
     conn_str = env("AZURE_POSTGRESQL_CONNECTIONSTRING")
     conn_str_params = {pair.split("=")[0]: pair.split("=")[1] for pair in conn_str.split(" ")}
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": conn_str_params["dbname"],
-            "HOST": conn_str_params["host"],
-            "USER": conn_str_params["user"],
-            "PASSWORD": conn_str_params["password"],
-        }
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": conn_str_params["dbname"],
+        "HOST": conn_str_params["host"],
+        "USER": conn_str_params["user"],
+        "PASSWORD": conn_str_params["password"],
     }
 else:
     DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
@@ -205,24 +203,17 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
-        "applogfile": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": str(ROOT_DIR.path("django.log")),
-            "maxBytes": 1024 * 1024 * 15,
-            "backupCount": 5,
-        },
     },
     "loggers": {
-        "django.request": {"handlers": ["mail_admins", "applogfile"], "level": "ERROR", "propagate": True},
+        "django.request": {"handlers": ["console", "mail_admins"], "level": "ERROR", "propagate": True},
         "django.security.DisallowedHost": {
             "level": "ERROR",
-            "handlers": ["console", "mail_admins", "applogfile"],
+            "handlers": ["console", "mail_admins"],
             "propagate": True,
         },
         "rundatanet": {
             "level": "ERROR",
-            "handlers": ["applogfile"],
+            "handlers": ["console"],
             "propagate": True,
         },
     },
