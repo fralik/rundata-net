@@ -1,14 +1,3 @@
-/**
- * Checks if a given word is a personal name.
- * @param {string} word - The word to check.
-  * @returns {boolean} - True if the word is a personal name, false otherwise.
-  *
-  */
-function isPersonalName(word) {
-  return word.startsWith('"') || word.startsWith("&quot;")
-    || word.includes('/"') || word.includes('/&quot;');
-}
-
 // Debounce function
 function debounce(func, wait) {
   let timeout;

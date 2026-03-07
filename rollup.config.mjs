@@ -18,6 +18,21 @@ export default [
     ]
   },
   {
+    input: 'rundatanet/runes/js/search_core_entry.js',
+    output: [
+      {
+        file: 'rundatanet/static/runes/search_core.js',
+        format: 'iife'
+      },
+      {
+        file: 'rundatanet/static/runes/search_core.min.js',
+        format: 'iife',
+        sourcemap: true,
+        plugins: [terser()]
+      }
+    ]
+  },
+  {
     input: 'rundatanet/runes/js/export.worker.js',
     output: [
       {

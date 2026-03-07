@@ -1,3 +1,7 @@
+import { isPersonalName } from './search_core.js';
+
+export { isPersonalName } from './search_core.js';
+
 export const schemaFieldsInfo = [
   {
     schemaName: 'signature_text',
@@ -301,17 +305,6 @@ export function getHumanName(schemaName, lang = 'en') {
   }
   return field.text[lang] || schemaName; // Return the human name or schemaName if translation is missing
 }
-
-/**
- * Checks if a given word is a personal name.
- * @param {string} word - The word to check.
- * @returns {boolean} - True if the word is a personal name, false otherwise.
- */
-export function isPersonalName(word) {
-  return word.startsWith('"') || word.startsWith("&quot;")
-    || word.includes('/"') || word.includes('/&quot;');
-}
-
 
 // Extracts word boundaries from inscription texts. These texts
 // have multiple separators (whitespaces, punctuation) that often
