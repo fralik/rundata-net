@@ -157,6 +157,28 @@
       </div>-->
     </div>
 
+    <div class="pt-2">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="caseSensitivity" value="matchCase" id="matchCaseInput" checked>
+        <label class="form-check-label" for="matchCaseInput">Match case</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="caseSensitivity" value="ignoreCase" id="ignoreCaseInput">
+        <label class="form-check-label" for="ignoreCaseInput">Ignore case</label>
+      </div>
+    </div>
+
+    <div class="pt-2">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="specialSymbolsMode" value="ignoreSpecialSymbols" id="ignoreSpecialSymbolsInput" checked>
+        <label class="form-check-label" for="ignoreSpecialSymbolsInput">Ignore editorial symbols</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="specialSymbolsMode" value="includeSpecialSymbols" id="includeSpecialSymbolsInput">
+        <label class="form-check-label" for="includeSpecialSymbolsInput">Include editorial symbols</label>
+      </div>
+    </div>
+
     <div class="mb-3 pt-2">
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="personalNamesMode" value="includeAll" id="includeAddInput" checked>
@@ -195,6 +217,7 @@
     </div>
   </main>
 
+<script src="{% static 'runes/search_core.min.js' %}"></script>
 <script src="{% static 'runes/eda_scripts.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js" integrity="sha512-KMs6GZJsWI3DXBlu2QMbVdaHJbFrzVDYeccH/Ipuvtg3IOHnABXwUZbIhr5ybFSNYL6Bde1dCQ37xtszsBZcSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -213,35 +236,25 @@ const outNumSignaturesFoundSpan = document.getElementById('outNumSignaturesFound
 const outNumWordsSpan = document.getElementById('outNumWords');
 const outNumFoundNamesSpan = document.getElementById('outNumFoundNames');
 
-function getSearchFunction(searchMode) {
-  if (searchMode === 'exact') {
-    return (word, query) => word === query;
-  } else if (searchMode === 'beginsWith') {
-    return (word, query) => word.startsWith(query);
-  } else if (searchMode === 'endsWith') {
-    return (word, query) => word.endsWith(query);
-  } else if (searchMode === 'regex') {
-    return (word, query) => new RegExp(query).test(word);
-  } else {
-    return (word, query) => word.includes(query);
-  }
-}
-
 function performSearch() {
   const normalisationQuery = normalisationInput.value.trim();
   const transliterationQuery = transliterationInput.value.trim();
   const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
   const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
-  const isAHit = getSearchFunction(searchMode);
+  const ignoreCase = document.querySelector('input[name="caseSensitivity"]:checked').value === 'ignoreCase';
+  const includeSpecialSymbols = document.querySelector('input[name="specialSymbolsMode"]:checked').value === 'includeSpecialSymbols';
+  const isAHit = getWordSearchFunction(searchMode, { ignoreCase, includeSpecialSymbols });
   const namesMode = document.querySelector('input[name="personalNamesMode"]:checked').value;
+  const searchDirectionConfig = getSearchDirectionConfig(searchDirection);
 
-  // Determine which normalisation field to use
-  let normalisationField;
-  if (searchDirection.includes('norse')) {
-    normalisationField = 'normalisation_norse';
-  } else {
-    normalisationField = 'normalisation_scandinavian';
+  if (!searchDirectionConfig) {
+    searchResultsDiv.innerHTML = '';
+    wordRelationsDiv.innerHTML = '';
+    outputStatistics([]);
+    return;
   }
+
+  const normalisationField = searchDirectionConfig.normalisationField;
 
   // Clear previous results
   searchResultsDiv.innerHTML = '';
@@ -251,9 +264,7 @@ function performSearch() {
   // which contains the indices of the words that matched the search query
   const results = dbAsJson.map(entry => {
     const normalWords = entry[`${normalisationField}_words`];
-    const normalisationText = entry[normalisationField];
     const transliterationWords = entry['transliteration_words'];
-    const transliterationText = entry['transliteration'];
 
     let matchFound = false;
     let matchedWords = [];
@@ -467,23 +478,15 @@ function displayWordRelations(results) {
   const wordMap = {};
 
   // determine search direction and first and second column names of word relations table
-  let fromField, toField;
   const searchDirection = document.querySelector('input[name="searchDirection"]:checked').value;
-  if (searchDirection.includes('ToTrans')) {
-    toField = 'transliteration';
-    if (searchDirection.includes('Norse')) {
-      fromField = 'normalisation_norse';
-    } else {
-      fromField = 'normalisation_scandinavian';
-    }
-  } else {
-    fromField = 'transliteration';
-    if (searchDirection.includes('Norse')) {
-      toField = 'normalisation_norse';
-    } else {
-      toField = 'normalisation_scandinavian';
-    }
+  const searchDirectionConfig = getSearchDirectionConfig(searchDirection);
+  if (!searchDirectionConfig) {
+    wordRelationsDiv.innerHTML = '';
+    return;
   }
+
+  const fromField = searchDirectionConfig.fromField;
+  const toField = searchDirectionConfig.toField;
 
   // populate wordMap
   results.forEach(entry => {
@@ -762,6 +765,12 @@ document.addEventListener('DOMContentLoaded', function() {
     radio.addEventListener('change', performSearch);
   });
   document.getElementsByName('searchMode').forEach(radio => {
+    radio.addEventListener('change', performSearch);
+  });
+  document.getElementsByName('caseSensitivity').forEach(radio => {
+    radio.addEventListener('change', performSearch);
+  });
+  document.getElementsByName('specialSymbolsMode').forEach(radio => {
     radio.addEventListener('change', performSearch);
   });
   document.getElementsByName('personalNamesMode').forEach(radio => {

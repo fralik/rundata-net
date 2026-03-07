@@ -1,51 +1,23 @@
+import {
+  getSearchDirectionConfig,
+  getWordSearchFunction,
+  isPersonalName,
+  prepareForComparison,
+  stripSpecialSymbols,
+} from './search_core.js';
+
+export {
+  getSearchDirectionConfig,
+  getWordSearchFunction,
+  isPersonalName,
+  normalizeWhitespace,
+  prepareForComparison,
+  stripSpecialSymbols,
+} from './search_core.js';
+
 /*
 This file contains code to do search in the inscriptions
 */
-
-/**
- * Normalizes whitespace in a string by replacing all whitespace characters
- * (including non-breaking spaces, tabs, etc.) with regular spaces.
- * This ensures consistent matching regardless of the type of whitespace used.
- *
- * @param {*} value - The value to normalize
- * @returns {string} The normalized string
- */
-function normalizeWhitespace(value) {
-  return String(value).replace(/\s/g, ' ');
-}
-
-/**
- * Prepares a string for comparison by normalizing whitespace and optionally lowercasing.
- * @param {*} value - The value to prepare
- * @param {boolean} ignoreCase - Whether to lowercase the string
- * @returns {string} The prepared string
- */
-function prepareForComparison(value, ignoreCase) {
-  const s = normalizeWhitespace(value);
-  return ignoreCase ? s.toLowerCase() : s;
-}
-
-/**
- * Strips editorial special symbols from a string so that searches can match
- * text regardless of annotation markers.
- *
- * Handles both literal characters (as typed by users) and HTML-entity forms
- * (as they appear in the _html / _words arrays built from escaped DB values):
- *   &quot; -> "  (personal-name marker)
- *   &lt;  -> <
- *   &gt;  -> >
- * Plus literal characters: " | [ ] ( ) { } ^ ´ < > ?
- *
- * @param {string} str - The string to strip
- * @returns {string} The string with special symbols removed
- */
-export function stripSpecialSymbols(str) {
-  return String(str)
-    .replace(/&quot;/g, '')  // HTML entity for "
-    .replace(/&lt;/g, '')    // HTML entity for <
-    .replace(/&gt;/g, '')    // HTML entity for >
-    .replace(/["<>|[\](){}^\u00b4?]/g, '');  // literal chars
-}
 
 // Standard comparison operators that can be used both in QueryBuilderParser and custom search functions.
 // String-based operators accept an optional third argument `ignoreCase` (default false).
@@ -375,9 +347,12 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase 
   const transliterationQuery = ruleValue['transliteration'];
   const namesMode = ruleValue['names_mode'];
 
-  // Determine which normalization field to use
-  const normalizationField = searchDirection.includes('norse') ?
-    'normalisation_norse' : 'normalisation_scandinavian';
+  const searchDirectionConfig = getSearchDirectionConfig(searchDirection);
+  if (!searchDirectionConfig) {
+    return { match: false, details: null };
+  }
+
+  const normalizationField = searchDirectionConfig.normalisationField;
 
   const normalWords = entry[`${normalizationField}_words`];
   const transliterationWords = entry['transliteration_words'];
@@ -556,89 +531,6 @@ const customSearchFunctions = {
   },
 };
 
-/**
- * Returns a word search function based on the specified search mode
- * @param {string} searchMode - The search mode ('exact', 'beginsWith', 'endsWith', 'regex', 'includes')
- * @param {Object} options - Additional options
- * @param {boolean} [options.ignoreCase=false] - Whether to ignore case when searching
- * @param {boolean} [options.includeSpecialSymbols=false] - When false (default), editorial symbols
- *   are stripped from both the data word and the query before comparison.
- *   When true, symbols are kept and matched literally.
- * @returns {Function} A search function that takes (word, query) parameters
- * @throws {Error} When an invalid regex pattern is provided in regex mode
- */
-export function getWordSearchFunction(searchMode, options = {}) {
-  const { ignoreCase = false, includeSpecialSymbols = false } = options;
-
-  // Create a function to prepare strings for comparison:
-  // optionally strip editorial symbols, then optionally lowercase.
-  const prepareString = (str) => {
-    let s = String(str);
-    if (!includeSpecialSymbols) s = stripSpecialSymbols(s);
-    if (ignoreCase) s = s.toLowerCase();
-    return s;
-  };
-
-  const prepareWord = (word) => {
-    // Check if this might be a list of personal names (divided by HTML escaped / symbol)
-    if (word.includes('&#x2F;') || word.includes('/')) {
-      // Split by the HTML escaped slash or regular slash
-      const names = word.split(/&#x2F;|\//).map(name => {
-        // Trim whitespace and remove quotes (both regular and HTML escaped) from the beginning
-        return name.trim().replace(/^(&quot;|")/, '');
-      });
-      // Return the array of individual names
-      return names;
-    }
-
-    // If it's not a list, just return the original word
-    return [word];
-  }
-
-  switch (searchMode) {
-    case 'exact':
-      return (word, query) => {
-        const words = prepareWord(word);
-        // Check if any of the words match the query
-        return words.some(w => prepareString(w) === prepareString(query));
-      }
-
-    case 'beginsWith':
-      return (word, query) => {
-        const words = prepareWord(word);
-        // Check if any of the words start with the query
-        return words.some(w => prepareString(w).startsWith(prepareString(query)));
-      }
-
-    case 'endsWith':
-      return (word, query) => {
-        const words = prepareWord(word);
-        // Check if any of the words end with the query
-        return words.some(w => prepareString(w).endsWith(prepareString(query)));
-      }
-
-    case 'regex': {
-      return (word, query) => {
-        try {
-          const flags = ignoreCase ? 'i' : '';
-          // Create RegExp only once per query
-          const regex = new RegExp(query, flags);
-          return regex.test(word);
-        } catch (error) {
-          throw new Error(`Invalid regex pattern: ${query}`);
-        }
-      };
-    }
-
-    case 'includes':
-    default:
-      return (word, query) => {
-        const words = prepareWord(word);
-        // Check if any of the words include the query
-        return words.some(w => prepareString(w).includes(prepareString(query)));
-      }
-  }
-}
 
 
 /**
