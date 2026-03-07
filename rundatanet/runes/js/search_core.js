@@ -53,7 +53,7 @@ export function stripSpecialSymbols(str) {
 
 /**
  * Returns a word search function based on the specified search mode.
- * @param {string} searchMode - The search mode ('exact', 'beginsWith', 'endsWith', 'regex', 'includes')
+ * @param {string} searchMode - The search mode ('exact', 'beginsWith', 'endsWith', 'regex', 'includes', 'contains'). 'contains' is an alias for 'includes'.
  * @param {Object} options - Additional options
  * @param {boolean} [options.ignoreCase=false] - Whether to ignore case when searching
  * @param {boolean} [options.includeSpecialSymbols=false] - Whether to keep editorial symbols in comparisons
