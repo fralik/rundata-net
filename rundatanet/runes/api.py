@@ -31,6 +31,12 @@ class InscriptionResponse(Schema):
     meta: dict[str, Any]
 
 
+class SearchOption(Schema):
+    id: str
+    title: str
+    slug: str
+
+
 class ErrorResponse(Schema):
     detail: str
 
@@ -49,6 +55,29 @@ def txt2rules(request, data: TextRequest):
 
         resp = TextResponse(rules="", error="Failed to convert text to rules")
     return resp
+
+
+@api.get(
+    "/search_options",
+    response=list[SearchOption],
+)
+def search_options_api(request):
+    """Return all canonical signatures formatted for client-side search datalists."""
+    index = SlugIndex.get()
+
+    signatures = Signature.objects.filter(id__in=index._id_to_slug.keys()).values_list("id", "signature_text")
+
+    options = [
+        SearchOption(
+            id=signature_text,
+            title=signature_text,
+            slug=index._id_to_slug[sig_id],
+        )
+        for sig_id, signature_text in signatures
+        if sig_id in index._id_to_slug
+    ]
+
+    return sorted(options, key=lambda option: option.title)
 
 
 @api.get(
