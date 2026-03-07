@@ -6,8 +6,8 @@ from .normalization import normalize_signature
 
 
 class StaticViewSitemap(sitemaps.Sitemap):
-    priority = 0.5
-    changefreq = "monthly"
+    priority = 0.2
+    changefreq = "yearly"
 
     def items(self):
         return ["runes:references"]
@@ -17,8 +17,8 @@ class StaticViewSitemap(sitemaps.Sitemap):
 
 
 class MainPageSitemap(sitemaps.Sitemap):
-    priority = 0.9
-    changefreq = "daily"
+    priority = 1.0
+    changefreq = "weekly"
 
     def items(self):
         return ["runes:index"]
@@ -28,8 +28,8 @@ class MainPageSitemap(sitemaps.Sitemap):
 
 
 class AboutPageSitemap(sitemaps.Sitemap):
-    priority = 1.0
-    changefreq = "monthly"
+    priority = 0.4
+    changefreq = "yearly"
 
     def items(self):
         return ["runes:about"]
@@ -39,7 +39,7 @@ class AboutPageSitemap(sitemaps.Sitemap):
 
 
 class InscriptionSitemap(sitemaps.Sitemap):
-    priority = 0.6
+    priority = 0.8
     changefreq = "monthly"
 
     def items(self):
