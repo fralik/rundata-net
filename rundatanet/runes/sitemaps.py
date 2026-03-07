@@ -6,6 +6,7 @@ from .normalization import normalize_signature
 
 
 class StaticViewSitemap(sitemaps.Sitemap):
+    protocol = "https"
     priority = 0.2
     changefreq = "yearly"
 
@@ -17,6 +18,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
 
 
 class MainPageSitemap(sitemaps.Sitemap):
+    protocol = "https"
     priority = 1.0
     changefreq = "weekly"
 
@@ -28,6 +30,7 @@ class MainPageSitemap(sitemaps.Sitemap):
 
 
 class AboutPageSitemap(sitemaps.Sitemap):
+    protocol = "https"
     priority = 0.4
     changefreq = "yearly"
 
@@ -39,6 +42,7 @@ class AboutPageSitemap(sitemaps.Sitemap):
 
 
 class InscriptionSitemap(sitemaps.Sitemap):
+    protocol = "https"
     priority = 0.8
     changefreq = "monthly"
 
