@@ -66,11 +66,12 @@
         --normalization: inherit;
         --popup-bg: #fffdf8;
         --found-color: #b86b25;
-        --present-color: #2e8b57;
+        --present-color: #2880ca;
         --found-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-orange.png');
         --found-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-orange.png');
-        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-green.png');
-        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-green.png');
+        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-blue.png');
+        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-blue.png');
+        --map-tiles-filter: none;
       }
 
       /* ── Dark palette ── */
@@ -95,11 +96,12 @@
         --normalization: #EAB308;
         --popup-bg: #282a2f;
         --found-color: #d17d2f;
-        --present-color: #46a36f;
+        --present-color: #2880ca;
         --found-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-orange.png');
         --found-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-orange.png');
-        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-green.png');
-        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-green.png');
+        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-blue.png');
+        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-blue.png');
+        --map-tiles-filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
       }
 
       html { font-size: 17px; }
@@ -465,8 +467,26 @@
         background: var(--popup-bg);
         color: var(--ink);
       }
+      .leaflet-popup-content,
+      .leaflet-popup-content p {
+        color: var(--ink);
+      }
+      .leaflet-popup-content a,
+      .leaflet-popup-content a:visited {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+      }
+      .leaflet-popup-content a:hover,
+      .leaflet-popup-content a:focus,
+      .leaflet-popup-content a:active {
+        color: var(--link-hover);
+      }
       .leaflet-container {
         font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+      }
+      .map-tiles {
+        filter: var(--map-tiles-filter);
       }
 
       /* ── theme toggle ── */
@@ -802,12 +822,25 @@
         return marker;
       }
 
+      function refreshMapTheme(map) {
+        if (!map) {
+          return;
+        }
+
+        map.eachLayer(function(layer) {
+          if (typeof layer.setUrl === 'function' && layer.options && layer.options.className === 'map-tiles') {
+            layer.redraw();
+          }
+        });
+      }
+
       /* ── Theme toggle ── */
       document.getElementById('themeToggle').addEventListener('click', function() {
         var current = document.documentElement.getAttribute('data-theme');
         var next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('rd-theme', next);
+        refreshMapTheme(window.detailMapInstance);
       });
 
       /* ── Inscription search (jQuery UI Autocomplete) ── */
@@ -971,10 +1004,12 @@
           scrollWheelZoom: false,
           attributionControl: true,
         });
+        window.detailMapInstance = map;
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+          attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+          className: 'map-tiles',
         }).addTo(map);
 
         const bounds = [];
