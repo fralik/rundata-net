@@ -130,6 +130,7 @@
       .breadcrumb a:hover { text-decoration: underline; }
 
       .search-container {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -147,6 +148,55 @@
       .search-container input:focus {
         outline: none;
         border-color: var(--ink);
+      }
+
+      /* ── custom autocomplete dropdown ── */
+      .search-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 900;
+        margin: 4px 0 0;
+        padding: 4px 0;
+        list-style: none;
+        background: var(--bg);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,.15);
+        max-height: 260px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 220px;
+        width: max-content;
+        max-width: min(360px, 90vw);
+      }
+      .search-dropdown.open { display: block; }
+      .search-dropdown li {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        color: var(--ink);
+        -webkit-tap-highlight-color: transparent;
+      }
+      .search-dropdown li.active,
+      .search-dropdown li:hover {
+        background: var(--rule);
+        color: var(--accent);
+      }
+      .search-dropdown li .slug-hint {
+        margin-left: 8px;
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+      }
+      .search-dropdown .no-results {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        color: var(--ink-faint);
+        font-style: italic;
       }
 
       /* ── title block ── */
@@ -462,8 +512,8 @@
           <a href="{% url 'runes:index' %}">← Home</a>
         </nav>
         <div class="search-container">
-          <input type="text" id="signatureSearch" list="signatureList" autocomplete="off" placeholder="Search inscription..." aria-label="Search by inscription ID">
-          <datalist id="signatureList"></datalist>
+          <input type="text" id="signatureSearch" autocomplete="off" placeholder="Search inscription..." aria-label="Search by inscription ID" role="combobox" aria-expanded="false" aria-controls="searchDropdown" aria-autocomplete="list">
+          <ul id="searchDropdown" class="search-dropdown" role="listbox"></ul>
         </div>
       </div>
 
@@ -722,46 +772,140 @@
 
       /* ── Autocomplete search ── */
       document.addEventListener("DOMContentLoaded", async () => {
-        const dataListElement = document.getElementById("signatureList");
         const searchInput = document.getElementById("signatureSearch");
+        const dropdown = document.getElementById("searchDropdown");
+        let signatures = [];
+        let activeIndex = -1;
+
+        function navigateTo(slug) {
+          window.location.href = `/inscription/${encodeURIComponent(slug)}/`;
+        }
+
+        function openDropdown() {
+          dropdown.classList.add('open');
+          searchInput.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeDropdown() {
+          dropdown.classList.remove('open');
+          searchInput.setAttribute('aria-expanded', 'false');
+          activeIndex = -1;
+        }
+
+        function renderResults(matches) {
+          dropdown.innerHTML = '';
+          if (!matches.length) {
+            dropdown.innerHTML = '<li class="no-results">No matches</li>';
+            openDropdown();
+            return;
+          }
+          matches.forEach((sig, i) => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.dataset.slug = sig.slug;
+            li.innerHTML = sig.title + '<span class="slug-hint">' + sig.slug + '</span>';
+            if (i === activeIndex) li.classList.add('active');
+            dropdown.appendChild(li);
+          });
+          openDropdown();
+        }
+
+        function getVisibleItems() {
+          return dropdown.querySelectorAll('li[role="option"]');
+        }
+
+        function setActive(index) {
+          const items = getVisibleItems();
+          if (!items.length) return;
+          items.forEach(el => el.classList.remove('active'));
+          activeIndex = Math.max(0, Math.min(index, items.length - 1));
+          items[activeIndex].classList.add('active');
+          items[activeIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function stripDiacritics(str) {
+          return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function filterAndShow() {
+          const q = stripDiacritics(searchInput.value.replace(/^\s+/, '').toLowerCase());
+          if (!q.trim()) { closeDropdown(); return; }
+          const matches = signatures.filter(s =>
+            stripDiacritics(s.title.toLowerCase()).includes(q) || s.slug.includes(q)
+          );
+          // Prioritise starts-with over contains so e.g. "Öl 1" ranks above "Stockholm"
+          matches.sort((a, b) => {
+            const aTitle = stripDiacritics(a.title.toLowerCase());
+            const bTitle = stripDiacritics(b.title.toLowerCase());
+            const aStarts = aTitle.startsWith(q) || a.slug.startsWith(q) ? 0 : 1;
+            const bStarts = bTitle.startsWith(q) || b.slug.startsWith(q) ? 0 : 1;
+            return aStarts - bStarts || aTitle.localeCompare(bTitle);
+          });
+          matches.splice(50);
+          activeIndex = -1;
+          renderResults(matches);
+        }
+
+        // Pointer/touch on dropdown items — use pointerdown so it fires before blur
+        dropdown.addEventListener('pointerdown', (e) => {
+          const li = e.target.closest('li[role="option"]');
+          if (li) {
+            e.preventDefault(); // keep focus on input, prevent blur race
+            navigateTo(li.dataset.slug);
+          }
+        });
+
+        searchInput.addEventListener('input', filterAndShow);
+
+        searchInput.addEventListener('keydown', (e) => {
+          const items = getVisibleItems();
+          if (!dropdown.classList.contains('open') || !items.length) {
+            if (e.key === 'ArrowDown' && searchInput.value.replace(/^\s+/, '').trim()) {
+              filterAndShow();
+              e.preventDefault();
+            }
+            return;
+          }
+          switch (e.key) {
+            case 'ArrowDown':
+              e.preventDefault();
+              setActive(activeIndex + 1);
+              break;
+            case 'ArrowUp':
+              e.preventDefault();
+              setActive(activeIndex - 1);
+              break;
+            case 'Enter':
+              e.preventDefault();
+              if (activeIndex >= 0 && items[activeIndex]) {
+                navigateTo(items[activeIndex].dataset.slug);
+              }
+              break;
+            case 'Escape':
+              closeDropdown();
+              break;
+          }
+        });
+
+        searchInput.addEventListener('focus', () => {
+          if (searchInput.value.trim()) filterAndShow();
+        });
+
+        searchInput.addEventListener('blur', () => {
+          // Small delay so pointerdown on dropdown items fires first
+          setTimeout(closeDropdown, 200);
+        });
+
+        // Close on outside tap (touch devices)
+        document.addEventListener('pointerdown', (e) => {
+          if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            closeDropdown();
+          }
+        });
 
         try {
-          // Fetch the options from the API endpoint
           const response = await fetch('/api/search_options');
-          const signatures = await response.json();
-
-          // Populate the datalist element efficiently
-          const fragment = document.createDocumentFragment();
-          signatures.forEach(sig => {
-            const option = document.createElement("option");
-            option.value = sig.title;
-            // Add both title and slug to text content so datalist matches against both in all browsers
-            option.textContent = `${sig.title} (${sig.slug})`;
-            option.dataset.slug = sig.slug;
-            fragment.appendChild(option);
-          });
-          dataListElement.appendChild(fragment);
-
-          // Listen for selection and redirect
-          function navigateToMatch(val) {
-            // Safari fills the input with textContent instead of option.value,
-            // so match against textContent as well.
-            const selectedOpt = Array.from(dataListElement.options).find(opt =>
-              opt.value === val || opt.textContent === val || opt.dataset.slug === val.toLowerCase()
-            );
-            if (selectedOpt) {
-              const urlParts = window.location.pathname.split('/');
-              if (urlParts.length >= 3 && urlParts[1] === 'inscription') {
-                urlParts[2] = encodeURIComponent(selectedOpt.dataset.slug);
-                window.location.href = urlParts.join('/');
-              } else {
-                window.location.href = `/inscription/${encodeURIComponent(selectedOpt.dataset.slug)}/`;
-              }
-            }
-          }
-          searchInput.addEventListener("change", (e) => navigateToMatch(e.target.value));
-          // Safari may not fire 'change' on datalist selection; 'input' covers that case.
-          searchInput.addEventListener("input", (e) => navigateToMatch(e.target.value));
+          signatures = await response.json();
         } catch (error) {
           console.error("Failed to load signatures for autocomplete:", error);
         }
