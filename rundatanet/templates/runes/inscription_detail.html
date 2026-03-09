@@ -93,13 +93,15 @@
         --present-color: #3d6d6a;
       }
 
+      html { font-size: 17px; }
+
       *, *::before, *::after { box-sizing: border-box; }
 
       body {
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font: 400 1.05rem/1.72 "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+        font: 400 1rem/1.72 "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -126,7 +128,10 @@
         font-size: 0.88rem;
         color: var(--ink-faint);
       }
-      .breadcrumb a { text-decoration: none; }
+      .breadcrumb a {
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+      }
       .breadcrumb a:hover { text-decoration: underline; }
 
       .search-container {
@@ -134,6 +139,11 @@
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+      .search-container label {
+        font-size: 0.88rem;
+        color: var(--ink-light);
+        white-space: nowrap;
       }
       .search-container input {
         background-color: var(--bg);
@@ -144,6 +154,7 @@
         font-size: 0.9rem;
         font-family: inherit;
         color-scheme: inherit;
+        width: 280px;
       }
       .search-container input:focus {
         outline: none;
@@ -167,9 +178,7 @@
         max-height: 260px;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        min-width: 220px;
-        width: max-content;
-        max-width: min(360px, 90vw);
+        width: 100%;
       }
       .search-dropdown.open { display: block; }
       .search-dropdown li {
@@ -241,7 +250,7 @@
         border-top: 1px solid var(--rule);
         border-bottom: 1px solid var(--rule);
         margin: 16px 0 32px;
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: var(--ink-light);
       }
       .meta-ribbon dt {
@@ -509,10 +518,11 @@
     <div class="page">
       <div class="top-nav">
         <nav class="breadcrumb" aria-label="Back navigation">
-          <a href="{% url 'runes:index' %}">← Home</a>
+          <a href="{% url 'runes:index' %}">Main Page</a>
         </nav>
         <div class="search-container">
-          <input type="text" id="signatureSearch" autocomplete="off" placeholder="Search inscription..." aria-label="Search by inscription ID" role="combobox" aria-expanded="false" aria-controls="searchDropdown" aria-autocomplete="list">
+          <label for="signatureSearch">Search by inscription ID:</label>
+          <input type="text" id="signatureSearch" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchDropdown" aria-autocomplete="list">
           <ul id="searchDropdown" class="search-dropdown" role="listbox"></ul>
         </div>
       </div>
