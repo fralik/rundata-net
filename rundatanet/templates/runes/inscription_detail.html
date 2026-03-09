@@ -201,6 +201,11 @@
         font-size: 0.78rem;
         color: var(--ink-faint);
       }
+      .search-dropdown li mark {
+        background: transparent;
+        font-weight: 700;
+        color: inherit;
+      }
       .search-dropdown .no-results {
         padding: 10px 12px;
         font-size: 0.85rem;
@@ -802,7 +807,7 @@
           activeIndex = -1;
         }
 
-        function renderResults(matches) {
+        function renderResults(matches, query) {
           dropdown.innerHTML = '';
           if (!matches.length) {
             dropdown.innerHTML = '<li class="no-results">No matches</li>';
@@ -813,7 +818,8 @@
             const li = document.createElement('li');
             li.setAttribute('role', 'option');
             li.dataset.slug = sig.slug;
-            li.innerHTML = sig.title + '<span class="slug-hint">' + sig.slug + '</span>';
+            const display = sig.slug !== sig.title.toLowerCase() ? sig.title + ' (' + sig.slug + ')' : sig.title;
+            li.innerHTML = highlight(display, query);
             if (i === activeIndex) li.classList.add('active');
             dropdown.appendChild(li);
           });
@@ -831,6 +837,13 @@
           activeIndex = Math.max(0, Math.min(index, items.length - 1));
           items[activeIndex].classList.add('active');
           items[activeIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function highlight(text, query) {
+          if (!query) return text;
+          const i = text.toLowerCase().indexOf(query);
+          if (i === -1) return text;
+          return text.slice(0, i) + '<mark>' + text.slice(i, i + query.length) + '</mark>' + text.slice(i + query.length);
         }
 
         function stripDiacritics(str) {
@@ -853,7 +866,7 @@
           });
           matches.splice(50);
           activeIndex = -1;
-          renderResults(matches);
+          renderResults(matches, q);
         }
 
         // Pointer/touch on dropdown items — use pointerdown so it fires before blur
