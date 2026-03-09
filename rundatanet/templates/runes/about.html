@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Rundata.info is a web version of ​​​Scandinavian Runic-text Data Base.">
+    <meta name="description" content="Rundata.info is a web version of the Scandinavian Runic-text Data Base.">
     <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'runes:about' %}">
     <link rel="stylesheet" href="{% static 'css/runinskrifter_style.css' %}" />
     {% get_from_settings 'USE_GA' as use_ga %}
@@ -31,60 +31,71 @@
         width: 100%;
         height: auto;
       }
+
+      section > h2.section-title {
+        font-family: 'Linux Libertine', 'Garamond', Junicode, JunicodeRegular, Junicode-Regular, 'Baskerville', serif;
+        font-size: 18pt;
+        margin: 0 0 0 -1%;
+        padding: 0.3em 0;
+        font-style: normal;
+        color: #000000;
+        text-decoration: none;
+      }
     </style>
     <title>Rundata.info - about</title>
   </head>
   <body>
     <header><h1>Rundata.info introduction</h1></header>
+    <main>
     <section id="about">
-      <h1>About</h1>
-      <p>Hello and welcome ​to Rundata.info website. This is a web client for <a href="http://www.nordiska.uu.se/forskn/samnord.htm/?languageId=1">​​​Scandinavian Runic-text Data Base</a> (<abbr title="Samnordisk runtextdatabas">SRDB</abbr>). The database contains information about runic inscriptions discovered mostly in Nordic countries (Scandinavia, Iceland, Scotland, Russia, e.t.c.).
+      <h2 class="section-title">About</h2>
+      <p>Welcome to the Rundata.info website. It is a web client for the <a href="http://www.nordiska.uu.se/forskn/samnord.htm/?languageId=1">Scandinavian Runic-text Data Base</a> (<abbr title="Samnordisk runtextdatabas">SRDB</abbr>). The database contains information about runic inscriptions discovered mainly in the Nordic countries, as well as in places such as Iceland, Scotland, and Russia.
 
-      This web version is based on a desktop client app known as <a href="https://en.wikipedia.org/wiki/Rundata">Rundata</a>. Despite the name of the website, the project itself has the name Rundata-net. So Rundata-net is available at web address <a href="http://www.rundata.info">http://www.rundata.info</a>.
+      This web version is based on the desktop application <a href="https://en.wikipedia.org/wiki/Rundata">Rundata</a>. Although the website is called Rundata.info, the project itself is named Rundata-net and is available at <a href="http://www.rundata.info">http://www.rundata.info</a>.
 
-      Rundata-net is a close adaptation of original Rundata. Although the interface of Rundata-net is in English, the database contains a lot of textual information and location descriptions in Swedish. This means that if you do not speak ​​Swedish, then you might struggle to get all the information.</p>
+      Rundata-net is a close adaptation of the original Rundata. Although the interface is in English, much of the database text and many place descriptions remain in Swedish. If you do not read Swedish, some parts of the content may therefore be difficult to use in full.</p>
 
       <p>Rundata-net was created by <a href="https://blog.vadimfrolov.com">Vadim Frolov</a> and <a href="mailto:sofia.pereswetoff-morath@su.se">Sofia Pereswetoff-Morath</a>.</p>
 
-      <p>Rundata.info is intended to be run in a modern browser on a desktop computer with a modern monitor/display. The horizontal resolution should be at least 1920 pixels. It might work on smartphones or smaller monitors, but it will look ugly.</p>
+      <p>Rundata.info is designed to run in a modern browser on a desktop computer with a modern display. A horizontal resolution of at least 1920 pixels is recommended for the best experience. The site also works on smartphones and smaller monitors, although the desktop layout remains the primary target.</p>
 
-      <p>The access to Rundata.info website is provided free of charge.</p>
+      <p>Access to the Rundata.info website is provided free of charge.</p>
     </section>
 
     <section>
-      <h1>Rundata-net code and support</h1>
-      <p>​​The source code of Rundata-net is open and provided under the terms of GNU GPL license, which ensures that the source code stays open. You can obtain the code from Github repository <a href="https://github.com/fralik/rundata-net">rundata-net</a>. By doing so you are able to run a version of Rundata-net the way you like it: on you own machine, on your dedicated server or in the cloud. It's up to you! You have all the freedom.</p>
+      <h2 class="section-title">Rundata-net code and support</h2>
+      <p>The source code of Rundata-net is open and distributed under the GNU GPL, which ensures that it remains open. You can obtain the code from the GitHub repository <a href="https://github.com/fralik/rundata-net">rundata-net</a>. This means you can run Rundata-net in the way that suits you best: on your own machine, on a dedicated server, or in the cloud.</p>
       <h2>User support</h2>
-        <p>If you have issues of bug reports, submit them on the <a href="https://github.com/fralik/rundata-net/issues">project page</a>.</p>
-        <p>If you have comments, you can reach me via e-mail (see bottom of that page).</p>
-        <p>User documentation is available at <a href="https://rundata-net.readthedocs.io/en/latest/">Read the Docs</a> website.</p>
+        <p>If you encounter issues or want to report a bug, please use the <a href="https://github.com/fralik/rundata-net/issues">project issue tracker</a>.</p>
+        <p>If you have comments, you can reach me by email using the address at the bottom of this page.</p>
+        <p>User documentation is available on <a href="https://rundata-net.readthedocs.io/en/latest/">Read the Docs</a>.</p>
     </section>
 
     <section id="ack">
-      <h1>Acknowledgements</h1>
-      <p>This project won't be possible without help of:
-        <ul>
-          <li><a href="http://runbloggen.gamlebo.se/">Jan Owe</a>. Jan is the maintainer of the original Rundata program and the database.</li>
-          <li><a href="https://www.runinskrifter.net">Marcus Smith</a>. Marcus developed perhaps the first web version of Rundata. I used his website for inspiration and to collect some missing data in the database.</li>
-          <li><a href="https://www.su.se/english/profiles/alepe-1.185724">Alexander Pereswetoff-Morath</a>. Alexander helped to make documentation in English better.</li>
-        </ul>
-      </p>
+      <h2 class="section-title">Acknowledgements</h2>
+      <p>This project would not have been possible without help from:</p>
+      <ul>
+        <li><a href="http://runbloggen.gamlebo.se/">Jan Owe</a>. Jan is the maintainer of the original Rundata program and the database.</li>
+        <li><a href="https://www.runinskrifter.net">Marcus Smith</a>. Marcus developed what was perhaps the first web version of Rundata. I used his website both for inspiration and to collect some missing data for the database.</li>
+        <li><a href="https://www.su.se/english/profiles/alepe-1.185724">Alexander Pereswetoff-Morath</a>. Alexander helped improve the English documentation.</li>
+      </ul>
     </section>
 
     <section id="browser-support">
-      <h1>Browser support</h1>
-      The list below shows how Rundata-net is supported in different browsers. The version number indicates from which browser version Rundata-net is known to be working.
+      <h2 class="section-title">Browser support</h2>
+      <p>The list below shows browser support for Rundata-net. The version number indicates the earliest browser version for which Rundata-net is known to work.</p>
       <ul>
         <li>Microsoft Edge, 12.</li>
         <li>Chrome, 49.</li>
         <li>Firefox, 44.</li>
-        <li>Safari, -. <em>Not tested, but modern versions should work</em>.</li>
+        <li>Safari, -. <em>Not actively tested, but modern versions should work.</em></li>
         <li>Internet Explorer, -. <b>Not supported!</b></li>
       </ul>
     </section>
+    </main>
 
     <footer class="footer navbar-fixed-bottom">
-      <p>© 2018, 2024 Vadim Frolov, <a href="mailto:mail@vadimfrolov.com">mail@vadimfrolov.com</a>.</p>
+      <p>© 2018, 2024, 2025, 2026 Vadim Frolov, <a href="mailto:mail@vadimfrolov.com">mail@vadimfrolov.com</a>.</p>
     </footer>
   </body>
 </html>

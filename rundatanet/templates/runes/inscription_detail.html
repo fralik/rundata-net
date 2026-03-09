@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{% static 'css/runinskrifter_style.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="{% static 'runes/jquery-ui/jquery-ui.min.css' %}">
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
@@ -64,8 +65,13 @@
         --transliteration: inherit;
         --normalization: inherit;
         --popup-bg: #fffdf8;
-        --found-color: #7b5333;
-        --present-color: #3d6d6a;
+        --found-color: #b86b25;
+        --present-color: #2880ca;
+        --found-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-orange.png');
+        --found-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-orange.png');
+        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-blue.png');
+        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-blue.png');
+        --map-tiles-filter: none;
       }
 
       /* ── Dark palette ── */
@@ -89,9 +95,16 @@
         --transliteration: #EF4444;
         --normalization: #EAB308;
         --popup-bg: #282a2f;
-        --found-color: #7b5333;
-        --present-color: #3d6d6a;
+        --found-color: #d17d2f;
+        --present-color: #2880ca;
+        --found-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-orange.png');
+        --found-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-orange.png');
+        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-blue.png');
+        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-blue.png');
+        --map-tiles-filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
       }
+
+      html { font-size: 17px; }
 
       *, *::before, *::after { box-sizing: border-box; }
 
@@ -99,7 +112,7 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font: 400 1.05rem/1.72 "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+        font: 400 1rem/1.72 "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -126,13 +139,22 @@
         font-size: 0.88rem;
         color: var(--ink-faint);
       }
-      .breadcrumb a { text-decoration: none; }
+      .breadcrumb a {
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+      }
       .breadcrumb a:hover { text-decoration: underline; }
 
       .search-container {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+      .search-container label {
+        font-size: 0.88rem;
+        color: var(--ink-light);
+        white-space: nowrap;
       }
       .search-container input {
         background-color: var(--bg);
@@ -143,10 +165,53 @@
         font-size: 0.9rem;
         font-family: inherit;
         color-scheme: inherit;
+        width: 280px;
       }
       .search-container input:focus {
         outline: none;
         border-color: var(--ink);
+      }
+
+      .ui-autocomplete {
+        z-index: 900;
+        margin: 4px 0 0;
+        padding: 4px 0;
+        list-style: none;
+        background: var(--bg);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,.15);
+        max-height: 260px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      .ui-menu .ui-menu-item-wrapper {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        color: var(--ink);
+        border: none;
+      }
+      .ui-menu .ui-menu-item-wrapper .slug-hint {
+        margin-left: 8px;
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+      }
+      .ui-menu .ui-state-active,
+      .ui-menu .ui-state-active:hover,
+      .ui-menu .ui-state-active:focus {
+        margin: 0;
+        background: var(--rule);
+        border: none;
+        color: var(--accent);
+      }
+      .ui-menu .ui-state-active .slug-hint,
+      .ui-menu .ui-state-active:hover .slug-hint,
+      .ui-menu .ui-state-active:focus .slug-hint {
+        color: var(--ink-faint);
       }
 
       /* ── title block ── */
@@ -191,7 +256,7 @@
         border-top: 1px solid var(--rule);
         border-bottom: 1px solid var(--rule);
         margin: 16px 0 32px;
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: var(--ink-light);
       }
       .meta-ribbon dt {
@@ -291,12 +356,6 @@
       }
       .swatch-found  { background: var(--found-color); }
       .swatch-present { background: var(--present-color); }
-
-      .coords-link {
-        font-size: 0.88rem;
-        margin-left: 6px;
-        white-space: nowrap;
-      }
 
       /* ── two-column layout for classification + location details ── */
       .two-col {
@@ -408,8 +467,26 @@
         background: var(--popup-bg);
         color: var(--ink);
       }
+      .leaflet-popup-content,
+      .leaflet-popup-content p {
+        color: var(--ink);
+      }
+      .leaflet-popup-content a,
+      .leaflet-popup-content a:visited {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+      }
+      .leaflet-popup-content a:hover,
+      .leaflet-popup-content a:focus,
+      .leaflet-popup-content a:active {
+        color: var(--link-hover);
+      }
       .leaflet-container {
         font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+      }
+      .map-tiles {
+        filter: var(--map-tiles-filter);
       }
 
       /* ── theme toggle ── */
@@ -449,6 +526,22 @@
         .two-col { grid-template-columns: 1fr; gap: 0; }
         .def-row { flex-direction: column; gap: 2px; }
         .def-term { flex: none; }
+        .top-nav {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .search-container {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 6px;
+          width: 100%;
+        }
+        .search-container label {
+          white-space: normal;
+        }
+        .search-container input {
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -459,11 +552,11 @@
     <div class="page">
       <div class="top-nav">
         <nav class="breadcrumb" aria-label="Back navigation">
-          <a href="{% url 'runes:index' %}">← Home</a>
+          <a href="{% url 'runes:index' %}">Main Page</a>
         </nav>
         <div class="search-container">
-          <input type="text" id="signatureSearch" list="signatureList" autocomplete="off" placeholder="Search inscription..." aria-label="Search by inscription ID">
-          <datalist id="signatureList"></datalist>
+          <label for="signatureSearch">Search by inscription ID:</label>
+          <input type="text" id="signatureSearch" placeholder="" autocomplete="off">
         </div>
       </div>
 
@@ -680,7 +773,9 @@
       </footer>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{% static 'runes/jquery-ui/jquery-ui.min.js' %}"></script>
     <script>
       function isSafari() {
         return navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1;
@@ -693,23 +788,50 @@
         return `geo:${lat},${lng}?q=${lat},${lng}`;
       }
 
+      function getThemeValue(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      function buildMarkerIcon(iconVar, icon2xVar) {
+        return L.icon({
+          iconUrl: getThemeValue(iconVar).slice(4, -1).replace(/^"|"$/g, '').replace(/^'|'$/g, ''),
+          iconRetinaUrl: getThemeValue(icon2xVar).slice(4, -1).replace(/^"|"$/g, '').replace(/^'|'$/g, ''),
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          shadowSize: [41, 41],
+          shadowAnchor: [13, 41],
+        });
+      }
+
       function buildLocationMarker(map, config) {
-        const marker = L.circleMarker([config.lat, config.lng], {
-          radius: 9,
-          color: config.stroke,
-          weight: 2,
-          fillColor: config.fill,
-          fillOpacity: 0.9,
+        const marker = L.marker([config.lat, config.lng], {
+          icon: buildMarkerIcon(config.iconVar, config.icon2xVar),
         }).addTo(map);
 
-        const popupParts = [`<strong>${config.label}</strong>`];
-        if (config.place) {
-          popupParts.push(`<div>${config.place}</div>`);
+        if (config.popup) {
+          const popupParts = [`<div>${config.label}</div>`];
+          if (config.place) {
+            popupParts.push(`<div>${config.place}</div>`);
+          }
+          popupParts.push(`<div>${config.lat.toFixed(6)}, ${config.lng.toFixed(6)}</div>`);
+          popupParts.push(`<div><a href="${getGeoIntentURL(config.lat, config.lng)}" target="_self">Drive here!</a></div>`);
+          marker.bindPopup(popupParts.join(''));
         }
-        popupParts.push(`<div>${config.lat.toFixed(6)}, ${config.lng.toFixed(6)}</div>`);
-        popupParts.push(`<div><a href="${getGeoIntentURL(config.lat, config.lng)}" target="_self">Navigate</a></div>`);
-        marker.bindPopup(popupParts.join(''));
         return marker;
+      }
+
+      function refreshMapTheme(map) {
+        if (!map) {
+          return;
+        }
+
+        map.eachLayer(function(layer) {
+          if (typeof layer.setUrl === 'function' && layer.options && layer.options.className === 'map-tiles') {
+            layer.redraw();
+          }
+        });
       }
 
       /* ── Theme toggle ── */
@@ -718,51 +840,123 @@
         var next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('rd-theme', next);
+        refreshMapTheme(window.detailMapInstance);
       });
 
-      /* ── Autocomplete search ── */
-      document.addEventListener("DOMContentLoaded", async () => {
-        const dataListElement = document.getElementById("signatureList");
-        const searchInput = document.getElementById("signatureSearch");
+      /* ── Inscription search (jQuery UI Autocomplete) ── */
+      document.addEventListener('DOMContentLoaded', function() {
+        var searchInput = $('#signatureSearch');
+        var signaturesPromise;
 
-        try {
-          // Fetch the options from the API endpoint
-          const response = await fetch('/api/search_options');
-          const signatures = await response.json();
-
-          // Populate the datalist element efficiently
-          const fragment = document.createDocumentFragment();
-          signatures.forEach(sig => {
-            const option = document.createElement("option");
-            option.value = sig.title;
-            // Add both title and slug to text content so datalist matches against both in all browsers
-            option.textContent = `${sig.title} (${sig.slug})`;
-            option.dataset.slug = sig.slug;
-            fragment.appendChild(option);
-          });
-          dataListElement.appendChild(fragment);
-
-          // Listen for selection and redirect
-          searchInput.addEventListener("change", (e) => {
-            const val = e.target.value;
-            // Find matched option by value or by slug if they typed it exactly
-            const selectedOpt = Array.from(dataListElement.options).find(opt =>
-              opt.value === val || opt.dataset.slug === val.toLowerCase()
-            );
-            if (selectedOpt) {
-              const urlParts = window.location.pathname.split('/');
-              // Replace the slug token and redirect
-              if (urlParts.length >= 3 && urlParts[1] === 'inscription') {
-                urlParts[2] = encodeURIComponent(selectedOpt.dataset.slug);
-                window.location.href = urlParts.join('/');
-              } else {
-                window.location.href = `/inscription/${encodeURIComponent(selectedOpt.dataset.slug)}/`;
-              }
-            }
-          });
-        } catch (error) {
-          console.error("Failed to load signatures for autocomplete:", error);
+        function escapeHtml(value) {
+          return $('<div>').text(value).html();
         }
+
+        function normalize(value) {
+          return (value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+        }
+
+        function fetchSignatures() {
+          if (!signaturesPromise) {
+            signaturesPromise = fetch('/api/search_options')
+              .then(function(response) {
+                if (!response.ok) {
+                  throw new Error('Failed to fetch search options');
+                }
+                return response.json();
+              })
+              .then(function(data) {
+                return data.map(function(item) {
+                  return {
+                    slug: item.slug,
+                    title: item.title,
+                    normalizedTitle: normalize(item.title),
+                    normalizedSlug: normalize(item.slug),
+                  };
+                });
+              });
+          }
+          return signaturesPromise;
+        }
+
+        function rankMatches(items, query) {
+          var normalizedQuery = normalize(query);
+          return items
+            .filter(function(item) {
+              return !normalizedQuery
+                || item.normalizedTitle.indexOf(normalizedQuery) !== -1
+                || item.normalizedSlug.indexOf(normalizedQuery) !== -1;
+            })
+            .sort(function(a, b) {
+              var aStarts = a.normalizedTitle.indexOf(normalizedQuery) === 0 || a.normalizedSlug.indexOf(normalizedQuery) === 0 ? 0 : 1;
+              var bStarts = b.normalizedTitle.indexOf(normalizedQuery) === 0 || b.normalizedSlug.indexOf(normalizedQuery) === 0 ? 0 : 1;
+              if (aStarts !== bStarts) {
+                return aStarts - bStarts;
+              }
+              return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+            })
+            .slice(0, 50)
+            .map(function(item) {
+              return {
+                label: item.title,
+                value: item.title,
+                slug: item.slug,
+                title: item.title,
+              };
+            });
+        }
+
+        fetchSignatures().catch(function(error) {
+          console.error('Failed to load signatures for autocomplete:', error);
+        });
+
+        searchInput.autocomplete({
+          minLength: 0,
+          delay: 0,
+          autoFocus: false,
+          appendTo: '.search-container',
+          source: function(request, response) {
+            fetchSignatures()
+              .then(function(items) {
+                response(rankMatches(items, request.term));
+              })
+              .catch(function(error) {
+                console.error('Failed to load signatures for autocomplete:', error);
+                response([]);
+              });
+          },
+          focus: function(event) {
+            event.preventDefault();
+          },
+          select: function(event, ui) {
+            event.preventDefault();
+            window.location.href = '/inscription/' + encodeURIComponent(ui.item.slug) + '/';
+          },
+        });
+
+        searchInput.on('focus', function() {
+          if (!this.value.trim()) {
+            searchInput.autocomplete('search', '');
+          }
+        });
+
+        searchInput.on('keydown', function(event) {
+          if (event.key === 'ArrowDown' && !this.value.trim()) {
+            searchInput.autocomplete('search', '');
+          }
+        });
+
+        searchInput.autocomplete('instance')._renderItem = function(ul, item) {
+          var showSlug = item.slug !== item.title.toLowerCase();
+          var content = '<div>' + escapeHtml(item.title)
+            + (showSlug ? ' <span class="slug-hint">(' + escapeHtml(item.slug) + ')</span>' : '')
+            + '</div>';
+          return $('<li>').append(content).appendTo(ul);
+        };
       });
 
       (function initDetailMap() {
@@ -783,8 +977,9 @@
             lng: originalLng,
             label: 'Original or found location',
             place: '{{ meta.found_location|default:""|escapejs }}',
-            stroke: '#5d3e27',
-            fill: '#7b5333',
+            iconVar: '--found-marker-icon',
+            icon2xVar: '--found-marker-icon-2x',
+            popup: false,
           });
         }
 
@@ -792,10 +987,11 @@
           locationPoints.push({
             lat: presentLat,
             lng: presentLng,
-            label: 'Current or present location',
+            label: 'Current location',
             place: '{{ meta.current_location|default:""|escapejs }}',
-            stroke: '#2f5d5a',
-            fill: '#3d6d6a',
+            iconVar: '--present-marker-icon',
+            icon2xVar: '--present-marker-icon-2x',
+            popup: true,
           });
         }
 
@@ -808,10 +1004,12 @@
           scrollWheelZoom: false,
           attributionControl: true,
         });
+        window.detailMapInstance = map;
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+          attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+          className: 'map-tiles',
         }).addTo(map);
 
         const bounds = [];
