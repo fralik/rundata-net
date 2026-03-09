@@ -65,8 +65,12 @@
         --transliteration: inherit;
         --normalization: inherit;
         --popup-bg: #fffdf8;
-        --found-color: #7b5333;
-        --present-color: #3d6d6a;
+        --found-color: #b86b25;
+        --present-color: #2e8b57;
+        --found-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-orange.png');
+        --found-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-orange.png');
+        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-green.png');
+        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-green.png');
       }
 
       /* ── Dark palette ── */
@@ -90,8 +94,12 @@
         --transliteration: #EF4444;
         --normalization: #EAB308;
         --popup-bg: #282a2f;
-        --found-color: #7b5333;
-        --present-color: #3d6d6a;
+        --found-color: #d17d2f;
+        --present-color: #46a36f;
+        --found-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-orange.png');
+        --found-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-orange.png');
+        --present-marker-icon: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-green.png');
+        --present-marker-icon-2x: url('https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-green.png');
       }
 
       html { font-size: 17px; }
@@ -346,12 +354,6 @@
       }
       .swatch-found  { background: var(--found-color); }
       .swatch-present { background: var(--present-color); }
-
-      .coords-link {
-        font-size: 0.88rem;
-        margin-left: 6px;
-        white-space: nowrap;
-      }
 
       /* ── two-column layout for classification + location details ── */
       .two-col {
@@ -766,22 +768,37 @@
         return `geo:${lat},${lng}?q=${lat},${lng}`;
       }
 
+      function getThemeValue(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      function buildMarkerIcon(iconVar, icon2xVar) {
+        return L.icon({
+          iconUrl: getThemeValue(iconVar).slice(4, -1).replace(/^"|"$/g, '').replace(/^'|'$/g, ''),
+          iconRetinaUrl: getThemeValue(icon2xVar).slice(4, -1).replace(/^"|"$/g, '').replace(/^'|'$/g, ''),
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          shadowSize: [41, 41],
+          shadowAnchor: [13, 41],
+        });
+      }
+
       function buildLocationMarker(map, config) {
-        const marker = L.circleMarker([config.lat, config.lng], {
-          radius: 9,
-          color: config.stroke,
-          weight: 2,
-          fillColor: config.fill,
-          fillOpacity: 0.9,
+        const marker = L.marker([config.lat, config.lng], {
+          icon: buildMarkerIcon(config.iconVar, config.icon2xVar),
         }).addTo(map);
 
-        const popupParts = [`<strong>${config.label}</strong>`];
-        if (config.place) {
-          popupParts.push(`<div>${config.place}</div>`);
+        if (config.popup) {
+          const popupParts = [`<div>${config.label}</div>`];
+          if (config.place) {
+            popupParts.push(`<div>${config.place}</div>`);
+          }
+          popupParts.push(`<div>${config.lat.toFixed(6)}, ${config.lng.toFixed(6)}</div>`);
+          popupParts.push(`<div><a href="${getGeoIntentURL(config.lat, config.lng)}" target="_self">Drive here!</a></div>`);
+          marker.bindPopup(popupParts.join(''));
         }
-        popupParts.push(`<div>${config.lat.toFixed(6)}, ${config.lng.toFixed(6)}</div>`);
-        popupParts.push(`<div><a href="${getGeoIntentURL(config.lat, config.lng)}" target="_self">Navigate</a></div>`);
-        marker.bindPopup(popupParts.join(''));
         return marker;
       }
 
@@ -927,8 +944,9 @@
             lng: originalLng,
             label: 'Original or found location',
             place: '{{ meta.found_location|default:""|escapejs }}',
-            stroke: '#5d3e27',
-            fill: '#7b5333',
+            iconVar: '--found-marker-icon',
+            icon2xVar: '--found-marker-icon-2x',
+            popup: false,
           });
         }
 
@@ -936,10 +954,11 @@
           locationPoints.push({
             lat: presentLat,
             lng: presentLng,
-            label: 'Current or present location',
+            label: 'Current location',
             place: '{{ meta.current_location|default:""|escapejs }}',
-            stroke: '#2f5d5a',
-            fill: '#3d6d6a',
+            iconVar: '--present-marker-icon',
+            icon2xVar: '--present-marker-icon-2x',
+            popup: true,
           });
         }
 
