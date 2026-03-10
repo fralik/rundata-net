@@ -13,6 +13,7 @@ from .models import (
     NormalisationNorse,
     NormalisationScandinavian,
     PersonalName,
+    Reference,
     Signature,
     TranslationEnglish,
     TranslationSwedish,
@@ -58,10 +59,17 @@ class MaterialSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ReferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reference
+        fields = ["text", "kind", "label"]
+
+
 class MetaInformationSerializer(serializers.ModelSerializer):
     signature = serializers.StringRelatedField(many=False, read_only=True)
     crosses = serializers.SerializerMethodField()
     materialType = serializers.StringRelatedField(many=False, read_only=True)
+    references = ReferenceSerializer(many=True, read_only=True)
     runic_texts = serializers.SerializerMethodField()
 
     class Meta:
