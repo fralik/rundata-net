@@ -12,7 +12,15 @@ from .serializers import MetaInformationSerializer
 
 logger = logging.getLogger(__name__)
 
-api = NinjaAPI()
+api = NinjaAPI(
+    title="Rundata API",
+    version="1.0.0",
+    description=(
+        "REST API for the Rundata runic inscription database. "
+        "Provides endpoints for searching inscriptions, retrieving detailed metadata, "
+        "and converting free-form text to normalized runic rules."
+    ),
+)
 
 
 class TextRequest(Schema):
@@ -41,8 +49,17 @@ class ErrorResponse(Schema):
     detail: str
 
 
-@api.post("/txt2rules", response=TextResponse)
+@api.post("/txt2rules", response=TextResponse, tags=["Rules"])
 def txt2rules(request, data: TextRequest):
+    """
+    Convert free-form text to normalized runic rules.
+
+    Submits a plain-text description to the inference engine, which returns
+    a structured rules string suitable for use in inscription searches.
+
+    Returns an empty `rules` string and a populated `error` field if the
+    inference step fails.
+    """
     try:
         # Call the inference function to get the rules
         llm_response = inference(data.text)
@@ -60,10 +77,19 @@ def txt2rules(request, data: TextRequest):
 @api.get(
     "/search_options",
     response=list[SearchOption],
+    tags=["Inscriptions"],
 )
 def search_options_api(request):
-    """Return all canonical signatures formatted for client-side search datalists."""
+    """
+    List all searchable inscription signatures.
+
+    Returns every canonical runic signature as a lightweight option object
+    containing an `id`, human-readable `title`, and URL-safe `slug`.
+    Intended for populating client-side search datalists and autocomplete widgets.
+    Results are sorted alphabetically by signature text.
+    """
     index = SlugIndex.get()
+    index._ensure_built()
 
     signatures = Signature.objects.filter(id__in=index._id_to_slug.keys()).values_list("id", "signature_text")
 
@@ -83,11 +109,22 @@ def search_options_api(request):
 @api.get(
     "/inscription/{slug}",
     response={200: InscriptionResponse, 404: ErrorResponse},
+    tags=["Inscriptions"],
 )
 def inscription_detail_api(request, slug: str):
-    """Return inscription data as JSON by normalized slug.
+    """
+    Retrieve full metadata for a single inscription by slug.
 
-    Alias slugs are resolved transparently to the canonical inscription.
+    Looks up an inscription using its URL-safe slug. Alias slugs (variant
+    identifiers pointing to the same physical inscription) are resolved
+    transparently to the canonical record.
+
+    Returns the canonical signature text, canonical slug, a list of known
+    alias signatures, and a full metadata object including material type,
+    images, and references.
+
+    Responds with **404** if the slug does not match any known inscription
+    or if the associated metadata record is missing.
     """
     index = SlugIndex.get()
     result = index.resolve(slug)
