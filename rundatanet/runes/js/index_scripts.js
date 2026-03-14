@@ -778,7 +778,7 @@ export function inscriptions2markup(inscriptions) {
       columnData = columnData.replace(/ ☺ /g, ' ');
 
       if (columnName === 'images') {
-        if (!showHeaders && (inscriptionData['directImages'].length == 0 || inscriptionData['indirectImages'].length == 0)) {
+        if (!showHeaders && (inscriptionData['directImages'].length == 0 && inscriptionData['indirectImages'].length == 0)) {
           // early stop if no headers and no images
           continue;
         }
