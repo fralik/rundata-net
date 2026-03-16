@@ -627,6 +627,23 @@ export function selectFirstSignature() {
 }
 
 /**
+ * Selects the inscription in jsTree that corresponds to the map marker that was clicked.
+ * This is called by the marker click handler in initMap (index_map.js).
+ * Selecting a node triggers the 'changed.jstree' event which calls displaySignatureInfo().
+ * @param {string} _signature - Kept for API compatibility with index_map.js call site; not used here
+ * @param {number|string} inscriptionId - The DB id of the inscription to select
+ */
+export function scrollToInscription(_signature, inscriptionId) {
+  const tree = $('#jstree').jstree(true);
+  tree.deselect_all();
+  tree.select_node(String(inscriptionId));
+  const el = document.getElementById(`${inscriptionId}_anchor`);
+  if (el) {
+    $('#jstree').scrollTop(el.offsetTop);
+  }
+}
+
+/**
  * Convert list of inscriptions to a list of select options in html format.
  */
 export function inscriptions2Select(container, dbMap) {
