@@ -7,8 +7,10 @@ from .base import env
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
+# Canonical domain for 301 redirects (www and Azure hostname → apex domain)
+CANONICAL_DOMAIN = env("CANONICAL_DOMAIN", default="rundata.info")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-default_allowed_hosts = ["www.rundata.info", "rundata.info"]
+default_allowed_hosts = [f"www.{CANONICAL_DOMAIN}", CANONICAL_DOMAIN]
 if "DJANGO_ALLOWED_HOSTS" in env:
     default_allowed_hosts += env.list("DJANGO_ALLOWED_HOSTS")
 if "WEBSITE_HOSTNAME" in env:
