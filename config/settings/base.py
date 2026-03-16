@@ -146,6 +146,13 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# SECURITY
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#secure-referrer-policy
+# OpenStreetMap tile servers require a Referer header per their usage policy.
+# "same-origin" (Django default) strips it on cross-origin requests, causing tile loading errors.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 # STATIC
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#static-root
