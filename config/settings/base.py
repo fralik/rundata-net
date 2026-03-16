@@ -150,7 +150,8 @@ MIDDLEWARE = [
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-referrer-policy
 # OpenStreetMap tile servers require a Referer header per their usage policy.
-# "same-origin" (Django default) strips it on cross-origin requests, causing tile loading errors.
+# Without this setting, Django does not send a Referrer-Policy header, leaving behavior to
+# browser defaults, which can strip the Referer on cross-origin tile requests and cause errors.
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # STATIC
