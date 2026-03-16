@@ -797,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   initSqlJs(sqlConfig).then(function(SQL) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=1.1.7", true);
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}", true);
     xhr.responseType = 'arraybuffer';
     xhr.addEventListener("load", function() {
       console.log('we got sql data from server');
@@ -942,7 +942,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchRules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
 
     // Create worker and send data
-    const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}?v=0.0.1");
+    const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}");
     exportWorker.onmessage = onExportWorkerMessage;
     exportWorker.onerror = onExportError;
 
