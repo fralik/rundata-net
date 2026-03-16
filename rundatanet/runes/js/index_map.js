@@ -11,7 +11,8 @@ export function initMap(divId, center = [56.607512, 16.439838], zoom = 8) {
   }).setView(center, zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    referrerPolicy: 'origin',
   }).addTo(map);
 
   // add location control to global name space for testing only
@@ -61,7 +62,7 @@ function getGeoIntentURL(lat, lng) {
     console.error('isSafari function is not defined');
     throw new Error('isSafari function is not defined');
   }
-  
+
   if (isSafari()) {
     return `http://maps.apple.com/?daddr=${lat},${lng}`;
   }
@@ -152,7 +153,7 @@ export function showMarkers({
 } = {}) {
   // array of all marker's lat/lon. Used to calculate new bounds.
   let markersLatLon = [];
-  
+
   if (!markersLayer || !mapObject) {
     console.log('No markers layer or map object provided');
     return;
