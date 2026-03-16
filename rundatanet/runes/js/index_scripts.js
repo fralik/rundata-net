@@ -637,9 +637,12 @@ export function scrollToInscription(_signature, inscriptionId) {
   const tree = $('#jstree').jstree(true);
   tree.deselect_all();
   tree.select_node(String(inscriptionId));
+  const container = $('#jstree')[0];
   const el = document.getElementById(`${inscriptionId}_anchor`);
-  if (el) {
-    $('#jstree').scrollTop(el.offsetTop);
+  if (el && container) {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    container.scrollTop = container.scrollTop + elRect.top - containerRect.top;
   }
 }
 
