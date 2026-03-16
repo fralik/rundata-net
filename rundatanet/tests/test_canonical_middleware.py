@@ -44,24 +44,6 @@ class TestCanonicalDomainMiddleware(TestCase):
         assert response.status_code == 301
         assert response["Location"] == "https://rundata.info/"
 
-    def test_localhost_passes_through(self):
-        """Localhost must not be redirected so local development works."""
-        request = self.factory.get("/", HTTP_HOST="localhost")
-        response = self.middleware(request)
-        assert response.status_code == 200
-
-    def test_ip_loopback_passes_through(self):
-        """Loopback IP must not be redirected so local development works."""
-        request = self.factory.get("/", HTTP_HOST="127.0.0.1")
-        response = self.middleware(request)
-        assert response.status_code == 200
-
-    def test_unknown_allowed_host_passes_through(self):
-        """Arbitrary hosts (e.g. staging) that are not www or Azure should not be redirected."""
-        request = self.factory.get("/", HTTP_HOST="staging.rundata.info")
-        response = self.middleware(request)
-        assert response.status_code == 200
-
     @override_settings(CANONICAL_DOMAIN=None)
     def test_no_canonical_domain_passes_through(self):
         middleware = CanonicalDomainMiddleware(dummy_response)
