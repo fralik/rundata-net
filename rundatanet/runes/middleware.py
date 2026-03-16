@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponsePermanentRedirect
+from django.http.request import split_domain_port
 
 
 class CanonicalDomainMiddleware:
@@ -16,8 +17,10 @@ class CanonicalDomainMiddleware:
 
     def __call__(self, request):
         if self.canonical_domain:
-            host = request.headers.get("host", "").split(":")[0]
-            if host and host != self.canonical_domain:
+            # Use Django's host parsing to respect USE_X_FORWARDED_HOST and ALLOWED_HOSTS
+            host = request.get_host()
+            domain, _ = split_domain_port(host)
+            if domain and domain != self.canonical_domain:
                 url = f"https://{self.canonical_domain}{request.get_full_path()}"
                 return HttpResponsePermanentRedirect(url)
 
