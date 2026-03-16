@@ -6,9 +6,9 @@ from django.http.request import split_domain_port
 class CanonicalDomainMiddleware:
     """301-redirect requests from non-canonical hostnames to CANONICAL_DOMAIN.
 
-    Ensures that www.rundata.info and *.azurewebsites.net are redirected
-    to the canonical domain, preventing duplicate-content issues in search
-    engines.
+    Intended for production use where ``CANONICAL_DOMAIN`` is set.  Any
+    incoming hostname that differs from ``CANONICAL_DOMAIN`` is permanently
+    redirected, preventing duplicate-content issues in search engines.
     """
 
     def __init__(self, get_response):

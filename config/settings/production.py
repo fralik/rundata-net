@@ -179,6 +179,17 @@ try:
 except ValueError:
     MIDDLEWARE = ["whitenoise.middleware.WhiteNoiseMiddleware"] + MIDDLEWARE  # noqa F405
 
+# CanonicalDomainMiddleware
+# ------------------------------------------------------------------------------
+# Redirect all non-canonical hostnames to the canonical domain. Placed here so
+# it only runs in production where CANONICAL_DOMAIN is configured; local
+# development is unaffected.
+try:
+    index = MIDDLEWARE.index("whitenoise.middleware.WhiteNoiseMiddleware")
+    MIDDLEWARE.insert(index + 1, "rundatanet.runes.middleware.CanonicalDomainMiddleware")
+except ValueError:
+    MIDDLEWARE.insert(1, "rundatanet.runes.middleware.CanonicalDomainMiddleware")  # noqa F405
+
 # LOGGING
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#logging
