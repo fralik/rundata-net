@@ -9,7 +9,10 @@ def dummy_response(request):
     return HttpResponse("OK")
 
 
-@override_settings(CANONICAL_DOMAIN="rundata.info")
+@override_settings(
+    CANONICAL_DOMAIN="rundata.info",
+    ALLOWED_HOSTS=["rundata.info", "www.rundata.info", "rundatanet.azurewebsites.net"],
+)
 class TestCanonicalDomainMiddleware(TestCase):
     def setUp(self):
         self.middleware = CanonicalDomainMiddleware(dummy_response)
