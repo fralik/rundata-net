@@ -10,7 +10,8 @@
     <meta property="og:description" content="Runic inscription {{ display_signature }}{% if meta.found_location %}, found at {{ meta.found_location }}{% endif %}">
     <meta property="og:type" content="article">
     <title>{{ signature }} — Rundata-net</title>
-    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'runes:inscription_detail' slug=canonical_slug %}">
+    {% get_from_settings 'CANONICAL_DOMAIN' as canonical_domain %}
+    <link rel="canonical" href="{{ canonical_domain }}{% url 'runes:inscription_detail' slug=canonical_slug %}">
 
     {% get_from_settings 'USE_GA' as use_ga %}
     {% if use_ga %}

@@ -199,7 +199,7 @@ class TestInscriptionDetailView(TestCase):
         assert "Original coordinates" in content
         assert "Current coordinates" in content
         assert "Original or found location" in content
-        assert "Current or present location" in content
+        assert "Current location" in content
         assert "59.123456, 17.654321" in content
         assert "59.987654, 18.123456" in content
         assert "Museum storehouse" in content
@@ -278,9 +278,7 @@ class TestMakeBlobUrlFilter(TestCase):
     """Unit tests for the make_blob_url template filter."""
 
     def _render(self, text, base_url):
-        tpl = Template(
-            "{% load settings %}{{ text|make_blob_url:base_url }}"
-        )
+        tpl = Template("{% load settings %}{{ text|make_blob_url:base_url }}")
         return tpl.render(Context({"text": text, "base_url": base_url}))
 
     def test_returns_absolute_url_unchanged(self):
