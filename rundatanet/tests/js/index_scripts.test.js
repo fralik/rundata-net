@@ -23,9 +23,9 @@ test('fetchAllImages() function', async () => {
 
   // images of the first inscription
   const images = result['1'];
-  
+
   assert.is(images.links.length, 41, `The first inscription should have 41 images`);
-  
+
   assert.is(images.links[0].direct, expectedDirectUrl, `The first inscription should have a direct link to: ${expectedDirectUrl}`);
   assert.is(images.links[0].indirect, expectedLinkUrl, `The first inscription should have a link to: ${expectedLinkUrl}`);
 });
@@ -42,7 +42,7 @@ test('makeImagesMarkup() function', async () => {
   const expectedDirect = `<div class="container-fluid"><div class="row"><div class="col-md-4"><a href="${images.links[0].indirect}" contentEditable="false" target="_blank"><img src="${images.links[0].direct}" class="img-responsive"></a></div></div></div>`;
   const results = makeImagesMarkup(images);
   assert.is(results.directImages, expectedDirect, `The direct images markup should be: ${expectedDirect}`);
-  assert.is(results.indirectImages, 'No images.', `The indirect images markup should be: No images.`);
+  assert.is(results.indirectImages, '', `The indirect images markup should be empty when no indirect-only images exist`);
 });
 
 test.run();
