@@ -176,7 +176,7 @@ INSTALLED_APPS += ["gunicorn"]  # noqa F405
 # development is unaffected.
 try:
     index = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
-    MIDDLEWARE.insert(index + 1, "rundatanet.runes.middleware.CanonicalDomainMiddleware")
+    MIDDLEWARE.insert(index, "rundatanet.runes.middleware.CanonicalDomainMiddleware")
 except ValueError:
     MIDDLEWARE.insert(0, "rundatanet.runes.middleware.CanonicalDomainMiddleware")  # noqa F405
 
