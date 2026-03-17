@@ -169,26 +169,26 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 # This adds `run_gunicorn` command to `./manage.py`.
 INSTALLED_APPS += ["gunicorn"]  # noqa F405
 
-# WhiteNoise
-# ------------------------------------------------------------------------------
-# http://whitenoise.evans.io/en/latest/django.html#enable-whitenoise
-try:
-    # Whitenoise must be placed after "django.middleware.security.SecurityMiddleware"
-    index = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
-    MIDDLEWARE.insert(index + 1, "whitenoise.middleware.WhiteNoiseMiddleware")
-except ValueError:
-    MIDDLEWARE = ["whitenoise.middleware.WhiteNoiseMiddleware"] + MIDDLEWARE  # noqa F405
-
 # CanonicalDomainMiddleware
 # ------------------------------------------------------------------------------
 # Redirect all non-canonical hostnames to the canonical domain. Placed here so
 # it only runs in production where CANONICAL_DOMAIN is configured; local
 # development is unaffected.
 try:
-    index = MIDDLEWARE.index("whitenoise.middleware.WhiteNoiseMiddleware")
+    index = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
     MIDDLEWARE.insert(index + 1, "rundatanet.runes.middleware.CanonicalDomainMiddleware")
 except ValueError:
-    MIDDLEWARE.insert(1, "rundatanet.runes.middleware.CanonicalDomainMiddleware")  # noqa F405
+    MIDDLEWARE.insert(0, "rundatanet.runes.middleware.CanonicalDomainMiddleware")  # noqa F405
+
+# WhiteNoise
+# ------------------------------------------------------------------------------
+# http://whitenoise.evans.io/en/latest/django.html#enable-whitenoise
+try:
+    # Place whitenoise after "rundatanet.runes.middleware.CanonicalDomainMiddleware" so redirects happen before static files are served.
+    index = MIDDLEWARE.index("rundatanet.runes.middleware.CanonicalDomainMiddleware")
+    MIDDLEWARE.insert(index + 1, "whitenoise.middleware.WhiteNoiseMiddleware")
+except ValueError:
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 # LOGGING
 # ------------------------------------------------------------------------------
