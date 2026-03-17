@@ -1,4 +1,4 @@
-{% load static %}
+{% load static settings %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -11,7 +11,7 @@
     <meta name="msapplication-TileColor" content="#2b5797">
     <meta name="theme-color" content="#ffffff">
     <title>Rundata.info - reference file</title>
-    <link rel="canonical" href="https://rundata.info{{ request.path }}">
+    <link rel="canonical" href="{{ CANONICAL_DOMAIN }}{{ request.path }}">
     <style type="text/css">
       html, body {
         min-height: 100%;
