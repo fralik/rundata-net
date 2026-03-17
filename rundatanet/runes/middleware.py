@@ -25,6 +25,11 @@ class CanonicalDomainMiddleware:
             domain, _ = split_domain_port(host)
             if domain and domain.lower() != self._canonical_domain_lower:
                 url = f"https://{self.canonical_domain}{request.get_full_path()}"
-                return HttpResponsePermanentRedirect(url)
+                # Use 301 for safe methods (GET/HEAD), and 308 for others to preserve method and body.
+                if request.method in ("GET", "HEAD"):
+                    return HttpResponsePermanentRedirect(url)
+                response = HttpResponsePermanentRedirect(url)
+                response.status_code = 308
+                return response
 
         return self.get_response(request)
