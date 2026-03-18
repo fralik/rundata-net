@@ -282,3 +282,4 @@ rundatanet/media/
 # Built JavaScript files
 rundatanet/static/runes/*.js
 rundatanet/static/runes/*.js.map
+rundatanet/django_default_db.sqlite3
