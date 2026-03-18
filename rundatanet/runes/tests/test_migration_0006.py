@@ -58,13 +58,11 @@ class ExtractDkReferencesTests(TestCase):
         assert self.meta.references.filter(text__startswith="http://runer.ku.dk/").exists()
         link_ref = self.meta.references.get(text__startswith="http://runer.ku.dk/")
         assert link_ref.kind == "link"
-        assert link_ref.label == "Runedatabasen Danske Runeindskrifter"
+        assert link_ref.label == "Danish Runic Inscriptions Database"
 
     def test_removes_dk_segment_at_end(self):
         """DK nr. segment at the end is removed."""
-        ref = self._create_ref(
-            "$=Moltke 1985:547; DK nr.: NJy 41, http://runer.ku.dk/VisGenstand.aspx?Titel=Ydby-sten"
-        )
+        ref = self._create_ref("$=Moltke 1985:547; DK nr.: NJy 41, http://runer.ku.dk/VisGenstand.aspx?Titel=Ydby-sten")
         self._run()
 
         ref.refresh_from_db()
@@ -72,19 +70,15 @@ class ExtractDkReferencesTests(TestCase):
 
     def test_dk_segment_with_dollar_prefix_deleted_when_only_segment(self):
         """If the only segment is $=DK nr.:…, the reference is deleted."""
-        ref_pk = self._create_ref(
-            "$=DK nr.: SJy 63, http://runer.ku.dk/VisGenstand.aspx?Titel=Kegnaes-hvaessesten"
-        ).pk
+        ref_pk = self._create_ref("$=DK nr.: SJy 63, http://runer.ku.dk/VisGenstand.aspx?Titel=Kegnaes-hvaessesten").pk
         self._run()
 
         assert not Reference.objects.using("runes_db").filter(pk=ref_pk).exists()
-        assert self.meta.references.filter(kind="link", label="Runedatabasen Danske Runeindskrifter").exists()
+        assert self.meta.references.filter(kind="link", label="Danish Runic Inscriptions Database").exists()
 
     def test_sole_dk_segment_without_prefix_deleted(self):
         """A reference that is purely a DK nr. entry is deleted after extraction."""
-        ref_pk = self._create_ref(
-            "DK nr.: Sk 14, http://runer.ku.dk/VisGenstand.aspx?Titel=Norra-Asum-sten"
-        ).pk
+        ref_pk = self._create_ref("DK nr.: Sk 14, http://runer.ku.dk/VisGenstand.aspx?Titel=Norra-Asum-sten").pk
         self._run()
 
         assert not Reference.objects.using("runes_db").filter(pk=ref_pk).exists()
@@ -93,16 +87,10 @@ class ExtractDkReferencesTests(TestCase):
         """Even if two text references share the same runer.ku.dk URL only one
         link reference is created."""
         sig2 = Signature.objects.using("runes_db").create(signature_text="DR 2")
-        meta2 = MetaInformation.objects.using("runes_db").create(
-            signature=sig2, found_location="Test2"
-        )
+        meta2 = MetaInformation.objects.using("runes_db").create(signature=sig2, found_location="Test2")
         url = "http://runer.ku.dk/VisGenstand.aspx?Titel=Shared-sten"
-        ref1 = Reference.objects.using("runes_db").create(
-            text=f"$=Author A; DK nr.: Sk 1, {url}"
-        )
-        ref2 = Reference.objects.using("runes_db").create(
-            text=f"$=Author B; DK nr.: Sk 1, {url}"
-        )
+        ref1 = Reference.objects.using("runes_db").create(text=f"$=Author A; DK nr.: Sk 1, {url}")
+        ref2 = Reference.objects.using("runes_db").create(text=f"$=Author B; DK nr.: Sk 1, {url}")
         self.meta.references.add(ref1)
         meta2.references.add(ref2)
 
@@ -118,9 +106,7 @@ class ExtractDkReferencesTests(TestCase):
         """If cleaning produces a text already owned by another Reference,
         the MetaInformation is migrated to the existing reference."""
         existing = Reference.objects.using("runes_db").create(text="$=Author 1990")
-        ref = self._create_ref(
-            "$=Author 1990; DK nr.: Sk 99, http://runer.ku.dk/VisGenstand.aspx?Titel=Test-sten"
-        )
+        ref = self._create_ref("$=Author 1990; DK nr.: Sk 99, http://runer.ku.dk/VisGenstand.aspx?Titel=Test-sten")
         ref_pk = ref.pk
         self._run()
 
