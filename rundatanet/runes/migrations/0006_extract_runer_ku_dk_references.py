@@ -31,7 +31,7 @@ _DK_SEGMENT_RE = re.compile(
     r"^(?:\$=)?DK nr\.: [^,]+, (http://runer\.ku\.dk/.+)$",
 )
 
-_LABEL = "Runedatabasen Danske Runeindskrifter"
+_LABEL = "Danish Runic Inscriptions Database"
 
 
 def extract_dk_references(apps, schema_editor):
@@ -39,9 +39,16 @@ def extract_dk_references(apps, schema_editor):
 
     # Work on a snapshot of matching PKs so we don't modify the queryset
     # while iterating.
-    matching_pks = list(
-        Reference.objects.filter(text__icontains="DK nr.:").values_list("pk", flat=True)
-    )
+    matching_pks = list(Reference.objects.filter(text__icontains="DK nr.:").values_list("pk", flat=True))
+
+    stats = {
+        "refs_processed": 0,
+        "links_created": 0,
+        "links_reused": 0,
+        "refs_deleted": 0,
+        "refs_merged": 0,
+        "refs_updated": 0,
+    }
 
     for pk in matching_pks:
         try:
@@ -65,6 +72,8 @@ def extract_dk_references(apps, schema_editor):
             # Pattern not actually present in any segment.
             continue
 
+        stats["refs_processed"] += 1
+
         # Collect affected MetaInformation objects *before* modifying
         # the reference so the M2M relationship is still intact.
         meta_informations = list(ref.meta_informations.all())
@@ -75,6 +84,10 @@ def extract_dk_references(apps, schema_editor):
                 text=url,
                 defaults={"kind": "link", "label": _LABEL},
             )
+            if created:
+                stats["links_created"] += 1
+            else:
+                stats["links_reused"] += 1
             if not created and not link_ref.label:
                 # Pre-existing bare-URL reference – give it a proper label.
                 link_ref.kind = "link"
@@ -91,6 +104,7 @@ def extract_dk_references(apps, schema_editor):
             for meta in meta_informations:
                 meta.references.remove(ref)
             ref.delete()
+            stats["refs_deleted"] += 1
         else:
             # Check whether the cleaned text already exists as a Reference.
             existing = Reference.objects.filter(text=new_text).exclude(pk=ref.pk).first()
@@ -101,9 +115,21 @@ def extract_dk_references(apps, schema_editor):
                     meta.references.add(existing)
                     meta.references.remove(ref)
                 ref.delete()
+                stats["refs_merged"] += 1
             else:
                 ref.text = new_text
                 ref.save()
+                stats["refs_updated"] += 1
+
+    print(
+        f"\n  DK references migration: "
+        f"{stats['refs_processed']} processed, "
+        f"{stats['links_created']} links created, "
+        f"{stats['links_reused']} links reused, "
+        f"{stats['refs_updated']} updated, "
+        f"{stats['refs_merged']} merged, "
+        f"{stats['refs_deleted']} deleted"
+    )
 
 
 class Migration(migrations.Migration):
