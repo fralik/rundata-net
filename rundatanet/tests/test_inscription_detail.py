@@ -219,6 +219,25 @@ class TestInscriptionDetailView(TestCase):
         assert "58.765432, 16.234567" in content
         assert "Regional museum" in content
 
+    def test_title_includes_scandinavian_runic_inscription(self):
+        """Page title should include 'Scandinavian Runic Inscription' for SEO."""
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        assert "<title>Sö 145 † — Scandinavian Runic Inscription from Södermanland — Rundata-net</title>" in content
+
+    def test_title_minimum_length(self):
+        """Page title should be at least 50 characters for SEO."""
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+        # Extract title text between <title> and </title>
+        title_start = content.find("<title>")
+        title_end = content.find("</title>")
+        assert title_start != -1 and title_end != -1, "<title> tag not found in response"
+        title = content[title_start + len("<title>"):title_end]
+        assert len(title) >= 50, f"Title too short ({len(title)} chars): {title!r}"
+
     def test_unicode_input_redirects(self):
         """Raw Unicode signature in URL should 301-redirect to the canonical slug."""
         response = self.client.get("/inscription/S\u00f6 145/")

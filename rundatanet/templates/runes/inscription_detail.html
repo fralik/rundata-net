@@ -6,10 +6,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Runic inscription {{ display_signature }}{% if meta.found_location %}, found at {{ meta.found_location }}{% endif %}{% if meta.dating %} ({{ meta.dating }}){% endif %}. Browse the runic text, transliteration, and scholarly interpretation on Rundata-net, the online Scandinavian Runic-text Data Base.">
-    <meta property="og:title" content="{{ signature }} — Rundata-net">
+    <meta property="og:title" content="{{ display_signature }} — Scandinavian Runic Inscription{% if meta.found_location %} from {{ meta.found_location }}{% endif %} — Rundata-net">
     <meta property="og:description" content="Runic inscription {{ display_signature }}{% if meta.found_location %}, found at {{ meta.found_location }}{% endif %}">
     <meta property="og:type" content="article">
-    <title>{{ signature }} — Rundata-net</title>
+    <title>{{ display_signature }} — Scandinavian Runic Inscription{% if meta.found_location %} from {{ meta.found_location }}{% endif %} — Rundata-net</title>
     {% get_from_settings 'CANONICAL_DOMAIN' as canonical_domain %}
     <link rel="canonical" href="{{ canonical_domain }}{% url 'runes:inscription_detail' slug=canonical_slug %}">
 
