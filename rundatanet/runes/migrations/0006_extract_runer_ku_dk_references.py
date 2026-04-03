@@ -16,7 +16,7 @@ existing object and the duplicate is removed.
 
 import re
 
-from django.db import migrations
+from django.db import migrations, models
 
 # Separator used between individual items in the legacy concatenated
 # reference text field.
@@ -31,15 +31,26 @@ _DK_SEGMENT_RE = re.compile(
     r"^(?:\$=)?DK nr\.: [^,]+, (http://runer\.ku\.dk/.+)$",
 )
 
+# Matches a bare runer.ku.dk URL that appears as a standalone segment.
+_BARE_URL_RE = re.compile(
+    r"^(http://runer\.ku\.dk/.+)$",
+)
+
 _LABEL = "Danish Runic Inscriptions Database"
 
 
 def extract_dk_references(apps, schema_editor):
     Reference = apps.get_model("runes", "Reference")
 
+    db_alias = schema_editor.connection.alias if schema_editor else "runes_db"
+
     # Work on a snapshot of matching PKs so we don't modify the queryset
     # while iterating.
-    matching_pks = list(Reference.objects.filter(text__icontains="DK nr.:").values_list("pk", flat=True))
+    matching_pks = list(
+        Reference.objects.using(db_alias)
+        .filter(models.Q(text__icontains="DK nr.:") | models.Q(text__icontains="runer.ku.dk"))
+        .values_list("pk", flat=True)
+    )
 
     stats = {
         "refs_processed": 0,
@@ -52,7 +63,7 @@ def extract_dk_references(apps, schema_editor):
 
     for pk in matching_pks:
         try:
-            ref = Reference.objects.get(pk=pk)
+            ref = Reference.objects.using(db_alias).get(pk=pk)
         except Reference.DoesNotExist:
             # May have been deleted in a previous iteration (merge branch).
             continue
@@ -65,6 +76,8 @@ def extract_dk_references(apps, schema_editor):
             m = _DK_SEGMENT_RE.match(seg)
             if m:
                 extracted_urls.append(m.group(1))
+            elif _BARE_URL_RE.match(seg):
+                extracted_urls.append(seg)
             else:
                 keep_segments.append(seg)
 
@@ -79,11 +92,13 @@ def extract_dk_references(apps, schema_editor):
         meta_informations = list(ref.meta_informations.all())
 
         # --- Create / retrieve link references and associate them --------
+        link_ref_pks = set()
         for url in extracted_urls:
-            link_ref, created = Reference.objects.get_or_create(
+            link_ref, created = Reference.objects.using(db_alias).get_or_create(
                 text=url,
                 defaults={"kind": "link", "label": _LABEL},
             )
+            link_ref_pks.add(link_ref.pk)
             if created:
                 stats["links_created"] += 1
             else:
@@ -100,14 +115,19 @@ def extract_dk_references(apps, schema_editor):
         new_text = _SEPARATOR.join(keep_segments)
 
         if not new_text:
-            # All content was extracted – remove and delete the reference.
-            for meta in meta_informations:
-                meta.references.remove(ref)
-            ref.delete()
-            stats["refs_deleted"] += 1
+            if ref.pk in link_ref_pks:
+                # The original reference was itself a bare URL and has
+                # already been converted to a link reference – keep it.
+                pass
+            else:
+                # All content was extracted – remove and delete the reference.
+                for meta in meta_informations:
+                    meta.references.remove(ref)
+                ref.delete()
+                stats["refs_deleted"] += 1
         else:
             # Check whether the cleaned text already exists as a Reference.
-            existing = Reference.objects.filter(text=new_text).exclude(pk=ref.pk).first()
+            existing = Reference.objects.using(db_alias).filter(text=new_text).exclude(pk=ref.pk).first()
             if existing:
                 # Transfer associations to the existing reference and drop
                 # the now-duplicate original.
