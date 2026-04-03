@@ -20,10 +20,11 @@ class DanishRunerKuDkReferenceTests(TestCase):
             )
             .values_list("signature__signature_text", flat=True)
         )
+        bad_list = list(bad)
         self.assertEqual(
-            list(bad),
+            bad_list,
             [],
-            f"Danish inscriptions still contain http://runer.ku.dk in 'reference': {list(bad)}",
+            f"Danish inscriptions still contain http://runer.ku.dk in 'reference': {bad_list}",
         )
 
     def test_no_runer_ku_dk_in_normalised_references(self):
@@ -37,8 +38,9 @@ class DanishRunerKuDkReferenceTests(TestCase):
             .values_list("signature__signature_text", flat=True)
             .distinct()
         )
+        bad_list = list(bad)
         self.assertEqual(
-            list(bad),
+            bad_list,
             [],
-            f"Danish inscriptions still linked to runer.ku.dk Reference rows: {list(bad)}",
+            f"Danish inscriptions still linked to runer.ku.dk Reference rows: {bad_list}",
         )
