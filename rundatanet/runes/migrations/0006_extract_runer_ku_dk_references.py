@@ -3,8 +3,8 @@
 For every Reference whose text contains the pattern
     ``(optional $=)DK nr.: <id>, http://runer.ku.dk/<path>``
 the segment is removed from the text reference, and a dedicated *link*
-Reference is created (kind='link', label='Runedatabasen Danske
-Runeindskrifter', text=<url>).  That link reference is then associated
+Reference is created (kind='link', label='Danish Runic Inscriptions Database', text=<url>).
+That link reference is then associated
 with every MetaInformation that previously held the original text
 reference.
 
