@@ -83,6 +83,34 @@ class ExtractDkReferencesTests(TestCase):
 
         assert not Reference.objects.using("runes_db").filter(pk=ref_pk).exists()
 
+    def test_encoded_url_full_reference_replaced(self):
+        """A bare runer.ku.dk URL reference is converted to a link in place."""
+        url = "http://runer.ku.dk/VisGenstand.aspx?Titel=Runem%c3%b8nt,_DR_M%c3%b8nt_6"
+        ref = self._create_ref(url)
+        self._run()
+
+        ref.refresh_from_db()
+        assert ref.kind == "link"
+        assert ref.label == "Danish Runic Inscriptions Database"
+        assert self.meta.references.filter(pk=ref.pk).exists()
+
+    def test_bare_url_extracted_from_mixed_segments(self):
+        """A bare runer.ku.dk URL among other segments is extracted as a link."""
+        ref = self._create_ref(
+            "DR BR74; KJ 128; §Q: $=Grønvik 1996:220-230; http://runer.ku.dk/VisGenstand.aspx?Titel=Eskatorp-brakteat; http://digi20.digitale-sammlungen.de/en/fs1/object/display/bsb00042599_00048.html; <http://www.runenprojekt.uni-kiel.de/abfragen/standard/deutung2_eng.asp?findno=129&ort=Eskatorp&objekt=brakteat (F-typ)>"
+        )
+        self._run()
+
+        ref.refresh_from_db()
+        assert ref.text == (
+            "DR BR74; KJ 128; §Q: $=Grønvik 1996:220-230; "
+            "http://digi20.digitale-sammlungen.de/en/fs1/object/display/bsb00042599_00048.html; "
+            "<http://www.runenprojekt.uni-kiel.de/abfragen/standard/deutung2_eng.asp?findno=129&ort=Eskatorp&objekt=brakteat (F-typ)>"
+        )
+        link_ref = self.meta.references.get(text="http://runer.ku.dk/VisGenstand.aspx?Titel=Eskatorp-brakteat")
+        assert link_ref.kind == "link"
+        assert link_ref.label == "Danish Runic Inscriptions Database"
+
     def test_link_reference_created_once_for_shared_url(self):
         """Even if two text references share the same runer.ku.dk URL only one
         link reference is created."""
