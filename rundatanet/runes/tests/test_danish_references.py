@@ -5,7 +5,7 @@ from django.test import TestCase
 from rundatanet.runes.models import MetaInformation
 
 
-class DanishRulerKuDkReferenceTests(TestCase):
+class DanishRunerKuDkReferenceTests(TestCase):
     """Verify that Danish inscriptions have no runer.ku.dk links in their references."""
 
     databases = {"default", "runes_db"}
