@@ -942,17 +942,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get the current search rules to include in the export
     const searchRules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    // Strip functions from rules — QueryBuilder includes filter.input as a function
+    // for custom filters, and postMessage can't clone functions.
+    const cloneableRules = JSON.parse(JSON.stringify(searchRules));
 
     // Create worker and send data
     const exportWorker = new Worker("{% static 'runes/export.worker.min.js' %}");
     exportWorker.onmessage = onExportWorkerMessage;
     exportWorker.onerror = onExportError;
 
-    exportWorker.postMessage({
-      inscriptions: Array.from(gViewModel.getActiveInscriptions().values()),
-      columnMap: columnMap,
-      rules: searchRules
-    });
+    try {
+      exportWorker.postMessage({
+        inscriptions: Array.from(gViewModel.getActiveInscriptions().values()),
+        columnMap: columnMap,
+        rules: cloneableRules
+      });
+    } catch (error) {
+      gExportInProgress = false;
+      hideLoading();
+      bootstrap.Modal.getInstance(document.getElementById('modalResultsIo'))?.hide();
+      showAlert('Failed to start export. Contact developers.', 'danger');
+      console.error('Failed to start export:', error);
+    }
   });
 
   // Search statistics updates:
