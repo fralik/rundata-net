@@ -958,11 +958,8 @@ document.addEventListener('DOMContentLoaded', function() {
         rules: cloneableRules
       });
     } catch (error) {
-      gExportInProgress = false;
-      hideLoading();
-      bootstrap.Modal.getInstance(document.getElementById('modalResultsIo'))?.hide();
-      showAlert('Failed to start export. Contact developers.', 'danger');
-      console.error('Failed to start export:', error);
+      exportWorker.terminate();
+      onExportError(error);
     }
   });
 
