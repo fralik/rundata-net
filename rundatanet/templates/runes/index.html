@@ -959,6 +959,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     } catch (error) {
       exportWorker.terminate();
+      bootstrap.Modal.getInstance(document.getElementById('modalResultsIo'))?.hide();
       onExportError(error);
     }
   });
