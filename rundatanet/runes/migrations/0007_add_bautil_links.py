@@ -2,7 +2,7 @@
 
 Reads ``B_to_Bautil_links.csv`` (co-located in this migrations folder) and
 for each row creates a ``kind='link'`` Reference pointing to the Alvin
-image viewer, labelled ``Bautil-<page>``.  The reference is then associated
+image viewer, labelled ``Bautil, page <page>``.  The reference is then associated
 with the ``MetaInformation`` record whose signature matches the
 ``inscription_id`` column.
 
@@ -42,7 +42,7 @@ def add_bautil_links(apps, schema_editor):
 
     for inscription_id, ds_id, page in _read_csv():
         url = _URL_TEMPLATE.format(ds_id=ds_id)
-        label = f"Bautil-{page}"
+        label = f"Bautil, page {page}"
 
         try:
             sig = Signature.objects.using(db_alias).get(
