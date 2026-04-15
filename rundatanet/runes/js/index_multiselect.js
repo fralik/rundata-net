@@ -101,6 +101,17 @@ function setMultiselectOptions(selectedValues, showHeaders) {
   $('#chkDisplayHeaders').prop('checked', showHeaders);
 }
 
+/**
+ * Preserve the sorting after user interacts with the display options.
+ * Reassigns sortValue attributes so the current order is maintained
+ * when the multiselect sort function runs after adding/removing items.
+ */
+function resortDisplayOptions() {
+  let newSort = 0;
+  $('#multiselect_to option').each(function() { $(this).attr('sortValue', newSort++); });
+  $('#multiselect option').each(function() { $(this).attr('sortValue', newSort++); });
+}
+
 export function initMultiselect() {
   const defaultSelectedValues = [
     'signature_text', 'transliteration', 'normalisation_scandinavian', 'normalisation_norse',
@@ -133,6 +144,10 @@ export function initMultiselect() {
         return aValue > bValue ? 1 : -1;
       }
     },
+    afterMoveUp: () => resortDisplayOptions(),
+    afterMoveDown: () => resortDisplayOptions(),
+    afterMoveToRight: () => resortDisplayOptions(),
+    afterMoveToLeft: () => resortDisplayOptions(),
   });
 
   $('#formatDialogAlertObj').hide();
