@@ -106,7 +106,7 @@ function setMultiselectOptions(selectedValues, showHeaders) {
  * Reassigns sortValue attributes so the current order is maintained
  * when the multiselect sort function runs after adding/removing items.
  */
-function resortDisplayOptions() {
+export function resortDisplayOptions() {
   let newSort = 0;
   $('#multiselect_to option').each(function() { $(this).attr('sortValue', newSort++); });
   $('#multiselect option').each(function() { $(this).attr('sortValue', newSort++); });
