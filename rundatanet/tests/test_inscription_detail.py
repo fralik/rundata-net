@@ -1,3 +1,5 @@
+import re
+
 from django.template import Context, Template
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -244,8 +246,11 @@ class TestInscriptionDetailView(TestCase):
         response = self.client.get(url)
         content = response.content.decode()
 
-        assert "section > h2.section-title {" in content
-        assert "color: var(--heading);" in content
+        assert re.search(
+            r"section > h2\.section-title\s*\{[^}]*color:\s*var\(--heading\);",
+            content,
+            re.DOTALL,
+        )
 
     def test_unicode_input_redirects(self):
         """Raw Unicode signature in URL should 301-redirect to the canonical slug."""
