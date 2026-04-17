@@ -238,6 +238,15 @@ class TestInscriptionDetailView(TestCase):
         title = content[title_start + len("<title>"):title_end]
         assert len(title) >= 50, f"Title too short ({len(title)} chars): {title!r}"
 
+    def test_section_titles_use_heading_color_selector(self):
+        """Section titles should override the legacy shared stylesheet on this page."""
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+
+        assert "section > h2.section-title {" in content
+        assert "color: var(--heading);" in content
+
     def test_unicode_input_redirects(self):
         """Raw Unicode signature in URL should 301-redirect to the canonical slug."""
         response = self.client.get("/inscription/S\u00f6 145/")
