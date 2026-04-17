@@ -1,3 +1,5 @@
+import re
+
 from django.template import Context, Template
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -237,6 +239,18 @@ class TestInscriptionDetailView(TestCase):
         assert title_start != -1 and title_end != -1, "<title> tag not found in response"
         title = content[title_start + len("<title>"):title_end]
         assert len(title) >= 50, f"Title too short ({len(title)} chars): {title!r}"
+
+    def test_section_titles_use_heading_color_selector(self):
+        """Section titles should override the legacy shared stylesheet on this page."""
+        url = reverse("runes:inscription_detail", kwargs={"slug": "so-145"})
+        response = self.client.get(url)
+        content = response.content.decode()
+
+        assert re.search(
+            r"section > h2\.section-title\s*\{[^}]*color:\s*var\(--heading\);",
+            content,
+            re.DOTALL,
+        )
 
     def test_unicode_input_redirects(self):
         """Raw Unicode signature in URL should 301-redirect to the canonical slug."""
