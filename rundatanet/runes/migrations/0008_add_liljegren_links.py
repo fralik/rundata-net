@@ -1,14 +1,15 @@
 """Data migration: add Liljegren Runurkunder page links to L-inscriptions.
 
 Reads ``Liljegren_Runurkunder_L_signatures_page_links.csv`` (co-located
-in this migrations folder) and for each row creates a ``kind='link'``
-Reference pointing to the litteraturbanken.se faksimil page, labelled
-``Liljegren, page <page>``.  The reference is then associated with the
-``MetaInformation`` record whose signature matches the ``Id number``
-column.
+in this migrations folder) and for each row creates or updates a
+``kind='link'`` Reference pointing to the litteraturbanken.se faksimil
+page, labelled ``Liljegren, page <page>``. The reference is then
+associated with the ``MetaInformation`` record whose signature matches
+the ``Id number`` column.
 
-Multiple inscriptions may share the same URL (page), so ``get_or_create``
-is used to avoid duplicates.
+Multiple inscriptions may share the same URL (page), so the migration
+reuses a single Reference for shared URLs/pages instead of creating
+duplicates.
 """
 
 import csv
