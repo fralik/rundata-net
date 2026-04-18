@@ -127,7 +127,7 @@ def reverse_liljegren_links(apps, schema_editor):
         except (Signature.DoesNotExist, MetaInformation.DoesNotExist):
             pass
 
-        if not ref.meta_informations.exists():
+        if not ref.meta_informations.using(db_alias).exists():
             ref.delete()
             removed += 1
 
