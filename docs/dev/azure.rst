@@ -217,10 +217,13 @@ Optional integrations
 
 #. Verify the Web App starts under ``PYTHON|3.12`` (Log stream →
    **Log stream** in the portal).
-#. Run Django migrations via **SSH** from the Kudu console::
+#. If your ``POST_BUILD_COMMAND`` already runs ``python manage.py migrate``,
+   do not run migrations manually again. Use **SSH** from the Kudu console
+   for ``collectstatic`` (and only run ``migrate`` manually if you did not
+   configure it in ``POST_BUILD_COMMAND``)::
 
-    $ python manage.py migrate
     $ python manage.py collectstatic --noinput
+    $ python manage.py migrate  # only if POST_BUILD_COMMAND does not run it
 
 #. Open ``https://<your-app-name>.azurewebsites.net`` and confirm
    the site responds.
