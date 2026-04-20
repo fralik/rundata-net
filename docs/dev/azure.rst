@@ -189,16 +189,20 @@ Hostnames and HTTPS
     Defaults to ``true``. Keep it enabled once a valid certificate is
     bound to your custom domain.
 
-``DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS``, ``DJANGO_SECURE_HSTS_PRELOAD``,
+``DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS``
+    Optional override; defaults to ``true``.
+
+``DJANGO_SECURE_HSTS_PRELOAD``
+    Optional override; defaults to ``true``.
+
 ``DJANGO_SECURE_CONTENT_TYPE_NOSNIFF``
-    Optional overrides for the corresponding Django security
-    settings; all default to ``true``.
+    Optional override; defaults to ``true``.
 
 Optional integrations
 ---------------------
 
 ``AZURE_BLOB_BASE_URL``
-    Set to `https://files.rundata.info/sveriges_runinskrifter`. This is the public URL of the Azure Blob Storage container that serves runic inscription images.
+    Set to ``https://files.rundata.info/sveriges_runinskrifter``. This is the public URL of the Azure Blob Storage container that serves runic inscription images.
     In the future, you can set up your own container and provide its URL here.
 
 ``MODEL_KEY``
