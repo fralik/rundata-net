@@ -122,6 +122,139 @@ export function getWordSearchFunction(searchMode, options = {}) {
 }
 
 /**
+ * Splits a phrase query into tokens by whitespace.
+ * Whitespace is first normalized to single spaces, then the string is
+ * trimmed and split on runs of whitespace.
+ *
+ * @param {string} query - The query string to tokenize
+ * @returns {string[]} Array of tokens. Empty array if query is empty/whitespace only.
+ */
+export function splitPhraseTokens(query) {
+  if (query === null || query === undefined) {
+    return [];
+  }
+  const normalized = normalizeWhitespace(query).trim();
+  if (normalized === '') {
+    return [];
+  }
+  return normalized.split(/\s+/);
+}
+
+/**
+ * Returns a phrase (multi-word) matcher for the specified search mode.
+ *
+ * The returned function accepts `(docWords, query)` where `docWords` is the
+ * array of words in the inscription (e.g. `entry.normalisation_norse_words`)
+ * and `query` is the phrase to search for. It returns an array of matched
+ * windows; each window is an array of word indices `[i, i+1, …, i+N-1]`.
+ *
+ * Per-operator semantics (N = number of tokens in the phrase, N ≥ 2):
+ *   - exact: every token must exactly equal the corresponding consecutive
+ *     doc word.
+ *   - includes / contains: every token must appear as a substring of the
+ *     corresponding consecutive doc word. This mirrors single-word
+ *     `contains` (which is `String.includes`) and is consistent across
+ *     every position, so e.g. "es satt" matches "es sattr" and "e sat"
+ *     matches "es sattr".
+ *   - beginsWith: tokens 0..N-2 must equal doc words exactly; the last
+ *     doc word must start with the last token.
+ *   - endsWith: tokens 1..N-1 must equal doc words exactly; the first
+ *     doc word must end with the first token.
+ *
+ * Windows may appear anywhere in the doc (not anchored to start/end).
+ *
+ * @param {string} searchMode - One of 'exact', 'beginsWith', 'endsWith',
+ *                              'includes', 'contains'.
+ * @param {Object} options - Additional options
+ * @param {boolean} [options.ignoreCase=false]
+ * @param {boolean} [options.includeSpecialSymbols=false]
+ * @returns {Function} (docWords, query) => number[][]
+ */
+export function getPhraseMatchFunction(searchMode, options = {}) {
+  const { ignoreCase = false, includeSpecialSymbols = false } = options;
+  const normalizedSearchMode = searchMode === 'contains' ? 'includes' : searchMode;
+
+  const prepareString = (str) => {
+    let preparedValue = prepareForComparison(str, ignoreCase);
+    if (!includeSpecialSymbols) {
+      preparedValue = stripSpecialSymbols(preparedValue);
+    }
+    return preparedValue;
+  };
+
+  // Reduce a doc word to its comparable alternatives (handles personal-name
+  // annotations like "/X" splitting into multiple candidates).
+  const prepareDocWordVariants = (word) => {
+    if (word.includes('&#x2F;') || word.includes('/')) {
+      return word.split(/&#x2F;|\//).map(name => {
+        return prepareString(name.trim().replace(/^(&quot;|")/, ''));
+      });
+    }
+    return [prepareString(word)];
+  };
+
+  const docWordEquals = (docWord, tokenPrepared) => {
+    return prepareDocWordVariants(docWord).some(v => v === tokenPrepared);
+  };
+
+  const docWordStartsWith = (docWord, tokenPrepared) => {
+    return prepareDocWordVariants(docWord).some(v => v.startsWith(tokenPrepared));
+  };
+
+  const docWordEndsWith = (docWord, tokenPrepared) => {
+    return prepareDocWordVariants(docWord).some(v => v.endsWith(tokenPrepared));
+  };
+
+  const docWordIncludes = (docWord, tokenPrepared) => {
+    return prepareDocWordVariants(docWord).some(v => v.includes(tokenPrepared));
+  };
+
+  // Decide the comparison to apply at position `j` of an N-token window.
+  const compareAt = (docWord, token, j, n) => {
+    const isFirst = j === 0;
+    const isLast = j === n - 1;
+    switch (normalizedSearchMode) {
+      case 'includes':
+        // Every token is a substring of the corresponding doc word.
+        return docWordIncludes(docWord, token);
+      case 'beginsWith':
+        return isLast ? docWordStartsWith(docWord, token) : docWordEquals(docWord, token);
+      case 'endsWith':
+        return isFirst ? docWordEndsWith(docWord, token) : docWordEquals(docWord, token);
+      case 'exact':
+      default:
+        return docWordEquals(docWord, token);
+    }
+  };
+
+  return (docWords, query) => {
+    const tokens = splitPhraseTokens(query).map(prepareString);
+    const windows = [];
+    const n = tokens.length;
+    if (n === 0 || !Array.isArray(docWords) || docWords.length < n) {
+      return windows;
+    }
+
+    for (let i = 0; i <= docWords.length - n; i++) {
+      let matches = true;
+      for (let j = 0; j < n; j++) {
+        if (!compareAt(docWords[i + j], tokens[j], j, n)) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) {
+        const window = [];
+        for (let j = 0; j < n; j++) window.push(i + j);
+        windows.push(window);
+      }
+    }
+
+    return windows;
+  };
+}
+
+/**
  * Returns field mapping for supported directional word searches.
  * @param {string} searchDirection - Direction identifier
  * @returns {{normalisationField: string, fromField: string, toField: string}|null}

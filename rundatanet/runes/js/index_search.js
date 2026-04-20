@@ -1,16 +1,20 @@
 import {
   getSearchDirectionConfig,
   getWordSearchFunction,
+  getPhraseMatchFunction,
   isPersonalName,
   prepareForComparison,
+  splitPhraseTokens,
 } from './search_core.js';
 
 export {
   getSearchDirectionConfig,
   getWordSearchFunction,
+  getPhraseMatchFunction,
   isPersonalName,
   normalizeWhitespace,
   prepareForComparison,
+  splitPhraseTokens,
   stripSpecialSymbols,
 } from './search_core.js';
 
@@ -341,6 +345,7 @@ const searchSignatureWrapper = (record, ruleValue, operatorFn, negate = false, i
 
 const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase = false, includeSpecialSymbols = false) => {
   const isAHit = getWordSearchFunction(searchMode, { ignoreCase, includeSpecialSymbols });
+  const phraseMatcher = getPhraseMatchFunction(searchMode, { ignoreCase, includeSpecialSymbols });
   // key names defined in valueGetter, e.g. normalization_norse_to_transliteration
   const normalisationQuery = ruleValue['normalization'];
   const transliterationQuery = ruleValue['transliteration'];
@@ -356,54 +361,74 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase 
   const normalWords = entry[`${normalizationField}_words`];
   const transliterationWords = entry['transliteration_words'];
 
-  let matchFound = false;
-  let matchedWords = [];
-  let numFoundNames = 0;
-
-  // Helper function to check personal name constraints and record matches
-  const processMatch = (index, isPersonal) => {
-    // Skip if filtering by personal names and constraints are not met
-    if ((namesMode === 'excludeNames' && isPersonal) ||
-        (namesMode === 'namesOnly' && !isPersonal)) {
-      return false;
+  // Build matching windows for a single query against a word list.
+  // Returns Map<startIndex, number[]> where value is the window of indices.
+  // For single-word queries, windows are of length 1.
+  const findWindows = (words, query) => {
+    const result = new Map();
+    if (!query || !Array.isArray(words)) return result;
+    const tokens = splitPhraseTokens(query);
+    if (tokens.length > 1) {
+      const windows = phraseMatcher(words, query);
+      windows.forEach(w => result.set(w[0], w));
+    } else {
+      words.forEach((word, i) => {
+        if (isAHit(word, query)) {
+          result.set(i, [i]);
+        }
+      });
     }
-
-    matchFound = true;
-    matchedWords.push(index);
-    if (isPersonal) numFoundNames++;
-    return true;
+    return result;
   };
 
-  // Case 1: Both normalization and transliteration queries are present
-  if (normalisationQuery && transliterationQuery) {
-    for (let i = 0; i < Math.min(normalWords.length, transliterationWords.length); i++) {
-      if (isAHit(normalWords[i], normalisationQuery) && isAHit(transliterationWords[i], transliterationQuery)) {
-        processMatch(i, isPersonalName(normalWords[i]));
-      }
-    }
-  }
-  // Case 2: Only one query type is present
-  else {
-    // Check normalization words
-    if (normalisationQuery) {
-      normalWords.forEach((word, i) => {
-        if (isAHit(word, normalisationQuery)) {
-          processMatch(i, isPersonalName(word));
-        }
-      });
-    }
+  // Determine whether a window passes the names-mode filter.
+  // ANY-word semantics:
+  //   excludeNames: reject if ANY word in window is a personal name
+  //   namesOnly:    require at least ONE word in window to be a personal name
+  const windowPassesNamesFilter = (indices) => {
+    if (namesMode !== 'excludeNames' && namesMode !== 'namesOnly') return true;
+    const hasPersonal = indices.some(i => i < normalWords.length && isPersonalName(normalWords[i]));
+    if (namesMode === 'excludeNames') return !hasPersonal;
+    return hasPersonal; // namesOnly
+  };
 
-    // Check transliteration words
-    if (transliterationQuery) {
-      transliterationWords.forEach((word, i) => {
-        if (isAHit(word, transliterationQuery)) {
-          // transliterated words don't contain personal name annotation
-          const isPersonal = (i < normalWords.length) && isPersonalName(normalWords[i]);
-          processMatch(i, isPersonal);
-        }
-      });
-    }
+  const countPersonalNamesInWindow = (indices) => {
+    let count = 0;
+    indices.forEach(i => {
+      if (i < normalWords.length && isPersonalName(normalWords[i])) count++;
+    });
+    return count;
+  };
+
+  const matchedSet = new Set();
+  let numFoundNames = 0;
+  let matchFound = false;
+
+  const acceptWindow = (indices) => {
+    if (!windowPassesNamesFilter(indices)) return;
+    matchFound = true;
+    numFoundNames += countPersonalNamesInWindow(indices);
+    indices.forEach(i => matchedSet.add(i));
+  };
+
+  if (normalisationQuery && transliterationQuery) {
+    // Combined case: both queries must match starting at the same index.
+    // Highlighted indices are the union of both windows.
+    const norseWindows = findWindows(normalWords, normalisationQuery);
+    const translitWindows = findWindows(transliterationWords, transliterationQuery);
+    norseWindows.forEach((norseWin, startIdx) => {
+      const translitWin = translitWindows.get(startIdx);
+      if (!translitWin) return;
+      const union = new Set([...norseWin, ...translitWin]);
+      acceptWindow([...union]);
+    });
+  } else if (normalisationQuery) {
+    findWindows(normalWords, normalisationQuery).forEach(win => acceptWindow(win));
+  } else if (transliterationQuery) {
+    findWindows(transliterationWords, transliterationQuery).forEach(win => acceptWindow(win));
   }
+
+  const matchedWords = [...matchedSet].sort((a, b) => a - b);
 
   return {
     match: matchFound,
