@@ -140,11 +140,14 @@ Required
     Set to ``1`` so Oryx installs Python dependencies during
     deployment.
 
-```CUSTOM_REQUIREMENTSTXT_PATH```
-   Set to `requirements/production.txt` to have the GitHub Actions workflow install the production dependencies during deployment.
+``CUSTOM_REQUIREMENTSTXT_PATH``
+    Set to ``requirements/production.txt`` to have the App Service
+    Oryx build step install the production dependencies during
+    deployment.
 
-```POST_BUILD_COMMAND```
-    Set to `python manage.py migrate` to have the GitHub Actions workflow run database migrations after deployment.
+``POST_BUILD_COMMAND``
+    Set to ``python manage.py migrate`` to have the App Service
+    Oryx build step run database migrations after deployment.
 
 Database
 --------
