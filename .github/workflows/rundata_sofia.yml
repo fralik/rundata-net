@@ -4,11 +4,13 @@
 
 name: Build and deploy Python app to Azure Web App - rundata-sofia
 
+# Pipeline disabled: automatic push trigger removed. Re-enable by restoring the
+# `push` block below. Manual runs via the Actions UI remain available.
 on:
-  push:
-    branches:
-      - rundata-sofia
   workflow_dispatch:
+  # push:
+  #   branches:
+  #     - rundata-sofia
 
 jobs:
   build:
