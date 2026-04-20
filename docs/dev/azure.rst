@@ -2,8 +2,6 @@
 Publishing to Azure as an Azure Web App
 =======================================
 
-.. module:: rundata.azure
-
 This page describes how to publish Rundata-net to Azure as a Linux
 Azure Web App (App Service). It covers forking the repository on
 GitHub, wiring up a GitHub Actions workflow for continuous
