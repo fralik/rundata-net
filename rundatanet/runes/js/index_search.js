@@ -368,12 +368,13 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase 
     const result = new Map();
     if (!query || !Array.isArray(words)) return result;
     const tokens = splitPhraseTokens(query);
+    if (tokens.length === 0) return result;
     if (tokens.length > 1) {
       const windows = phraseMatcher(words, query);
       windows.forEach(w => result.set(w[0], w));
     } else {
       words.forEach((word, i) => {
-        if (isAHit(word, query)) {
+        if (isAHit(word, tokens[0])) {
           result.set(i, [i]);
         }
       });
