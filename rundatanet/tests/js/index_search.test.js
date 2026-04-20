@@ -688,6 +688,28 @@ test('phrase wordIndices are sorted and deduplicated across multiple windows', (
   assert.equal(result[0].matchDetails.wordIndices, [0, 1, 3, 4], 'Indices sorted, deduped across windows');
 });
 
+test('phrase numPersonalNames is deduplicated across overlapping windows', () => {
+  // Build a record where a single personal-name word participates in two
+  // overlapping phrase windows. With a 2-token "contains" phrase "a b":
+  //   - window [0,1]: 'a' ⊂ 'a', 'b' ⊂ '&quot;a/b&quot;'  → accepted
+  //   - window [1,2]: 'a' ⊂ '&quot;a/b&quot;', 'b' ⊂ 'b'  → accepted
+  // The personal-name word at index 1 appears in BOTH windows, but must
+  // only be counted once in numPersonalNames.
+  const rec = makeWordSearchRecord({
+    id: 'OVERLAP_NAME',
+    norseWords: ['a', '&quot;a/b&quot;', 'b'],
+  });
+  const rules = buildPhraseRule({ operator: 'contains', normalization: 'a b' });
+  const result = doSearch(rules, [rec]);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [0, 1, 2]);
+  assert.is(
+    result[0].matchDetails.numPersonalNames,
+    1,
+    'Personal name shared by overlapping windows is counted once'
+  );
+});
+
 test('phrase highlight spans a contiguous range via highlightWordsFromWordBoundaries', () => {
   const str = 'raised the stone in memory of';
   const boundaries = [];

@@ -393,22 +393,12 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase 
     return hasPersonal; // namesOnly
   };
 
-  const countPersonalNamesInWindow = (indices) => {
-    let count = 0;
-    indices.forEach(i => {
-      if (i < normalWords.length && isPersonalName(normalWords[i])) count++;
-    });
-    return count;
-  };
-
   const matchedSet = new Set();
-  let numFoundNames = 0;
   let matchFound = false;
 
   const acceptWindow = (indices) => {
     if (!windowPassesNamesFilter(indices)) return;
     matchFound = true;
-    numFoundNames += countPersonalNamesInWindow(indices);
     indices.forEach(i => matchedSet.add(i));
   };
 
@@ -430,6 +420,11 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase 
   }
 
   const matchedWords = [...matchedSet].sort((a, b) => a - b);
+  // Count unique personal names once from the deduped set of matched indices
+  // so that overlapping phrase windows do not inflate the count.
+  const numFoundNames = matchedWords.reduce((acc, i) => (
+    i < normalWords.length && isPersonalName(normalWords[i]) ? acc + 1 : acc
+  ), 0);
 
   return {
     match: matchFound,
