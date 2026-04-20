@@ -48,9 +48,7 @@ Development and technical information
     dev/docker
     dev/install
     dev/local_tests
-
-Indices and tables
-------------------
+    dev/azure
 
 If you can’t find the information you’re looking for, have a look at the
 index or try to find it using the search function:
