@@ -89,7 +89,7 @@ function getValueAsString(value) {
 
 /**
  * Test function for searching inscriptions using a single rule
- * 
+ *
  * @param {Object} options - The options for the search test
  * @param {string} options.operator - The operator to use for the search rule (e.g., 'equal', 'contains')
  * @param {*} options.value - The value to search for
@@ -103,9 +103,9 @@ function getValueAsString(value) {
  * @returns {void}
  */
 function testSingleRuleSearch({
-  operator, 
-  value, 
-  expectedCount, 
+  operator,
+  value,
+  expectedCount,
   testName,
   id = null,
   firstResultCheck = null,
@@ -130,11 +130,11 @@ function testSingleRuleSearch({
       not: false,
       valid: true
     };
-    
+
     const result = doSearch(rules, dbMap.values());
-    
+
     assert.is(result.length, expectedCount, `Should find ${expectedCount} inscriptions`);
-    
+
     if (firstResultCheck) {
       if (typeof firstResultCheck === 'object') {
         const fieldDataStr = JSON.stringify(result[0][field]);
@@ -310,10 +310,10 @@ test('search inscription via year range', () => {
     not: false,
     valid: true
   };
-  
+
   const results = doSearch(rules, dbMap.values());
   const expectedCount = 48;
-  
+
   assert.not(results[0].signature_text === 'Ög 218', 'Should not find Ög 218');
   assert.is(results.length, expectedCount, `Should find ${expectedCount} inscriptions`);
 });
@@ -335,16 +335,16 @@ test('search by style begins_with Pr 4 should find Öl 4', () => {
     not: false,
     valid: true
   };
-  
+
   const results = doSearch(rules, dbMap.values());
-  
+
   // Find if Öl 4 is in the results
   const ol4 = results.find(r => r.signature_text === 'Öl 4');
-  
+
   assert.ok(ol4, 'Should find Öl 4 in results');
   // The style field may contain non-breaking spaces, so we normalize for comparison
   assert.is(ol4.style.replace(/\s/g, ' '), 'Pr 4', 'Öl 4 should have style "Pr 4" (normalized)');
-  
+
   // Verify we're finding many more results now (not just 3)
   assert.ok(results.length > 100, `Should find many results (found ${results.length})`);
 });
@@ -487,6 +487,436 @@ test('doSearch case-sensitive search does not find results with wrong case', () 
   };
   const result = doSearch(rules, dbMap.values());
   assert.is(result.length, 0, 'Case-sensitive search should not find results when case does not match');
+});
+
+// ── Phrase search in transliteration/normalization ────────────────────────────
+
+/**
+ * Build a minimal fake record matching the shape produced by
+ * convertDbToKeyMap() for the fields that doWordSearch reads.
+ */
+function makeWordSearchRecord({
+  id,
+  norseWords,
+  scandinavianWords = null,
+  translitWords = null,
+}) {
+  const tr = translitWords || norseWords;
+  const sc = scandinavianWords || norseWords;
+  return {
+    id,
+    signature_text: id,
+    normalisation_norse_words: norseWords,
+    normalisation_scandinavian_words: sc,
+    transliteration_words: tr,
+    // word_boundaries are only consulted by highlighting code, not by
+    // doWordSearch itself; empty arrays are fine for these tests.
+    normalisation_norse_word_boundaries: norseWords.map((text, i) => ({ start: i, end: i + text.length, text })),
+    normalisation_scandinavian_word_boundaries: sc.map((text, i) => ({ start: i, end: i + text.length, text })),
+    transliteration_word_boundaries: tr.map((text, i) => ({ start: i, end: i + text.length, text })),
+  };
+}
+
+function buildPhraseRule({
+  id = 'normalization_norse_to_transliteration',
+  operator,
+  normalization = '',
+  transliteration = '',
+  namesMode = 'includeAll',
+  ignoreCase = false,
+  includeSpecialSymbols = false,
+}) {
+  return {
+    condition: 'AND',
+    rules: [
+      {
+        id,
+        field: id === 'normalization_norse_to_transliteration' ? 'normalisation_norse' : 'normalisation_scandinavian',
+        type: 'string',
+        operator,
+        value: {
+          normalization,
+          transliteration,
+          names_mode: namesMode,
+        },
+        data: { multiField: true },
+        ignoreCase,
+        includeSpecialSymbols,
+      }
+    ],
+    not: false,
+    valid: true,
+  };
+}
+
+test('phrase contains: finds record with consecutive matching tokens in normalization', () => {
+  const records = [
+    makeWordSearchRecord({ id: 'T1', norseWords: ['raised', 'the', 'stone', 'in', 'memory', 'of'] }),
+    makeWordSearchRecord({ id: 'T2', norseWords: ['stone', 'of', 'memory'] }),
+  ];
+  const rules = buildPhraseRule({ operator: 'contains', normalization: 'in memory' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1, 'Only T1 should match the phrase "in memory"');
+  assert.is(result[0].id, 'T1');
+  assert.equal(result[0].matchDetails.wordIndices, [3, 4], 'Matched word indices span the phrase');
+});
+
+test('phrase contains: substring on every token (including middle)', () => {
+  const records = [
+    makeWordSearchRecord({ id: 'T1', norseWords: ['raised', 'the', 'stone', 'in', 'memory'] }),
+  ];
+  // Every token is a substring of the corresponding doc word:
+  //   'he' ⊂ 'the', 'ton' ⊂ 'stone', 'i' ⊂ 'in'
+  const rules = buildPhraseRule({ operator: 'contains', normalization: 'he ton i' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1, 'contains uses substring on every token');
+  assert.equal(result[0].matchDetails.wordIndices, [1, 2, 3]);
+});
+
+test('phrase contains: partial match allowed on first and last tokens', () => {
+  const records = [
+    makeWordSearchRecord({ id: 'T1', norseWords: ['raised', 'the', 'stone', 'in', 'memory'] }),
+  ];
+  // Prefix on last token: "mem" matches "memory"
+  const rulesPrefix = buildPhraseRule({ operator: 'contains', normalization: 'in mem' });
+  assert.is(doSearch(rulesPrefix, records).length, 1, 'Prefix on last token should match');
+
+  // Suffix on first token: "sed" matches "raised"
+  const rulesSuffix = buildPhraseRule({ operator: 'contains', normalization: 'sed the' });
+  assert.is(doSearch(rulesSuffix, records).length, 1, 'Suffix on first token should match');
+});
+
+test('phrase beginsWith: last token may be a prefix', () => {
+  const records = [
+    makeWordSearchRecord({ id: 'T1', norseWords: ['raised', 'the', 'stone', 'in', 'memory'] }),
+  ];
+  const rules = buildPhraseRule({ operator: 'begins_with', normalization: 'in mem' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [3, 4]);
+});
+
+test('phrase endsWith: first token may be a suffix', () => {
+  const records = [
+    makeWordSearchRecord({ id: 'T1', norseWords: ['raised', 'stone', 'memory', 'of'] }),
+  ];
+  const rules = buildPhraseRule({ operator: 'ends_with', normalization: 'sed stone' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [0, 1]);
+});
+
+test('phrase search respects ignoreCase flag', () => {
+  const records = [
+    makeWordSearchRecord({ id: 'T1', norseWords: ['Raised', 'The', 'Stone'] }),
+  ];
+  const rulesSens = buildPhraseRule({ operator: 'contains', normalization: 'raised the' });
+  assert.is(doSearch(rulesSens, records).length, 0, 'Case-sensitive phrase should not match');
+
+  const rulesIns = buildPhraseRule({ operator: 'contains', normalization: 'raised the', ignoreCase: true });
+  const result = doSearch(rulesIns, records);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [0, 1]);
+});
+
+test('phrase search namesMode=excludeNames rejects window containing a personal name', () => {
+  const records = [
+    // A window "Þórr sonr" where Þórr is a personal name marker
+    makeWordSearchRecord({ id: 'T1', norseWords: ['raised', '&quot;Þórr&quot;', 'sonr', 'of', 'father'] }),
+  ];
+  const rules = buildPhraseRule({
+    operator: 'contains',
+    normalization: 'Þórr sonr',
+    namesMode: 'excludeNames',
+  });
+  assert.is(doSearch(rules, records).length, 0, 'excludeNames should reject window with personal name');
+
+  const rulesAll = buildPhraseRule({ operator: 'contains', normalization: 'Þórr sonr' });
+  assert.is(doSearch(rulesAll, records).length, 1, 'Without filter, record should match');
+});
+
+test('phrase search namesMode=namesOnly requires at least one personal name in window', () => {
+  const recWithName = makeWordSearchRecord({
+    id: 'WITH_NAME',
+    norseWords: ['raised', '&quot;Þórr&quot;', 'sonr'],
+  });
+  const recNoName = makeWordSearchRecord({
+    id: 'NO_NAME',
+    norseWords: ['raised', 'Þórr', 'sonr'],
+  });
+  const rules = buildPhraseRule({
+    operator: 'contains',
+    normalization: 'Þórr sonr',
+    namesMode: 'namesOnly',
+  });
+  const result = doSearch(rules, [recWithName, recNoName]);
+  assert.is(result.length, 1, 'Only records with a personal name in the window should match');
+  assert.is(result[0].id, 'WITH_NAME');
+});
+
+test('combined norse+translit phrases must align at the same start index', () => {
+  const aligned = makeWordSearchRecord({
+    id: 'ALIGNED',
+    norseWords: ['raised', 'stone', 'in', 'memory'],
+    translitWords: ['raisti', 'stain', 'iR', 'miniR'],
+  });
+  const misaligned = makeWordSearchRecord({
+    id: 'MISALIGNED',
+    norseWords: ['raised', 'stone', 'in', 'memory', 'of'],
+    translitWords: ['iR', 'miniR', 'raisti', 'stain', 'X'],
+  });
+  const rules = buildPhraseRule({
+    operator: 'contains',
+    normalization: 'stone in',
+    transliteration: 'stain iR',
+  });
+  const result = doSearch(rules, [aligned, misaligned]);
+  assert.is(result.length, 1, 'Only the record where both phrases start at the same index matches');
+  assert.is(result[0].id, 'ALIGNED');
+  // Highlighted indices are the union of both windows (same range here)
+  assert.equal(result[0].matchDetails.wordIndices, [1, 2]);
+});
+
+test('phrase wordIndices are sorted and deduplicated across multiple windows', () => {
+  const rec = makeWordSearchRecord({
+    id: 'MULTI',
+    norseWords: ['a', 'b', 'c', 'a', 'b', 'd'],
+  });
+  const rules = buildPhraseRule({ operator: 'contains', normalization: 'a b' });
+  const result = doSearch(rules, [rec]);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [0, 1, 3, 4], 'Indices sorted, deduped across windows');
+});
+
+test('phrase numPersonalNames is deduplicated across overlapping windows', () => {
+  // Build a record where a single personal-name word participates in two
+  // overlapping phrase windows. With a 2-token "contains" phrase "a b":
+  //   - window [0,1]: 'a' ⊂ 'a', 'b' ⊂ '&quot;a/b&quot;'  → accepted
+  //   - window [1,2]: 'a' ⊂ '&quot;a/b&quot;', 'b' ⊂ 'b'  → accepted
+  // The personal-name word at index 1 appears in BOTH windows, but must
+  // only be counted once in numPersonalNames.
+  const rec = makeWordSearchRecord({
+    id: 'OVERLAP_NAME',
+    norseWords: ['a', '&quot;a/b&quot;', 'b'],
+  });
+  const rules = buildPhraseRule({ operator: 'contains', normalization: 'a b' });
+  const result = doSearch(rules, [rec]);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [0, 1, 2]);
+  assert.is(
+    result[0].matchDetails.numPersonalNames,
+    1,
+    'Personal name shared by overlapping windows is counted once'
+  );
+});
+
+test('phrase highlight spans a contiguous range via highlightWordsFromWordBoundaries', () => {
+  const str = 'raised the stone in memory of';
+  const boundaries = [];
+  let cursor = 0;
+  'raised the stone in memory of'.split(' ').forEach(word => {
+    const start = str.indexOf(word, cursor);
+    boundaries.push({ start, end: start + word.length, text: word });
+    cursor = start + word.length;
+  });
+  // Simulate a match on "in memory" → indices 3, 4
+  const matched = [3, 4];
+  const matchedBoundaries = boundaries.filter((_, i) => matched.includes(i));
+  const html = highlightWordsFromWordBoundaries(str, matchedBoundaries);
+  assert.is(
+    html,
+    'raised the stone <span class="highlight">in</span> <span class="highlight">memory</span> of',
+    'Both matched words are wrapped in highlight spans'
+  );
+});
+
+test('single-word query still works through the same code path (backwards compat)', () => {
+  const rec = makeWordSearchRecord({
+    id: 'SINGLE',
+    norseWords: ['raised', 'the', 'stone'],
+  });
+  const rules = buildPhraseRule({ operator: 'contains', normalization: 'stone' });
+  const result = doSearch(rules, [rec]);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.wordIndices, [2]);
+});
+
+// ── Inscription-level integration tests (Öl 1) ────────────────────────────────
+//
+// These tests use the real text of Öl 1 (Öland, Sweden) to demonstrate how to
+// search a specific inscription by its normalization / transliteration text
+// and verify the matched word indices and their character-level boundaries.
+//
+// Helper: given a plain-text string, split on whitespace runs and return both
+// the words and their {start, end, text} character offsets in the original
+// string. The main app computes boundaries via getWordBoundaries() over
+// HTML-escaped text, but for a search-behavior test this whitespace split is
+// sufficient and matches what doWordSearch operates on.
+function tokenizeWithBoundaries(text) {
+  const words = [];
+  const boundaries = [];
+  const re = /\S+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    words.push(m[0]);
+    boundaries.push({ start: m.index, end: m.index + m[0].length, text: m[0] });
+  }
+  return { words, boundaries };
+}
+
+// Build an inscription record with the minimum shape doWordSearch reads.
+function makeInscriptionFromTexts({ id, norseText, scandinavianText, translitText }) {
+  const norse = tokenizeWithBoundaries(norseText);
+  const scand = tokenizeWithBoundaries(scandinavianText);
+  const trans = tokenizeWithBoundaries(translitText);
+  return {
+    id,
+    signature_text: id,
+    normalisation_norse_words: norse.words,
+    normalisation_norse_word_boundaries: norse.boundaries,
+    normalisation_scandinavian_words: scand.words,
+    normalisation_scandinavian_word_boundaries: scand.boundaries,
+    transliteration_words: trans.words,
+    transliteration_word_boundaries: trans.boundaries,
+  };
+}
+
+const OL1_NORSE = '§A S[t]e[inn] [þe]ss[i] er settr eptir "Sibba "Góða/"Goða, son "Foldars, en hans liði setti at ... ... Folginn liggr hinns fylgðu, flestr vissi þat, mestar dæðir dolga "Þrúðar draugr í þessu haugi; munat "Reið-Viðurr ráða rógstarkr í "Danmôrku "[E]ndils jôrmungrundar ørgrandari landi. §B {In nomin[e](?) "Ie[su](?) ...}';
+const OL1_SCAND = '§A S[t]æ[inn] [sa]s[i] es sattr æftiR "Sibba "Goða/"Guða, sun "Fuldars, en hans liði satti at ... ... Fulginn liggR hinns fylgðu, flæstr vissi þat, mæstaR dæðiR dolga "ÞruðaR draugR i þæimsi haugi; munat "Ræið-Viðurr raða rogstarkR i "Danmarku "[Æ]ndils iarmungrundaR uRgrandaRi landi. §B {In nomin[e](?) "Ie[su](?) ...}';
+const OL1_TRANS = '§A + s-a... --(s)- i(a)s · satr · aiftir · si(b)(a) · kuþa · sun · fultars · in hons ·· liþi · sati · at · u · -ausa-þ-... +: fulkin : likr : hins : fulkþu : flaistr (:)· uisi · þat · maistar · taiþir : tulka · þruþar : traukr : i : þaimsi · huki · munat : raiþ:uiþur : raþa : ruk:starkr · i · tanmarku : --ntils : iarmun··kruntar : urkrontari : lonti §B {÷ IN| |NONIN- ¶ + HE... ...}';
+
+test('Öl 1 scandinavian: phrase "es sattr" contains-matches and highlights both words', () => {
+  const inscription = makeInscriptionFromTexts({
+    id: 'Öl 1',
+    norseText: OL1_NORSE,
+    scandinavianText: OL1_SCAND,
+    translitText: OL1_TRANS,
+  });
+
+  const rules = buildPhraseRule({
+    id: 'normalization_scandinavian_to_transliteration',
+    operator: 'contains',
+    normalization: 'es sattr',
+  });
+  const results = doSearch(rules, [inscription]);
+
+  // Did it match?
+  assert.is(results.length, 1, 'Öl 1 should match "es sattr"');
+
+  // Which word indices matched?
+  // After whitespace-tokenizing OL1_SCAND, "es" is index 3 and "sattr" is 4.
+  assert.equal(results[0].matchDetails.wordIndices, [3, 4]);
+
+  // What are the matched words' character boundaries inside the raw text?
+  const matchedBoundaries = results[0].normalisation_scandinavian_word_boundaries
+    .filter((_, i) => results[0].matchDetails.wordIndices.includes(i));
+  assert.is(matchedBoundaries.length, 2);
+  assert.is(matchedBoundaries[0].text, 'es');
+  assert.is(matchedBoundaries[1].text, 'sattr');
+  // Verify that slicing the raw text with those offsets yields the words.
+  assert.is(OL1_SCAND.slice(matchedBoundaries[0].start, matchedBoundaries[0].end), 'es');
+  assert.is(OL1_SCAND.slice(matchedBoundaries[1].start, matchedBoundaries[1].end), 'sattr');
+
+  // What the highlighted HTML would look like (main-page rendering path).
+  const html = highlightWordsFromWordBoundaries(OL1_SCAND, matchedBoundaries);
+  assert.ok(
+    html.includes('<span class="highlight">es</span> <span class="highlight">sattr</span>'),
+    'Highlight should wrap both matched words contiguously'
+  );
+});
+
+test('Öl 1 scandinavian: phrase "es satt" contains-matches (last token prefix of "sattr")', () => {
+  const inscription = makeInscriptionFromTexts({
+    id: 'Öl 1',
+    norseText: OL1_NORSE,
+    scandinavianText: OL1_SCAND,
+    translitText: OL1_TRANS,
+  });
+
+  const rules = buildPhraseRule({
+    id: 'normalization_scandinavian_to_transliteration',
+    operator: 'contains',
+    normalization: 'es satt',
+  });
+  const results = doSearch(rules, [inscription]);
+
+  // Phrase contains allows a prefix on the last token, the same way that
+  // single-word contains "sat" matches "sattr". So "es satt" matches
+  // "es sattr" at word indices [3, 4].
+  assert.is(results.length, 1, 'Öl 1 should match "es satt" under contains');
+  assert.equal(results[0].matchDetails.wordIndices, [3, 4]);
+
+  const matchedBoundaries = results[0].normalisation_scandinavian_word_boundaries
+    .filter((_, i) => results[0].matchDetails.wordIndices.includes(i));
+  assert.is(matchedBoundaries[0].text, 'es');
+  assert.is(matchedBoundaries[1].text, 'sattr',
+    'The whole matched word "sattr" is highlighted, not just the partial query "satt"');
+});
+
+test('Öl 1 scandinavian: phrase "es satt" does NOT equal-match (equal requires exact tokens)', () => {
+  const inscription = makeInscriptionFromTexts({
+    id: 'Öl 1',
+    norseText: OL1_NORSE,
+    scandinavianText: OL1_SCAND,
+    translitText: OL1_TRANS,
+  });
+
+  const rules = buildPhraseRule({
+    id: 'normalization_scandinavian_to_transliteration',
+    operator: 'equal',
+    normalization: 'es satt',
+  });
+  const results = doSearch(rules, [inscription]);
+
+  // equal requires strict token equality. "satt" != "sattr", so no match.
+  assert.is(results.length, 0, 'equal requires strict token equality');
+});
+
+test('Öl 1 scandinavian: phrase "es sattr" equal-matches (strict tokens)', () => {
+  const inscription = makeInscriptionFromTexts({
+    id: 'Öl 1',
+    norseText: OL1_NORSE,
+    scandinavianText: OL1_SCAND,
+    translitText: OL1_TRANS,
+  });
+
+  const rules = buildPhraseRule({
+    id: 'normalization_scandinavian_to_transliteration',
+    operator: 'equal',
+    normalization: 'es sattr',
+  });
+  const results = doSearch(rules, [inscription]);
+
+  assert.is(results.length, 1);
+  assert.equal(results[0].matchDetails.wordIndices, [3, 4]);
+});
+
+test('Öl 1 scandinavian: phrase "es satt" begins_with-matches (last token may be a prefix)', () => {
+  const inscription = makeInscriptionFromTexts({
+    id: 'Öl 1',
+    norseText: OL1_NORSE,
+    scandinavianText: OL1_SCAND,
+    translitText: OL1_TRANS,
+  });
+
+  const rules = buildPhraseRule({
+    id: 'normalization_scandinavian_to_transliteration',
+    operator: 'begins_with',
+    normalization: 'es satt',
+  });
+  const results = doSearch(rules, [inscription]);
+
+  // begins_with phrase semantics: tokens 0..N-2 must equal doc words exactly,
+  // and the last doc word must start with the last token. "sattr" starts with
+  // "satt", so the window [3, 4] matches.
+  assert.is(results.length, 1, 'Öl 1 should match "es satt" under begins_with');
+  assert.equal(results[0].matchDetails.wordIndices, [3, 4]);
+
+  const matchedBoundaries = results[0].normalisation_scandinavian_word_boundaries
+    .filter((_, i) => results[0].matchDetails.wordIndices.includes(i));
+  assert.is(matchedBoundaries[0].text, 'es');
+  assert.is(matchedBoundaries[1].text, 'sattr',
+    'Even though query is "satt", the whole matched word "sattr" is highlighted');
 });
 
 test.run();
