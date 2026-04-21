@@ -911,6 +911,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
     gViewModel.clearSearchResults();
+    $(`#${inpQueryBuilder}`).queryBuilder('reset');
   });
   const resultsIoTitle = document.getElementById('divResultsIoLabel');
   const resultsExportSection = document.getElementById('resultsExportSection');
