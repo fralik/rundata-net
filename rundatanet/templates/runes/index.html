@@ -340,20 +340,6 @@
             </a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="#" id="mHideMap">Hide Map</a></li>
-              <li>
-                <div class="dropdown-item">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
-                    <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div class="dropdown-item"><div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="" id="chkShowOriginalLocation" aria-label="Checkbox for showing original location">
-                  <label class="form-check-label" for="chkShowOriginalLocation">Show inscriptions based on original location</label>
-                </div></div>
-              </li>
             </ul>
           </li>
 
@@ -446,6 +432,17 @@
 
       <div id="mapDisplayWrapper" class="col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
         <div id="mapDisplay" class="my-fixed-height"></div>
+        <div class="border rounded p-2 mt-2">
+          <div class="small text-muted mb-2">Map filters</div>
+          <div class="form-check mb-1">
+            <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
+            <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="chkShowOriginalLocation" aria-label="Checkbox for showing original location">
+            <label class="form-check-label" for="chkShowOriginalLocation">Show inscriptions based on original location</label>
+          </div>
+        </div>
       </div>
     </div>
 
