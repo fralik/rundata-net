@@ -268,6 +268,24 @@
       .py-6 {
         padding-bottom: 9rem !important;
       }
+      .query-builder [data-delete="rule"],
+      .query-builder [data-delete="group"] {
+        display: none !important;
+      }
+      .query-builder .group-actions [data-add="rule"],
+      .query-builder .group-actions [data-add="group"] {
+        color: #fff !important;
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+      }
+      .query-builder .group-actions [data-add="rule"]:hover,
+      .query-builder .group-actions [data-add="group"]:hover,
+      .query-builder .group-actions [data-add="rule"]:focus,
+      .query-builder .group-actions [data-add="group"]:focus {
+        color: #fff !important;
+        background-color: #0b5ed7 !important;
+        border-color: #0a58ca !important;
+      }
 
     </style>
 
@@ -481,8 +499,7 @@
           <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
         </div>
         <button type="button" class="btn btn-success px-4" id="btnSearch">Search</button>
-        <button type="button" class="btn btn-default" id="btnResetSearch">Reset search</button>
-        <button type="button" class="btn btn-default" id="btnClearRules">Clear search parameters</button>
+        <button type="button" class="btn btn-danger" id="btnResetSearch">Delete search</button>
         <button type="button" class="btn btn-default" id="btnOpenImportId" data-bs-toggle="modal" data-bs-target="#modalResultsIo" data-results-mode="import">Import ID</button>
         <button type="button" class="btn btn-default" id="btnOpenExportResults" data-bs-toggle="modal" data-bs-target="#modalResultsIo" data-results-mode="export">Export</button>
       </div>
@@ -494,14 +511,14 @@
     </div>
     <div class="row mt-4 mb-3 pb-6">
       <div class="col-md-10 offset-md-1">
-        <div class="border rounded-3 p-3 bg-body-tertiary shadow-sm">
+        <div class="border border-warning rounded-3 p-3 bg-body-tertiary shadow-sm">
           <div class="small text-muted mb-2">Let the AI assistent help you with your search: write your question in any language</div>
           <div class="row g-2 align-items-start">
             <div class="col">
               <textarea id="searchTextInput" class="form-control" rows="4" placeholder="Enter search query here..."></textarea>
             </div>
             <div class="col-auto d-grid">
-              <button class="btn btn-success" type="button" id="btnText2Rules">Convert to search parameters</button>
+              <button class="btn btn-warning" type="button" id="btnText2Rules">Convert to search</button>
             </div>
           </div>
         </div>
@@ -939,10 +956,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const rules = JSON.parse($('#ruleIo').val());
     $(`#${inpQueryBuilder}`).queryBuilder('setRules', rules, true);
   });
-  document.getElementById('btnClearRules').addEventListener('click', function() {
-    $(`#${inpQueryBuilder}`).queryBuilder('reset');
-  });
-
   // Export Excel button handler
   document.getElementById('btnExportResults').addEventListener('click', function() {
     if (gExportInProgress) {
