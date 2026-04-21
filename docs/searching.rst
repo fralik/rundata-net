@@ -405,7 +405,7 @@ Several things should be kept in mind when performing searches across words:
 
 * Each input is interpreted as plain text (literal characters, stripped of editorial
   symbols by default). Regular expressions are not supported.
-* A single space separates two phrase tokens. Multiple spaces are treated as a single
+* Whitespace separates phrase tokens; runs of whitespace are treated as a single
   separator.
 * The logical NOT operator should not be used on word-search rules. Although the number
   of found inscriptions may be correct, the highlight mechanism will not work.
