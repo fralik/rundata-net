@@ -336,15 +336,6 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Map
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" id="mHideMap">Hide Map</a></li>
-            </ul>
-          </li>
-
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Import/Export
             </a>
             <ul class="dropdown-menu">
@@ -358,6 +349,9 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'runes:about' %}" target="_blank">About</a></li>
             <li class="nav-item"><a class="nav-link" href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+            <li class="nav-item d-flex align-items-center ms-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="mHideMap">Hide map</button>
+            </li>
           </ul>
         </form>
       </div>
@@ -423,17 +417,26 @@
     <div class="row">
       <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-fixed-height my-2 me-3 my-md-0 ms-md-2">
         <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
-        <div id="jstree" class="overflow-scroll h-100"></div>
+        <div id="jstree" class="overflow-scroll flex-grow-1"></div>
+        <div class="mt-2 small">
+          <div>Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
+          <div><span id="outNumWordsLabel">Number of words:</span> <span id="outNumWords">54852</span></div>
+          <div><span id="outNumFoundNamesLabel">Number of names:</span> <span id="outNumFoundNames">11318</span></div>
+        </div>
         <!--<input type="text" class="form-control" id="txtQuickSearch" placeholder="Quick inscription selection, just type ID">-->
       </div>
 
-      <div id="mainDisplay" class="col my-fixed-height overflow-scroll border my-2 me-3 my-md-0 ms-md-2" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="col my-2 me-3 my-md-0 ms-md-2">
+        <div id="mainDisplay" class="my-fixed-height overflow-scroll border" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <div class="mt-2">
+          <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#divFormatDialog">Choose what to show about each inscription</button>
+        </div>
       </div>
 
       <div id="mapDisplayWrapper" class="col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
         <div id="mapDisplay" class="my-fixed-height"></div>
         <div class="border rounded p-2 mt-2">
-          <div class="small text-muted mb-2">Map filters</div>
           <div class="form-check mb-1">
             <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
             <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
@@ -447,26 +450,11 @@
     </div>
 
     <div class="row">
-      <div class="col-md-auto">Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
-      <div class="col-md-auto"><span id="outNumWordsLabel">Number of words:</span> <span id="outNumWords">0</span></div>
-      <div class="col-md-auto"><span id="outNumFoundNamesLabel">Number of personal names:</span> <span id="outNumFoundNames">0</span></div>
-    </div>
-    <div class="row">
       <div class="col-xs-12">&nbsp;</div>
     </div>
 
-    <form class="row pb-1 vertical-align" role="group">
-      <div class="col-md-2">
-        Control buttons:
-      </div>
-      <div class="col" aria-label="">
-        <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#divFormatDialog">Choose what to show about each inscription</button>
-      </div>
-    </form>
-
-    <section class="row vertical-align">
-      <div class="col-md-2">Copy symbol to clipboard:</div>
-      <div class="col-md-10">
+    <div class="row py-3" role="group" aria-label="">
+      <div class="col d-flex flex-wrap align-items-start gap-2">
         <div class="btn-group flex-wrap" role="group">
           <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
           <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
@@ -487,36 +475,30 @@
           <button type="button" class="btn btn-default clip" id="btnOhakeSmall">ô</button>
           <button type="button" class="btn btn-default clip" id="btnOhakeCapital">Ô</button>
         </div>
-      </div>
-    </section>
-
-    <div class="row py-3" role="group" aria-label="">
-      <div class="col-auto col-md-3 offset-md-2">
-        <button type="button" class="col-md-12 btn btn-success" id="btnSearch">Search</button>
-      </div>
-      <div class="col-auto col-md-2">
-        <button type="button" class="col-md-12 btn btn-default" id="btnResetSearch">Reset search</button>
-      </div>
-      <div class="col-auto col-md-2">
-        <button type="button" class="btn btn-default col-md-12" id="btnClearRules">Clear search parameters</button>
-      </div>
-    </div>
-
-    <div class="row mb-3">
-      <div class="col-2">
-        <span>Enter your search in natural language. For example, 'Sök på alla inskrifter som i sin translitterering innehåller ordet stan'</span>
-      </div>
-      <div class="col">
-        <textarea id="searchTextInput" class="form-control" rows="4" placeholder="Enter search query here..."></textarea>
-      </div>
-      <div class="col-2">
-        <button class="btn btn-success" type="button" id="btnText2Rules">Convert to search parameters</button>
+        <button type="button" class="btn btn-success px-4" id="btnSearch">Search</button>
+        <button type="button" class="btn btn-default" id="btnResetSearch">Reset search</button>
+        <button type="button" class="btn btn-default" id="btnClearRules">Clear search parameters</button>
       </div>
     </div>
 
     <!-- pb-6 is our custom class to make more vertical space -->
-    <div class="row pb-6">
+    <div class="row">
       <div id="builder" class="col"></div>
+    </div>
+    <div class="row mt-4 mb-3 pb-6">
+      <div class="col-md-10 offset-md-1">
+        <div class="border rounded-3 p-3 bg-body-tertiary shadow-sm">
+          <div class="small text-muted mb-2">Let the AI assistent help you with your search: write your question in any language</div>
+          <div class="row g-2 align-items-start">
+            <div class="col">
+              <textarea id="searchTextInput" class="form-control" rows="4" placeholder="Enter search query here..."></textarea>
+            </div>
+            <div class="col-auto d-grid">
+              <button class="btn btn-success" type="button" id="btnText2Rules">Convert to search parameters</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
