@@ -168,6 +168,15 @@
         height: 500px;
         margin-bottom: 15px;
       }
+      .signatures-fixed-height {
+        max-height: 420px;
+        min-height: 420px;
+        height: 420px;
+      }
+      #mainDisplay {
+        padding: 5mm;
+        box-sizing: border-box;
+      }
       .jstree-scrollable {
         overflow-y: scroll;
         max-height: 100%;
@@ -334,14 +343,10 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Import/Export
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#containerRuleIo">
+              Search code
             </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#containerRuleIo">Search parameters</a></li>
-              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalResultsIo">Results</a></li>
-            </ul>
           </li>
         </ul>
         <form class="d-flex" role="about">
@@ -414,10 +419,10 @@
       <div class="col-md-4 p-0 bg-success">f</div>
     </div>-->
 
-    <div class="row">
-      <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-fixed-height my-2 me-3 my-md-0 ms-md-2">
+    <div class="row align-items-start">
+      <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-2 me-3 my-md-0 ms-md-2">
         <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
-        <div id="jstree" class="overflow-scroll flex-grow-1"></div>
+        <div id="jstree" class="overflow-scroll signatures-fixed-height"></div>
         <div class="mt-2 small">
           <div>Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
           <div><span id="outNumWordsLabel">Number of words:</span> <span id="outNumWords">54852</span></div>
@@ -478,6 +483,8 @@
         <button type="button" class="btn btn-success px-4" id="btnSearch">Search</button>
         <button type="button" class="btn btn-default" id="btnResetSearch">Reset search</button>
         <button type="button" class="btn btn-default" id="btnClearRules">Clear search parameters</button>
+        <button type="button" class="btn btn-default" id="btnOpenImportId" data-bs-toggle="modal" data-bs-target="#modalResultsIo" data-results-mode="import">Import ID</button>
+        <button type="button" class="btn btn-default" id="btnOpenExportResults" data-bs-toggle="modal" data-bs-target="#modalResultsIo" data-results-mode="export">Export</button>
       </div>
     </div>
 
@@ -608,17 +615,17 @@
         </div>
 
         <div class="modal-body">
-          <div class="row">
+          <div class="row" id="resultsExportSection">
             <div class="col-xs-offset-1 col-xs-10">
               <p>Export search results in Excel format by clicking <em>Export</em> button bellow.<br>Read more about exporting <a href="https://rundata-net.readthedocs.io/en/latest/getting-started/user_guide.html#importing-and-exporting-results">in the documentation</a>.</p>
               <button type="button" class="col-xs-3 btn btn-default" id="btnExportResults"><b>Export search results</b></button>
             </div>
           </div>
-          <div class="row">
+          <div class="row" id="resultsIoDivider">
             <div class="col-xs-12"><hr></div>
           </div>
 
-          <div class="row">
+          <div class="row" id="resultsImportSection">
             <div id="drop-area" class="col-xs-10 col-xs-offset-1">
               <form class="my-form" id="form-signature-import">
                 <div class="form-group">
@@ -888,6 +895,40 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnResetSearch').addEventListener('click', function() {
     gViewModel.clearSearchResults();
   });
+  const resultsIoTitle = document.getElementById('divResultsIoLabel');
+  const resultsExportSection = document.getElementById('resultsExportSection');
+  const resultsImportSection = document.getElementById('resultsImportSection');
+  const resultsIoDivider = document.getElementById('resultsIoDivider');
+  const resultsIoModal = document.getElementById('modalResultsIo');
+
+  function setResultsIoMode(mode) {
+    const selectedMode = mode || 'both';
+    if (selectedMode === 'import') {
+      resultsIoTitle.textContent = 'Import signatures';
+      resultsExportSection.style.display = 'none';
+      resultsImportSection.style.display = '';
+      resultsIoDivider.style.display = 'none';
+      return;
+    }
+    if (selectedMode === 'export') {
+      resultsIoTitle.textContent = 'Export search results';
+      resultsExportSection.style.display = '';
+      resultsImportSection.style.display = 'none';
+      resultsIoDivider.style.display = 'none';
+      return;
+    }
+    resultsIoTitle.textContent = 'Export search results, import signatures';
+    resultsExportSection.style.display = '';
+    resultsImportSection.style.display = '';
+    resultsIoDivider.style.display = '';
+  }
+
+  resultsIoModal.addEventListener('show.bs.modal', function(event) {
+    const trigger = event.relatedTarget;
+    const requestedMode = trigger ? trigger.getAttribute('data-results-mode') : null;
+    setResultsIoMode(requestedMode);
+  });
+
   document.getElementById('btnRulesExport').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
     if (!$.isEmptyObject(rules)) {
