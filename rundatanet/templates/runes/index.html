@@ -648,7 +648,7 @@
                 <div class="form-group">
                   <p>Import file with signatures by dragging and dropping it in highlighted area or by selecting it. Read more about the possible file formats <a href="https://rundata-net.readthedocs.io/en/latest/getting-started/user_guide.html#importing-and-exporting-results">in the documentation</a>.</p>
                   <label for="fileElem" class="button">Select a file</label>
-                  <input type="file" id="fileElem">
+                  <input type="file" id="fileElem" accept=".csv,.txt,.xlsx,.xls,.ods">
                 </div>
               </form>
             </div>
@@ -715,6 +715,7 @@ function isSafari() {
 <!-- end of query builder js -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script type="text/javascript" src="{% static 'runes/index.min.js' %}"></script>
 
