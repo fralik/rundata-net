@@ -207,4 +207,16 @@ test('getPhraseMatchFunction returns empty for empty query', () => {
   assert.equal(fn(['a', 'b'], '   '), []);
 });
 
+test('getPhraseMatchFunction returns empty when any prepared query token is empty', () => {
+  const fnInc = getPhraseMatchFunction('includes');
+  const fnBeg = getPhraseMatchFunction('beginsWith');
+  const fnEnd = getPhraseMatchFunction('endsWith');
+  const words = ['alpha', 'beta'];
+
+  assert.equal(fnInc(words, '"'), []);
+  assert.equal(fnInc(words, 'alpha "'), []);
+  assert.equal(fnBeg(words, '" beta'), []);
+  assert.equal(fnEnd(words, 'alpha "'), []);
+});
+
 test.run();

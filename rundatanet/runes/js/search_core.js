@@ -231,7 +231,12 @@ export function getPhraseMatchFunction(searchMode, options = {}) {
     const tokens = splitPhraseTokens(query).map(prepareString);
     const windows = [];
     const n = tokens.length;
-    if (n === 0 || !Array.isArray(docWords) || docWords.length < n) {
+    if (
+      n === 0 ||
+      tokens.some(token => token.length === 0) ||
+      !Array.isArray(docWords) ||
+      docWords.length < n
+    ) {
       return windows;
     }
 
