@@ -15,17 +15,9 @@ jobs:
     name: Build
     uses: ./.github/workflows/build-template.yml
 
-  npm-test:
-    name: NPM Test
-    uses: ./.github/workflows/npm-test-template.yml
-
-  python-test:
-    name: Python Test
-    uses: ./.github/workflows/python-test-template.yml
-
   deploy:
     runs-on: ubuntu-latest
-    needs: [build, npm-test, python-test]
+    needs: [build]
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}

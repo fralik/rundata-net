@@ -5,7 +5,11 @@
 gevent==23.9.1 # https://pypi.org/project/gevent
 gunicorn==21.2.0  # https://github.com/benoitc/gunicorn
 #boto3==1.6.2  # pyup: update minor  # https://github.com/boto/boto3
-psycopg2==2.9.9  # https://github.com/psycopg/psycopg2
+# Use psycopg2-binary (manylinux wheel) so the venv is portable across glibc versions.
+# Shipping a source-built psycopg2 from the GitHub runner (Ubuntu 24.04, glibc 2.39)
+# to the App Service Linux Python image (older glibc) fails at import time with
+# `GLIBC_2.38' not found`.
+psycopg2-binary==2.9.9  # https://github.com/psycopg/psycopg2
 mysqlclient==2.2.1 # https://pypi.org/project/mysqlclient/
 
 # Django
