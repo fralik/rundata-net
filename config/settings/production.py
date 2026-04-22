@@ -169,6 +169,13 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 # This adds `run_gunicorn` command to `./manage.py`.
 INSTALLED_APPS += ["gunicorn"]  # noqa F405
 
+# InternalHealthCheckMiddleware
+# ------------------------------------------------------------------------------
+# Short-circuit Azure App Service internal probes (link-local 169.254.x.x and
+# similar) with a 200 OK before any other middleware runs. Azure rotates these
+# IPs periodically, so maintaining them in ALLOWED_HOSTS is not viable.
+MIDDLEWARE.insert(0, "rundatanet.runes.middleware.InternalHealthCheckMiddleware")  # noqa F405
+
 # CanonicalDomainMiddleware
 # ------------------------------------------------------------------------------
 # Redirect all non-canonical hostnames to the canonical domain. Placed here so
@@ -178,7 +185,7 @@ try:
     index = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
     MIDDLEWARE.insert(index, "rundatanet.runes.middleware.CanonicalDomainMiddleware")
 except ValueError:
-    MIDDLEWARE.insert(0, "rundatanet.runes.middleware.CanonicalDomainMiddleware")  # noqa F405
+    MIDDLEWARE.insert(1, "rundatanet.runes.middleware.CanonicalDomainMiddleware")  # noqa F405
 
 # WhiteNoise
 # ------------------------------------------------------------------------------
