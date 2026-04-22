@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 //import Database from 'better-sqlite3';
-import { convertDbToKeyMap, fetchAllImages, makeImagesMarkup } from '../../runes/js/index_scripts.js';
+import { convertDbToKeyMap, fetchAllImages, makeImagesMarkup, highlightSubstringRanges } from '../../runes/js/index_scripts.js';
 import { mockDb } from './mockDb.js';
 
 test('convertDbToKeyMap() function', async () => {
@@ -43,6 +43,94 @@ test('makeImagesMarkup() function', async () => {
   const results = makeImagesMarkup(images);
   assert.is(results.directImages, expectedDirect, `The direct images markup should be: ${expectedDirect}`);
   assert.is(results.indirectImages, '', `The indirect images markup should be empty when no indirect-only images exist`);
+});
+
+// ---------------------------------------------------------------------------
+// Tests for highlightSubstringRanges
+// ---------------------------------------------------------------------------
+
+test('highlightSubstringRanges wraps a single range and escapes surrounding text', () => {
+  const str = 'raised this stone';
+  const result = highlightSubstringRanges(str, [[12, 17]]);
+  assert.is(result, 'raised this <span class="highlight">stone</span>');
+});
+
+test('highlightSubstringRanges supports multiple non-overlapping ranges', () => {
+  const str = 'the stone and the stone';
+  const ranges = [[4, 9], [18, 23]];
+  const result = highlightSubstringRanges(str, ranges);
+  assert.is(
+    result,
+    'the <span class="highlight">stone</span> and the <span class="highlight">stone</span>'
+  );
+});
+
+test('highlightSubstringRanges merges overlapping ranges', () => {
+  const str = 'abcdefghij';
+  // [2,6)=cdef, [4,8)=efgh — overlapping → merged [2,8)=cdefgh
+  const ranges = [[2, 6], [4, 8]];
+  const result = highlightSubstringRanges(str, ranges);
+  assert.is(result, 'ab<span class="highlight">cdefgh</span>ij');
+});
+
+test('highlightSubstringRanges merges adjacent ranges', () => {
+  const str = 'abcdef';
+  const ranges = [[0, 2], [2, 4]]; // adjacent → merged [0,4)
+  const result = highlightSubstringRanges(str, ranges);
+  assert.is(result, '<span class="highlight">abcd</span>ef');
+});
+
+test('highlightSubstringRanges sorts unsorted ranges', () => {
+  const str = 'one two three';
+  // Supplied in reverse order; should still render correctly.
+  const ranges = [[8, 13], [0, 3]];
+  const result = highlightSubstringRanges(str, ranges);
+  assert.is(
+    result,
+    '<span class="highlight">one</span> two <span class="highlight">three</span>'
+  );
+});
+
+test('highlightSubstringRanges escapes HTML inside and outside the matched range', () => {
+  const str = '<b>stone</b> & <i>hammer</i>';
+  // Highlight the substring "stone" (chars 3..8).
+  const result = highlightSubstringRanges(str, [[3, 8]]);
+  assert.is(
+    result,
+    '&lt;b&gt;<span class="highlight">stone</span>&lt;&#x2F;b&gt; &amp; &lt;i&gt;hammer&lt;&#x2F;i&gt;'
+  );
+});
+
+test('highlightSubstringRanges with no ranges returns the escaped string', () => {
+  const str = '<stone>';
+  assert.is(highlightSubstringRanges(str, []), '&lt;stone&gt;');
+});
+
+test('highlightSubstringRanges clamps out-of-bound ranges', () => {
+  const str = 'abcdef';
+  // [-2,2) → clamped to [0,2); [4,999) → clamped to [4,6)
+  const ranges = [[-2, 2], [4, 999]];
+  const result = highlightSubstringRanges(str, ranges);
+  assert.is(
+    result,
+    '<span class="highlight">ab</span>cd<span class="highlight">ef</span>'
+  );
+});
+
+test('highlightSubstringRanges drops invalid (zero/negative-length) ranges', () => {
+  const str = 'abcdef';
+  const ranges = [[3, 3], [5, 2], [1, 2]];
+  const result = highlightSubstringRanges(str, ranges);
+  assert.is(result, 'a<span class="highlight">b</span>cdef');
+});
+
+test('highlightSubstringRanges handles null and undefined input', () => {
+  assert.is(highlightSubstringRanges(null, [[0, 1]]), '');
+  assert.is(highlightSubstringRanges(undefined, [[0, 1]]), '');
+});
+
+test('highlightSubstringRanges handles empty string input', () => {
+  assert.is(highlightSubstringRanges('', [[0, 5]]), '');
 });
 
 test.run();

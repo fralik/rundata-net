@@ -1,5 +1,12 @@
+/**
+ * EDA-page helpers. Source file bundled by rollup into
+ * `rundatanet/static/runes/eda.min.js` and exposed on `window` by
+ * `eda.js` (the bundle entry).
+ */
+import { isPersonalName } from './search_core.js';
+
 // Debounce function
-function debounce(func, wait) {
+export function debounce(func, wait) {
   let timeout;
   return function(...args) {
     clearTimeout(timeout);
@@ -14,7 +21,7 @@ function debounce(func, wait) {
 // {start: num, end: num, text: string, isPersonal: 0|1}
 // Arguments:
 //   str - search string
-function getWordBoundaries(str, sourceIsEscaped = false) {
+export function getWordBoundaries(str, sourceIsEscaped = false) {
   // regex used to detect word boundaries
   const wordBoundariesSource = "((\\s+|^(·|:|×|¤|'|\\+|÷|¶))(·|:|×|¤|'|\\+|÷|¶){0,1}\\s*)";
   // the reason it is written so complex via | is because we can do html escaping on that string
@@ -89,7 +96,7 @@ function getWordBoundaries(str, sourceIsEscaped = false) {
 }
 
 // Utility function to get display name for a field
-function getFieldDisplayName(fieldName) {
+export function getFieldDisplayName(fieldName) {
   switch (fieldName) {
     case 'signature_text':
       return 'Signature';
@@ -104,7 +111,7 @@ function getFieldDisplayName(fieldName) {
   }
 }
 
-function escapeHtml(string) {
+export function escapeHtml(string) {
   const entityMap = {
     '&': '&amp;',
     '<': '&lt;',
@@ -119,26 +126,4 @@ function escapeHtml(string) {
   return String(string).replace(/[&<>"'`=\/]/g, function (s) {
     return entityMap[s];
   });
-}
-
-function highlightWordsFromWordBoundaries(str, wordBoundaries) {
-  // Sort the indices to ensure they are processed in the correct order
-  wordBoundaries.sort((a, b) => a.start - b.start);
-
-  let highlightedStr = '';
-  let lastIndex = 0;
-
-  wordBoundaries.forEach(({start, end, text}) => {
-    // Append the part of the string before the current word
-    highlightedStr += str.slice(lastIndex, start);
-    // Wrap the word in a <span> tag and append it
-    highlightedStr += `<span class="highlight">${str.slice(start, end)}</span>`;
-    // Update the lastIndex to the end of the current word
-    lastIndex = end;
-  });
-
-  // Append the remaining part of the string after the last word
-  highlightedStr += str.slice(lastIndex);
-
-  return highlightedStr;
 }

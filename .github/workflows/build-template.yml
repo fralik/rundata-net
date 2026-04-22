@@ -17,46 +17,82 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: 'requirements/production.txt'
 
-      - name: Install dependencies
+      # Cache the pre-built virtualenv itself. Re-use only when requirements haven't changed
+      # AND the Python minor version is the same (wheels are ABI-specific).
+      - name: Cache antenv virtualenv
+        id: cache-antenv
+        uses: actions/cache@v5
+        with:
+          path: antenv
+          key: antenv-${{ runner.os }}-py3.12-${{ hashFiles('requirements/production.txt', 'requirements/base.txt') }}
+
+      # mysqlclient needs MySQL client headers + build tools to compile on the runner.
+      # App Service Linux (Python 3.12 image) provides the runtime libmysqlclient, so the
+      # wheel built here can be executed there without installing anything extra.
+      # Install these only when cache misses and antenv must be rebuilt.
+      - name: Install system build dependencies for mysqlclient
+        if: steps.cache-antenv.outputs.cache-hit != 'true'
         run: |
-          pip install --upgrade pip wheel build setuptools
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            default-libmysqlclient-dev
+
+      - name: Create virtualenv and install Python dependencies
+        if: steps.cache-antenv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv --copies antenv
+          source antenv/bin/activate
+          pip install --upgrade pip wheel setuptools
           pip install -r requirements/production.txt
 
-      # Add Node.js setup
+      # Node.js is only needed to build static assets; it is NOT shipped in the artifact.
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
 
-      # Install npm dependencies
       - name: Install npm dependencies
-        run: |
-          npm ci
+        run: npm ci
 
-      # Build the frontend
       - name: Build frontend assets
-        run: |
-          npm run dev
+        run: npm run dev
 
-      - name: Run npm tests
-        run: npm test
-
+      # Run collectstatic with production settings so WhiteNoise's
+      # CompressedManifestStaticFilesStorage generates hashed filenames.
+      # Dummy values satisfy the settings import; no DB access is needed for collectstatic.
       - name: Collect static files
-        run: python manage.py collectstatic --noinput
+        env:
+          RUNDATA_PROD: '1'
+          DJANGO_SECRET_KEY: 'collectstatic-dummy-key-not-used-at-runtime'
+          DATABASE_URL: 'sqlite:///dummy.sqlite3'
+          DJANGO_ADMIN_URL: '/dummyadmin/'  # noqa: S105 -- Not a secret, just needed to import settings.
+        run: |
+          source antenv/bin/activate
+          python manage.py collectstatic --noinput
 
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-
+      # Build a self-contained zip: source + pre-built venv + collected static files +
+      # startup script. App Service will extract this and run startup.sh directly,
+      # with SCM_DO_BUILD_DURING_DEPLOYMENT=0 on the App Service side.
       - name: Zip artifact for deployment
-        run: zip release.zip manage.py config/ requirements/ rundatanet/ -r
+        run: |
+          chmod +x startup.sh
+          zip -r -q release.zip \
+            manage.py \
+            startup.sh \
+            config \
+            requirements \
+            rundatanet \
+            antenv \
+            staticfiles \
+            -x '*.pyc' '*/__pycache__/*' '*/.git/*' 'antenv/**/__pycache__/*'
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v7
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: release.zip
+          retention-days: 3

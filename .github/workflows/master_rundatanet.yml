@@ -17,20 +17,25 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build]
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
+    # One-time Azure App Service configuration required for this deploy flow
+    # (set via Portal → Configuration, or `az webapp config ...`):
+    #   * App settings:
+    #       SCM_DO_BUILD_DURING_DEPLOYMENT = 0   (disable Oryx build; artifact already contains antenv/)
+    #       POST_BUILD_COMMAND             = (remove; migrate now runs from startup.sh)
+    #   * General settings:
+    #       Startup Command                = startup.sh
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v8
         with:
           name: python-app
 
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-
+      # Deploy the zip directly; no need to unpack it on the runner.
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -38,3 +43,4 @@ jobs:
           app-name: 'rundatanet'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9BC9A973904F4593A99A1038DE223027 }}
+          package: release.zip
