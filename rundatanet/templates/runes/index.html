@@ -482,8 +482,9 @@
         <div id="jstree" class="overflow-scroll signatures-fixed-height"></div>
         <div class="mt-2 small">
           <div>Number of inscriptions: <span id="outNumSignaturesFound">6815</span></div>
-          <div><span id="outNumWordsLabel">Number of words:</span> <span id="outNumWords">54852</span></div>
-          <div><span id="outNumFoundNamesLabel">Number of names:</span> <span id="outNumFoundNames">11318</span></div>
+          <div id="statsWordsRow"><span id="outNumWordsLabel">Number of words:</span> <span id="outNumWords">54852</span></div>
+          <div id="statsNamesRow"><span id="outNumFoundNamesLabel">Number of names:</span> <span id="outNumFoundNames">11318</span></div>
+          <div id="statsTokensRow" style="display:none;"><span id="outNumTokensLabel">Number of words:</span> <span id="outNumTokens">0</span></div>
         </div>
         <!--<input type="text" class="form-control" id="txtQuickSearch" placeholder="Quick inscription selection, just type ID">-->
       </div>
@@ -768,6 +769,25 @@ let gMarkersLayer = null;
 let inpQueryBuilder = "builder";
 let gViewModel = null; // Global view model for the runic inscriptions
 let gExportInProgress = false;
+let gTranslationOccurrenceCount = null;
+
+function applyStatsDisplayMode() {
+  const wordsRow = document.getElementById('statsWordsRow');
+  const namesRow = document.getElementById('statsNamesRow');
+  const tokensRow = document.getElementById('statsTokensRow');
+
+  if (gTranslationOccurrenceCount !== null) {
+    wordsRow.style.display = 'none';
+    namesRow.style.display = 'none';
+    tokensRow.style.display = '';
+    document.getElementById('outNumTokens').textContent = gTranslationOccurrenceCount;
+    return;
+  }
+
+  wordsRow.style.display = '';
+  namesRow.style.display = '';
+  tokensRow.style.display = 'none';
+}
 
 function getCrossUrl(crossName) {
   // It is important that staticBase is written in a file that is processed by the back-end.
@@ -944,12 +964,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    const hasTranslationWordSearch = getTranslationSearchTokenCount(rules) > 0;
     const results = doSearch(rules, gViewModel.getAllInscriptions().values());
+    gTranslationOccurrenceCount = hasTranslationWordSearch ? getTranslationOccurrenceCount(results) : null;
     //console.log(`Got ${results.length} results`);
     gViewModel.setSearchResults(results);
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
+    gTranslationOccurrenceCount = null;
     gViewModel.clearSearchResults();
     $(`#${inpQueryBuilder}`).queryBuilder('reset');
   });
@@ -1071,6 +1094,7 @@ document.addEventListener('DOMContentLoaded', function() {
     $('#jstree').jstree(true).refresh(false, true);
     showMarkersWrapper();
     calcWordsAndPersonalNames(data.model.getActiveInscriptions());
+    applyStatsDisplayMode();
   });
 
   initDragAndDrop();

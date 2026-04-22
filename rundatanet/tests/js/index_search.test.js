@@ -1,11 +1,96 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { doSearch, stripSpecialSymbols, getWordSearchFunction } from '../../runes/js/index_search.js';
+import { doSearch, stripSpecialSymbols, getWordSearchFunction, getTranslationSearchTokens, getTranslationSearchTokenCount, getTranslationOccurrenceCount } from '../../runes/js/index_search.js';
 import { mockDb } from './mockDb.js';
 import { convertDbToKeyMap, highlightWordsFromWordBoundaries } from '../../runes/js/index_scripts.js';
 
 // Process mockDb once at the module level
 const dbMap = convertDbToKeyMap(mockDb);
+
+test('getTranslationSearchTokens collects tokens from English/Swedish translation rules', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'english_translation',
+        field: 'english_translation',
+        operator: 'contains',
+        value: 'king stone',
+      },
+      {
+        id: 'swedish_translation',
+        field: 'swedish_translation',
+        operator: 'begins_with',
+        value: 'sten, konung',
+      },
+      {
+        id: 'signature_text',
+        field: 'signature_text',
+        operator: 'contains',
+        value: 'DR',
+      }
+    ],
+    valid: true
+  };
+
+  const tokens = getTranslationSearchTokens(rules);
+  assert.equal(tokens, ['king', 'stone', 'sten', 'konung']);
+  assert.is(getTranslationSearchTokenCount(rules), 4);
+});
+
+test('getTranslationSearchTokens ignores valueless translation operators', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'english_translation',
+        field: 'english_translation',
+        operator: 'is_not_empty',
+        value: null,
+      },
+      {
+        id: 'swedish_translation',
+        field: 'swedish_translation',
+        operator: 'is_empty',
+        value: null,
+      }
+    ],
+    valid: true
+  };
+
+  assert.equal(getTranslationSearchTokens(rules), []);
+  assert.is(getTranslationSearchTokenCount(rules), 0);
+});
+
+test('getTranslationOccurrenceCount sums translation field match ranges', () => {
+  const mockResults = [
+    {
+      matchDetails: {
+        fieldRanges: {
+          english_translation: [[0, 4], [10, 14]],
+          swedish_translation: [[2, 6]],
+        }
+      }
+    },
+    {
+      matchDetails: {
+        fieldRanges: {
+          english_translation: [[1, 5]],
+        }
+      }
+    },
+    {
+      matchDetails: {
+        fieldRanges: {
+          signature_text: [[0, 2]],
+        }
+      }
+    },
+    {}
+  ];
+
+  assert.is(getTranslationOccurrenceCount(mockResults), 4);
+});
 
 // Test suite for highlightWordsFromWordBoundaries function
 test('highlightWordsFromWordBoundaries with single word', () => {

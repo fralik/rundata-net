@@ -642,6 +642,77 @@ const customSearchFunctions = {
   swedish_translation: buildTranslationSearchFunctions('swedish_translation'),
 };
 
+const TRANSLATION_FIELDS = new Set(['english_translation', 'swedish_translation']);
+const VALUELESS_OPERATORS = new Set(['is_empty', 'is_not_empty', 'is_null', 'is_not_null']);
+
+function trimToken(token) {
+  return String(token || '').replace(/^[\s"'`.,;:!?()[\]{}<>]+|[\s"'`.,;:!?()[\]{}<>]+$/g, '');
+}
+
+function collectTokensFromRuleValue(value, outputMap) {
+  if (value === null || value === undefined) return;
+  if (Array.isArray(value)) {
+    value.forEach(v => collectTokensFromRuleValue(v, outputMap));
+    return;
+  }
+  if (typeof value === 'object') {
+    Object.values(value).forEach(v => collectTokensFromRuleValue(v, outputMap));
+    return;
+  }
+  const tokens = splitPhraseTokens(String(value)).map(trimToken).filter(Boolean);
+  tokens.forEach(token => {
+    const key = token.toLowerCase();
+    if (!outputMap.has(key)) {
+      outputMap.set(key, token);
+    }
+  });
+}
+
+function traverseTranslationRules(group, outputMap) {
+  if (!group || !Array.isArray(group.rules)) return;
+  group.rules.forEach(rule => {
+    if (rule && Array.isArray(rule.rules)) {
+      traverseTranslationRules(rule, outputMap);
+      return;
+    }
+    if (!rule || !TRANSLATION_FIELDS.has(rule.id)) return;
+    if (VALUELESS_OPERATORS.has(rule.operator)) return;
+    collectTokensFromRuleValue(rule.value, outputMap);
+  });
+}
+
+export function getTranslationSearchTokens(rules) {
+  const tokenMap = new Map();
+  traverseTranslationRules(rules, tokenMap);
+  return Array.from(tokenMap.values());
+}
+
+export function getTranslationSearchTokenCount(rules) {
+  return getTranslationSearchTokens(rules).length;
+}
+
+export function getTranslationOccurrenceCount(searchResults) {
+  if (!Array.isArray(searchResults)) {
+    return 0;
+  }
+
+  let totalOccurrences = 0;
+  for (const result of searchResults) {
+    const rangesByField = result?.matchDetails?.fieldRanges;
+    if (!rangesByField || typeof rangesByField !== 'object') {
+      continue;
+    }
+    ['english_translation', 'swedish_translation'].forEach(fieldName => {
+      const ranges = rangesByField[fieldName];
+      if (Array.isArray(ranges)) {
+        totalOccurrences += ranges.length;
+      }
+    });
+  }
+
+  return totalOccurrences;
+}
+
 
 
 /**
