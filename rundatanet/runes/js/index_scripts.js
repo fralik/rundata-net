@@ -991,9 +991,16 @@ export function inscriptions2markup(inscriptions) {
 
         if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails !== null && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
           const entryWordBoundaries = inscriptionData[`${columnName}_word_boundaries`];
-          const matchedWords = inscriptionData.matchDetails.wordIndices;
-          const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
-          columnData = highlightWordsFromWordBoundaries(columnData, matchedWordBoundaries);
+          // Word-indices highlighting only applies to columns that were pre-split into
+          // word boundaries (transliteration / normalisation_*). Translation columns
+          // are also `highlight: true` but have no `_word_boundaries`, so skip them
+          // to avoid TypeError on undefined.filter (see issue: normalization search
+          // crash "can't access property 'filter', e is undefined").
+          if (Array.isArray(entryWordBoundaries)) {
+            const matchedWords = inscriptionData.matchDetails.wordIndices;
+            const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
+            columnData = highlightWordsFromWordBoundaries(columnData, matchedWordBoundaries);
+          }
         }
       }
 
