@@ -546,18 +546,35 @@ export function makeImagesMarkup(signatureImageLinks) {
   let directImages = "";
   let indirectImages = "";
 
+  const escapeHtml = function (value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  };
+
+  const imageSourceLabel = function (url) {
+    try {
+      const hostname = (new URL(url)).hostname.replace(/^www\./, "");
+      return hostname || url;
+    } catch {
+      return url;
+    }
+  };
+
   // make image gallery of direct image links
   const galleryLinks = signatureImageLinks.links.slice(0, 9);
   const offsetIndirectImages = galleryLinks.length;
 
-  directImages = '<div class="container-fluid"><div class="row">';
-  galleryLinks.map(function (v, i) {
-    if (i % 3 == 0 && i !== 0) {
-      directImages += "</div><div class='row'>";
-    }
-    directImages += `<div class="col-md-4"><a href="${v.indirect}" contentEditable="false" target="_blank"><img src="${v.direct}" class="img-responsive"></a></div>`;
+  directImages = '<div class="rundata-image-gallery">';
+  galleryLinks.map(function (v) {
+    const indirectUrl = escapeHtml(v.indirect);
+    const directUrl = escapeHtml(v.direct);
+    const sourceLabel = escapeHtml(imageSourceLabel(v.indirect));
+    directImages += `<figure class="rundata-image-item"><a href="${indirectUrl}" contentEditable="false" target="_blank" class="rundata-image-link"><img src="${directUrl}" class="rundata-image-avatar" alt="Inscription image"></a><figcaption class="rundata-image-source">source: <a href="${indirectUrl}" contentEditable="false" target="_blank">${sourceLabel}</a></figcaption></figure>`;
   });
-  directImages += '</div></div>';
+  directImages += '</div>';
 
   const indirectImagesLinks = signatureImageLinks.links.slice(offsetIndirectImages);
   if (indirectImagesLinks.length > 0) {
@@ -875,18 +892,20 @@ export function inscriptions2markup(inscriptions) {
           // early stop if no headers and no images
           continue;
         }
-        if (inscriptionData['directImages'].length == 0 && inscriptionData['indirectImages'].length > 0) {
+        if (inscriptionData['directImages'].length > 0) {
+          paragraph += inscriptionData['directImages'];
+          if (inscriptionData['indirectImages'].length > 0) {
+            // add image links as they have not been added yet
+            paragraph += '<br>' + inscriptionData['indirectImages'];
+          }
+          continue;
+        }
+        if (inscriptionData['indirectImages'].length > 0) {
           paragraph += inscriptionData['indirectImages'];
           continue;
         }
-        paragraph += inscriptionData['directImages'];
-        if (inscriptionData['indirectImages'].length > 0) {
-          // add image links as they have not been added yet
-          paragraph += '<br>' + inscriptionData['indirectImages'];
-        } else {
-          if (showHeaders) {
-            paragraph += '<i>No images.</i>';
-          }
+        if (showHeaders) {
+          paragraph += '<i>No images.</i>';
         }
 
         continue;
@@ -1109,4 +1128,3 @@ export function hideLoading() {
 export function closeResultsIoModal() {
   $('#modalResultsIo').modal('hide');
 }
-
