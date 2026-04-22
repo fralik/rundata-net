@@ -144,12 +144,14 @@ export const schemaFieldsInfo = [
     text: {
       en: 'Translation to English',
     },
+    highlight: true,
   },
   {
     schemaName: 'swedish_translation',
     text: {
       en: 'Translation to Swedish',
-    }
+    },
+    highlight: true,
   },
   {
     schemaName: 'transliteration',
@@ -756,6 +758,77 @@ function escapeHtml(string) {
   });
 }
 
+/**
+ * Highlight whole words in a string given their pre-computed character
+ * boundaries. Used for word-aligned fields (transliteration and the two
+ * normalisations). The boundaries are sorted in-place before rendering.
+ *
+ * @param {string} str - The (already HTML-escaped) string to render.
+ * @param {Array<{start: number, end: number, text: string}>} wordBoundaries
+ * @returns {string} The string with matched words wrapped in highlight spans.
+ */
+export function highlightWordsFromWordBoundaries(str, wordBoundaries) {
+  // Sort the indices to ensure they are processed in the correct order
+  wordBoundaries.sort((a, b) => a.start - b.start);
+
+  let highlightedStr = '';
+  let lastIndex = 0;
+
+  wordBoundaries.forEach(({start, end, text}) => {
+    // Append the part of the string before the current word
+    highlightedStr += str.slice(lastIndex, start);
+    // Wrap the word in a <span> tag and append it
+    highlightedStr += `<span class="highlight">${str.slice(start, end)}</span>`;
+    // Update the lastIndex to the end of the current word
+    lastIndex = end;
+  });
+
+  // Append the remaining part of the string after the last word
+  highlightedStr += str.slice(lastIndex);
+
+  return highlightedStr;
+}
+
+/**
+ * Highlight substring ranges in a raw (un-escaped) string, producing an
+ * HTML-safe string with `<span class="highlight">...</span>` around each
+ * matched range. Non-highlight text is HTML-escaped via `escapeHtml`;
+ * highlight content is also escaped before being wrapped.
+ *
+ * @param {string} rawStr - Original (un-escaped) field value.
+ * @param {Array<[number, number]>} ranges - Array of [start, end) pairs into `rawStr`.
+ * @returns {string} HTML-safe string with highlights applied.
+ */
+export function highlightSubstringRanges(rawStr, ranges) {
+  const str = rawStr == null ? '' : String(rawStr);
+  if (!Array.isArray(ranges) || ranges.length === 0) {
+    return escapeHtml(str);
+  }
+  // Sort and merge overlapping/adjacent ranges.
+  const sorted = ranges
+    .map(([s, e]) => [Math.max(0, s|0), Math.min(str.length, e|0)])
+    .filter(([s, e]) => e > s)
+    .sort((a, b) => a[0] - b[0]);
+  const merged = [];
+  for (const [s, e] of sorted) {
+    if (merged.length && s <= merged[merged.length - 1][1]) {
+      merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], e);
+    } else {
+      merged.push([s, e]);
+    }
+  }
+
+  let out = '';
+  let last = 0;
+  for (const [s, e] of merged) {
+    if (s > last) out += escapeHtml(str.slice(last, s));
+    out += `<span class="highlight">${escapeHtml(str.slice(s, e))}</span>`;
+    last = e;
+  }
+  if (last < str.length) out += escapeHtml(str.slice(last));
+  return out;
+}
+
 export function inscriptions2markup(inscriptions) {
   // array of selected inscription IDs
   //const selectedSignatureIds = $('#jstree').jstree(true).get_selected();
@@ -907,13 +980,21 @@ export function inscriptions2markup(inscriptions) {
         continue;
       }
 
-      columnData = escapeHtml(columnData);
+      const fieldRanges = inscriptionData.matchDetails
+        && inscriptionData.matchDetails.fieldRanges
+        && inscriptionData.matchDetails.fieldRanges[columnName];
+      if (shouldHighlight && Array.isArray(fieldRanges) && fieldRanges.length > 0) {
+        // Highlight ranges in the raw string, then escape non-highlight segments.
+        columnData = highlightSubstringRanges(columnData, fieldRanges);
+      } else {
+        columnData = escapeHtml(columnData);
 
-      if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails !== null && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
-        const entryWordBoundaries = inscriptionData[`${columnName}_word_boundaries`];
-        const matchedWords = inscriptionData.matchDetails.wordIndices;
-        const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
-        columnData = highlightWordsFromWordBoundaries(columnData, matchedWordBoundaries);
+        if (shouldHighlight && inscriptionData.hasOwnProperty('matchDetails') && inscriptionData.matchDetails !== null && inscriptionData.matchDetails.hasOwnProperty('wordIndices')) {
+          const entryWordBoundaries = inscriptionData[`${columnName}_word_boundaries`];
+          const matchedWords = inscriptionData.matchDetails.wordIndices;
+          const matchedWordBoundaries = entryWordBoundaries.filter((_, i) => matchedWords.includes(i));
+          columnData = highlightWordsFromWordBoundaries(columnData, matchedWordBoundaries);
+        }
       }
 
       if (columnData.indexOf(paragraphSymbol) !== -1) {

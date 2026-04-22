@@ -53,13 +53,23 @@ $.fn.queryBuilder.define('case-rule', function(options) {
   });
 
   this.on('afterCreateRuleInput.filter', function(e, rule) {
-    // Show plugin's button only for normalization and transliteration filters
+    // Show plugin's button only for normalization, transliteration and translation filters
     const caseRuleFilterIds = [
       'normalization_norse_to_transliteration',
       'normalization_scandinavian_to_transliteration',
+      'english_translation',
+      'swedish_translation',
+    ];
+    // Filters where case-insensitive search is the default.
+    const ignoreCaseByDefaultIds = [
+      'english_translation',
+      'swedish_translation',
     ];
     if (rule.filter && caseRuleFilterIds.includes(rule.filter.id)) {
       rule.$el.find(cssSelectorPluginCaseRule).show();
+      if (ignoreCaseByDefaultIds.includes(rule.filter.id) && rule.ignoreCase !== true) {
+        rule.ignoreCase = true;
+      }
     } else {
       rule.$el.find(cssSelectorPluginCaseRule).hide();
     }
@@ -706,8 +716,8 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
       label: 'Transliteration and Normalization "Old Scandinavian"',
       optgroup: 'gr_texts',
     }),
-    prepareAutoComplete('english_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
-    prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts' }),
+    prepareAutoComplete('english_translation', dbMap, getHumanName, { optgroup: 'gr_texts', operators: ["contains", "not_contains", "is_empty", 'is_not_empty'] }),
+    prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts', operators: ["contains", "not_contains", "is_empty", 'is_not_empty'] }),
     {
       id: 'has_personal_name',
       label: "Contains personal names",

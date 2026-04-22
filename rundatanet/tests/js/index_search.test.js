@@ -1,8 +1,8 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { doSearch, highlightWordsFromWordBoundaries, stripSpecialSymbols, getWordSearchFunction } from '../../runes/js/index_search.js';
+import { doSearch, stripSpecialSymbols, getWordSearchFunction } from '../../runes/js/index_search.js';
 import { mockDb } from './mockDb.js';
-import { convertDbToKeyMap } from '../../runes/js/index_scripts.js';
+import { convertDbToKeyMap, highlightWordsFromWordBoundaries } from '../../runes/js/index_scripts.js';
 
 // Process mockDb once at the module level
 const dbMap = convertDbToKeyMap(mockDb);
@@ -917,6 +917,229 @@ test('Öl 1 scandinavian: phrase "es satt" begins_with-matches (last token may b
   assert.is(matchedBoundaries[0].text, 'es');
   assert.is(matchedBoundaries[1].text, 'sattr',
     'Even though query is "satt", the whole matched word "sattr" is highlighted');
+});
+
+// ---------------------------------------------------------------------------
+// Tests for translation custom search functions (via doSearch)
+// ---------------------------------------------------------------------------
+
+function makeTranslationRecord({ id, english = '', swedish = '' }) {
+  return {
+    id,
+    signature_text: id,
+    english_translation: english,
+    swedish_translation: swedish,
+  };
+}
+
+function buildTranslationRule({ id, operator, value, ignoreCase = false }) {
+  return {
+    condition: 'AND',
+    rules: [
+      {
+        id,
+        field: id,
+        type: 'string',
+        operator,
+        value,
+        ignoreCase,
+      }
+    ],
+    not: false,
+    valid: true,
+  };
+}
+
+test('translation contains: finds a single occurrence and records its range', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'Bjorn raised this stone' }),
+    makeTranslationRecord({ id: 'T2', english: 'No match here' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'contains', value: 'stone' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.is(result[0].id, 'T1');
+  const ranges = result[0].matchDetails.fieldRanges.english_translation;
+  assert.equal(ranges, [[18, 23]]);
+  assert.is(result[0].english_translation.slice(18, 23), 'stone');
+});
+
+test('translation contains: records all non-overlapping occurrences', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'stone and another stone' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'contains', value: 'stone' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  const ranges = result[0].matchDetails.fieldRanges.english_translation;
+  assert.equal(ranges, [[0, 5], [18, 23]]);
+});
+
+test('translation contains: ignoreCase=true matches different case', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'Stone and STONE' }),
+  ];
+  const rules = buildTranslationRule({
+    id: 'english_translation',
+    operator: 'contains',
+    value: 'stone',
+    ignoreCase: true,
+  });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  const ranges = result[0].matchDetails.fieldRanges.english_translation;
+  assert.equal(ranges, [[0, 5], [10, 15]]);
+  // Highlighted slices preserve original casing.
+  assert.is(result[0].english_translation.slice(0, 5), 'Stone');
+  assert.is(result[0].english_translation.slice(10, 15), 'STONE');
+});
+
+test('translation contains: ignoreCase=false is case-sensitive', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'Stone' }),
+  ];
+  const rules = buildTranslationRule({
+    id: 'english_translation',
+    operator: 'contains',
+    value: 'stone',
+    ignoreCase: false,
+  });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 0);
+});
+
+test('translation begins_with: matches prefix and highlights only the prefix', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'Bjorn raised this stone' }),
+    makeTranslationRecord({ id: 'T2', english: 'After Bjorn' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'begins_with', value: 'Bjorn' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.is(result[0].id, 'T1');
+  assert.equal(result[0].matchDetails.fieldRanges.english_translation, [[0, 5]]);
+});
+
+test('translation ends_with: matches suffix and highlights only the suffix', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'raised this stone' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'ends_with', value: 'stone' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  const ranges = result[0].matchDetails.fieldRanges.english_translation;
+  assert.equal(ranges, [[12, 17]]);
+});
+
+test('translation equal: matches exact value and highlights whole string', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'stone' }),
+    makeTranslationRecord({ id: 'T2', english: 'stone.' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'equal', value: 'stone' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.is(result[0].id, 'T1');
+  assert.equal(result[0].matchDetails.fieldRanges.english_translation, [[0, 5]]);
+});
+
+test('translation equal: ignoreCase works', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'Stone' }),
+  ];
+  const rules = buildTranslationRule({
+    id: 'english_translation',
+    operator: 'equal',
+    value: 'stone',
+    ignoreCase: true,
+  });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.fieldRanges.english_translation, [[0, 5]]);
+});
+
+test('swedish_translation contains uses its own fieldRanges key', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', swedish: 'Björn reste denna sten' }),
+  ];
+  const rules = buildTranslationRule({ id: 'swedish_translation', operator: 'contains', value: 'sten' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.ok(result[0].matchDetails.fieldRanges.swedish_translation);
+  assert.not.ok(result[0].matchDetails.fieldRanges.english_translation);
+});
+
+test('translation contains: empty ruleValue produces no match', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'anything' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'contains', value: '' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 0);
+});
+
+test('translation AND-merge: translation contains + translation contains on same field unions ranges', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'stone and hammer' }),
+  ];
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'english_translation', field: 'english_translation', type: 'string',
+        operator: 'contains', value: 'stone', ignoreCase: false,
+      },
+      {
+        id: 'english_translation', field: 'english_translation', type: 'string',
+        operator: 'contains', value: 'hammer', ignoreCase: false,
+      },
+    ],
+    not: false,
+    valid: true,
+  };
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  const ranges = result[0].matchDetails.fieldRanges.english_translation;
+  // Both ranges should be present (order is insertion order per field).
+  assert.equal(
+    ranges.slice().sort((a, b) => a[0] - b[0]),
+    [[0, 5], [10, 16]]
+  );
+});
+
+test('translation AND-merge: duplicate ranges are deduped', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'stone' }),
+  ];
+  // Two identical translation rules produce the same [0,5] range.
+  const rules = {
+    condition: 'AND',
+    rules: [
+      {
+        id: 'english_translation', field: 'english_translation', type: 'string',
+        operator: 'contains', value: 'stone', ignoreCase: false,
+      },
+      {
+        id: 'english_translation', field: 'english_translation', type: 'string',
+        operator: 'contains', value: 'stone', ignoreCase: false,
+      },
+    ],
+    not: false,
+    valid: true,
+  };
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.equal(result[0].matchDetails.fieldRanges.english_translation, [[0, 5]]);
+});
+
+test('translation search does not produce wordIndices', () => {
+  const records = [
+    makeTranslationRecord({ id: 'T1', english: 'a stone' }),
+  ];
+  const rules = buildTranslationRule({ id: 'english_translation', operator: 'contains', value: 'stone' });
+  const result = doSearch(rules, records);
+  assert.is(result.length, 1);
+  assert.not.ok(result[0].matchDetails.wordIndices);
 });
 
 test.run();
