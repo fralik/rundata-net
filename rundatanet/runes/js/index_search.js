@@ -176,7 +176,24 @@ export class QueryBuilderParser {
         results.reduce((acc, result) => {
           if (result.details) {
             Object.entries(result.details).forEach(([field, details]) => {
-              if (!acc[field]) acc[field] = details;
+              if (field === 'fieldRanges' && details && typeof details === 'object') {
+                // Merge per-field substring ranges, deduping identical [start, end] pairs.
+                if (!acc.fieldRanges) acc.fieldRanges = {};
+                Object.entries(details).forEach(([fname, ranges]) => {
+                  if (!Array.isArray(ranges)) return;
+                  const existing = acc.fieldRanges[fname] || [];
+                  const seen = new Set(existing.map(r => `${r[0]},${r[1]}`));
+                  const merged = existing.slice();
+                  ranges.forEach(r => {
+                    const key = `${r[0]},${r[1]}`;
+                    if (!seen.has(key)) {
+                      seen.add(key);
+                      merged.push(r);
+                    }
+                  });
+                  acc.fieldRanges[fname] = merged;
+                });
+              } else if (!acc[field]) acc[field] = details;
               else if (Array.isArray(acc[field]) && Array.isArray(details)) {
                 // Merge arrays and remove duplicates
                 acc[field] = [...new Set([...acc[field], ...details])];
@@ -470,6 +487,78 @@ const searchHasPersonalName = (numNames, ruleValue) => {
   return { match: isMatch };
 };
 
+/**
+ * Build substring-range search functions for a free-text field (e.g. translations).
+ * Each returned operator handler returns { match, details: { fieldRanges: { <field>: [[start,end], ...] } } }.
+ * Ranges are indices into the original (un-escaped) field value and are used later for
+ * rendering highlights. Honors `rule.ignoreCase` on the rule.
+ *
+ * @param {string} fieldName - Name of the record field (e.g. 'english_translation').
+ * @returns {Object} Map of operator name -> handler function.
+ */
+function buildTranslationSearchFunctions(fieldName) {
+  const buildMatch = (ranges) => ({
+    match: true,
+    details: { fieldRanges: { [fieldName]: ranges } }
+  });
+
+  const findAllRanges = (haystack, needle, ignoreCase) => {
+    const ranges = [];
+    if (!needle) return ranges;
+    const h = ignoreCase ? haystack.toLowerCase() : haystack;
+    const n = ignoreCase ? needle.toLowerCase() : needle;
+    let from = 0;
+    while (from <= h.length - n.length) {
+      const idx = h.indexOf(n, from);
+      if (idx === -1) break;
+      ranges.push([idx, idx + n.length]);
+      from = idx + n.length; // non-overlapping
+    }
+    return ranges;
+  };
+
+  return {
+    contains: (fieldValue, ruleValue, rule) => {
+      const value = fieldValue == null ? '' : String(fieldValue);
+      const query = ruleValue == null ? '' : String(ruleValue);
+      const ranges = findAllRanges(value, query, !!(rule && rule.ignoreCase));
+      if (ranges.length === 0) return { match: false };
+      return buildMatch(ranges);
+    },
+    begins_with: (fieldValue, ruleValue, rule) => {
+      const value = fieldValue == null ? '' : String(fieldValue);
+      const query = ruleValue == null ? '' : String(ruleValue);
+      if (query.length === 0 || query.length > value.length) return { match: false };
+      const ignoreCase = !!(rule && rule.ignoreCase);
+      const a = ignoreCase ? value.slice(0, query.length).toLowerCase() : value.slice(0, query.length);
+      const b = ignoreCase ? query.toLowerCase() : query;
+      if (a !== b) return { match: false };
+      return buildMatch([[0, query.length]]);
+    },
+    ends_with: (fieldValue, ruleValue, rule) => {
+      const value = fieldValue == null ? '' : String(fieldValue);
+      const query = ruleValue == null ? '' : String(ruleValue);
+      if (query.length === 0 || query.length > value.length) return { match: false };
+      const ignoreCase = !!(rule && rule.ignoreCase);
+      const start = value.length - query.length;
+      const a = ignoreCase ? value.slice(start).toLowerCase() : value.slice(start);
+      const b = ignoreCase ? query.toLowerCase() : query;
+      if (a !== b) return { match: false };
+      return buildMatch([[start, value.length]]);
+    },
+    equal: (fieldValue, ruleValue, rule) => {
+      const value = fieldValue == null ? '' : String(fieldValue);
+      const query = ruleValue == null ? '' : String(ruleValue);
+      const ignoreCase = !!(rule && rule.ignoreCase);
+      const a = ignoreCase ? value.toLowerCase() : value;
+      const b = ignoreCase ? query.toLowerCase() : query;
+      if (a !== b) return { match: false };
+      if (value.length === 0) return { match: true }; // nothing to highlight
+      return buildMatch([[0, value.length]]);
+    },
+  };
+}
+
 const searchCountryOrProvince = (entry, ruleValues) => {
   for (let i = 0; i < ruleValues.length; i++) {
     // let areaCode = ruleValues[i];
@@ -549,6 +638,8 @@ const customSearchFunctions = {
       return { match: !result.match };
     },
   },
+  english_translation: buildTranslationSearchFunctions('english_translation'),
+  swedish_translation: buildTranslationSearchFunctions('swedish_translation'),
 };
 
 
@@ -605,26 +696,4 @@ export function calcWordsAndPersonalNames(dbMap) {
   $(document).trigger('updateSignatureCount', { count: totalSignatures });
   $(document).trigger('updateWordCount', { count: totalWordMatches, type: countType });
   $(document).trigger('updatePersonalNameCount', { count: totalPersonalNames, type: countType });
-}
-
-export function highlightWordsFromWordBoundaries(str, wordBoundaries) {
-  // Sort the indices to ensure they are processed in the correct order
-  wordBoundaries.sort((a, b) => a.start - b.start);
-
-  let highlightedStr = '';
-  let lastIndex = 0;
-
-  wordBoundaries.forEach(({start, end, text}) => {
-    // Append the part of the string before the current word
-    highlightedStr += str.slice(lastIndex, start);
-    // Wrap the word in a <span> tag and append it
-    highlightedStr += `<span class="highlight">${str.slice(start, end)}</span>`;
-    // Update the lastIndex to the end of the current word
-    lastIndex = end;
-  });
-
-  // Append the remaining part of the string after the last word
-  highlightedStr += str.slice(lastIndex);
-
-  return highlightedStr;
 }

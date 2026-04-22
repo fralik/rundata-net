@@ -33,6 +33,21 @@ export default [
     ]
   },
   {
+    input: 'rundatanet/runes/js/eda.js',
+    output: [
+      {
+        file: 'rundatanet/static/runes/eda.js',
+        format: 'iife'
+      },
+      {
+        file: 'rundatanet/static/runes/eda.min.js',
+        format: 'iife',
+        sourcemap: true,
+        plugins: [terser()]
+      }
+    ]
+  },
+  {
     input: 'rundatanet/runes/js/export.worker.js',
     output: [
       {
