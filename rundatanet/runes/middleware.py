@@ -20,12 +20,20 @@ class InternalHealthCheckMiddleware:
     internal probes with a lightweight ``200 OK`` before any downstream
     middleware, including :class:`CanonicalDomainMiddleware`, runs.
 
-    Hosts treated as "internal":
+    The short-circuit **fails closed** for untrusted traffic. Because the
+    ``Host`` header is client-controlled, a public request can trivially
+    spoof ``Host: 127.0.0.1``. To prevent that from bypassing
+    ``ALLOWED_HOSTS`` / ``SecurityMiddleware``, the middleware also requires
+    the TCP peer address (``REMOTE_ADDR``, set by the server socket — not the
+    client) to be in an internal range. On Azure App Service, external
+    traffic flows through the platform front-end, so ``REMOTE_ADDR`` will be
+    the front-end's address, never link-local / loopback.
+
+    Hosts / peers treated as "internal":
 
     * ``169.254.0.0/16`` — IPv4 link-local (Azure platform probes)
     * ``127.0.0.0/8``    — loopback
     * ``::1`` / ``fe80::/10`` — IPv6 loopback / link-local
-    * Missing or empty ``Host`` header
     """
 
     _INTERNAL_NETWORKS = (
@@ -34,6 +42,10 @@ class InternalHealthCheckMiddleware:
         ipaddress.ip_network("::1/128"),
         ipaddress.ip_network("fe80::/10"),
     )
+    # Only HTTP verbs a health probe would plausibly use. Anything else from
+    # an internal peer is suspicious and should fall through to normal
+    # handling.
+    _PROBE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -45,26 +57,48 @@ class InternalHealthCheckMiddleware:
 
     @classmethod
     def _is_internal_probe(cls, request):
+        # 1. Restrict to safe methods — probes are always GET/HEAD/OPTIONS.
+        if request.method not in cls._PROBE_METHODS:
+            return False
+
+        # 2. TCP peer must be internal. REMOTE_ADDR is set by the WSGI server
+        #    from the accepted socket, not from a client header, so it cannot
+        #    be spoofed by a public caller.
+        remote_addr = request.META.get("REMOTE_ADDR", "")
+        if not cls._is_internal_ip(remote_addr):
+            return False
+
+        # 3. No forwarding headers. Real external traffic arrives via Azure's
+        #    front-end with X-Forwarded-For / X-Forwarded-Host set; platform
+        #    probes do not. Reject anything that looks forwarded, even from
+        #    an internal peer, as a defense-in-depth measure.
+        if request.headers.get("x-forwarded-for") or request.headers.get("x-forwarded-host"):
+            return False
+
+        # 4. Host header, if present, must also be an internal IP literal
+        #    (the rotating link-local address) or missing. A probe with a
+        #    real hostname should fall through to normal processing.
         raw_host = request.headers.get("host", "")
         if not raw_host:
-            # Some probes (and HTTP/1.0 clients) omit Host entirely.
             return True
 
-        # Strip optional port. ``split_domain_port`` handles IPv6 in brackets.
         domain, _ = split_domain_port(raw_host)
         if not domain:
             return False
 
-        # Unwrap bracketed IPv6 literals: "[::1]" -> "::1"
         if domain.startswith("[") and domain.endswith("]"):
             domain = domain[1:-1]
 
-        try:
-            ip = ipaddress.ip_address(domain)
-        except ValueError:
-            # Not an IP literal — a real hostname. Let normal routing handle it.
-            return False
+        return cls._is_internal_ip(domain)
 
+    @classmethod
+    def _is_internal_ip(cls, value):
+        if not value:
+            return False
+        try:
+            ip = ipaddress.ip_address(value)
+        except ValueError:
+            return False
         return any(ip in net for net in cls._INTERNAL_NETWORKS)
 
 
