@@ -44,15 +44,11 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_88C7D032B4574C99A85A8B0B36E9682E }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CC5973B1BC954CDDB7235E4D2314C6DC }}
 
-      # Deploy the zip with --clean so stale files (e.g. oryx-manifest.toml,
-      # output.tar.zst from prior Oryx builds) are removed from wwwroot on each deploy.
+      # Deploy the zip directly; no need to unpack it on the runner.
       - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
-        run: |
-          az webapp deploy \
-            --resource-group rundatanet_group \
-            --name rundata-sofia \
-            --src-path release.zip \
-            --type zip \
-            --clean true \
-            --restart true
+        with:
+          app-name: 'rundata-sofia'
+          slot-name: 'Production'
+          package: release.zip
