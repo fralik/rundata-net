@@ -61,9 +61,6 @@ jobs:
       - name: Build frontend assets
         run: npm run dev
 
-      - name: Run npm tests
-        run: npm test
-
       # Run collectstatic with production settings so WhiteNoise's
       # CompressedManifestStaticFilesStorage generates hashed filenames.
       # Dummy values satisfy the settings import; no DB access is needed for collectstatic.

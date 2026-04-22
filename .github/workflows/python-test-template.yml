@@ -1,0 +1,43 @@
+name: Python Test Template
+
+on:
+  workflow_call:
+
+jobs:
+  python-test:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python version
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/local.txt
+
+      # mysqlclient needs MySQL client headers + build tools to compile wheels.
+      - name: Install system build dependencies for mysqlclient
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            default-libmysqlclient-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          pip install -r requirements/local.txt
+
+      # config.settings.test imports base settings which expect DJANGO_SECRET_KEY
+      # and a DATABASE_URL. Tests use sqlite, so a dummy file-based URL is fine.
+      - name: Run pytest
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          DJANGO_SECRET_KEY: 'pytest-dummy-key-not-used'
+          DATABASE_URL: 'sqlite:///test.sqlite3'
+        run: pytest
