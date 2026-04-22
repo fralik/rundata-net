@@ -18,17 +18,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      # mysqlclient needs MySQL client headers + build tools to compile on the runner.
-      # App Service Linux (Python 3.12 image) provides the runtime libmysqlclient, so the
-      # wheel built here can be executed there without installing anything extra.
-      - name: Install system build dependencies for mysqlclient
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            pkg-config \
-            default-libmysqlclient-dev
-
       # Cache the pre-built virtualenv itself. Re-use only when requirements haven't changed
       # AND the Python minor version is the same (wheels are ABI-specific).
       - name: Cache antenv virtualenv
@@ -37,6 +26,18 @@ jobs:
         with:
           path: antenv
           key: antenv-${{ runner.os }}-py3.12-${{ hashFiles('requirements/production.txt', 'requirements/base.txt') }}
+
+      # mysqlclient needs MySQL client headers + build tools to compile on the runner.
+      # App Service Linux (Python 3.12 image) provides the runtime libmysqlclient, so the
+      # wheel built here can be executed there without installing anything extra.
+      - name: Install system build dependencies for mysqlclient
+        if: steps.cache-antenv.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            default-libmysqlclient-dev
 
       - name: Create virtualenv and install Python dependencies
         if: steps.cache-antenv.outputs.cache-hit != 'true'
