@@ -69,10 +69,17 @@ class InternalHealthCheckMiddleware:
             return False
 
         # 3. No forwarding headers. Real external traffic arrives via Azure's
-        #    front-end with X-Forwarded-For / X-Forwarded-Host set; platform
-        #    probes do not. Reject anything that looks forwarded, even from
-        #    an internal peer, as a defense-in-depth measure.
-        if request.headers.get("x-forwarded-for") or request.headers.get("x-forwarded-host"):
+        #    front-end with forwarding metadata such as X-Forwarded-For,
+        #    X-Forwarded-Host, X-Forwarded-Proto, or the standard Forwarded
+        #    header; platform probes do not. Reject anything that looks
+        #    forwarded, even from an internal peer, as a defense-in-depth
+        #    measure.
+        if (
+            request.headers.get("x-forwarded-for")
+            or request.headers.get("x-forwarded-host")
+            or request.headers.get("x-forwarded-proto")
+            or request.headers.get("forwarded")
+        ):
             return False
 
         # 4. Host header, if present, must also be an internal IP literal
