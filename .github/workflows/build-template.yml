@@ -30,6 +30,7 @@ jobs:
       # mysqlclient needs MySQL client headers + build tools to compile on the runner.
       # App Service Linux (Python 3.12 image) provides the runtime libmysqlclient, so the
       # wheel built here can be executed there without installing anything extra.
+      # Install these only when cache misses and antenv must be rebuilt.
       - name: Install system build dependencies for mysqlclient
         if: steps.cache-antenv.outputs.cache-hit != 'true'
         run: |
