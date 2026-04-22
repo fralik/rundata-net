@@ -70,6 +70,7 @@ jobs:
           RUNDATA_PROD: '1'
           DJANGO_SECRET_KEY: 'collectstatic-dummy-key-not-used-at-runtime'
           DATABASE_URL: 'sqlite:///dummy.sqlite3'
+          DJANGO_ADMIN_URL: '/dummyadmin/'  # noqa: S105 -- Not a secret, just needed to import settings.
         run: |
           source antenv/bin/activate
           python manage.py collectstatic --noinput
