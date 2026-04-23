@@ -525,19 +525,46 @@ export function prepareSignumForDisplay({signature_text, lost, new_reading}) {
   return signature_text + additional;
 }
 
+function resolveUrlOrBlob(urlOrBlob) {
+  if (urlOrBlob.startsWith('http://') || urlOrBlob.startsWith('https://')) {
+    return urlOrBlob;
+  }
+  const blobBase = (typeof window !== "undefined" && window.BLOB_BASE_URL)
+    ? window.BLOB_BASE_URL
+    : "";
+  if (blobBase) {
+    return blobBase.replace(/\/$/, '') + '/' + urlOrBlob;
+  }
+  return urlOrBlob;
+}
+
 export function fetchAllImages(db) {
-  const content = db.exec("SELECT meta_id, link_url, direct_url FROM runes_imagelink");
+  let content = [];
+  try {
+    content = db.exec("SELECT meta_id, link_url, direct_url, info FROM runes_imagelink");
+  } catch (e) {
+    // Backwards compatibility with DB snapshots where `info` column is absent.
+    content = db.exec("SELECT meta_id, link_url, direct_url FROM runes_imagelink");
+  }
+  if (!content || content.length === 0) {
+    return {};
+  }
   const allRows = content[0].values;
+  const hasInfoColumn = content[0].columns.includes("info");
 
   let allImages = {};
 
   for (let i = 0; i < allRows.length; i++) {
     const row = allRows[i];
+    const indirect = row[1] || "";
+    const direct = row[2] || "";
+    const info = hasInfoColumn ? (row[3] || "") : "";
+
     const metaId = row[0];
     if (!allImages.hasOwnProperty(metaId)) {
       allImages[metaId] = {links: []};
     }
-    allImages[metaId].links.push({indirect: row[1], direct: row[2]});
+    allImages[metaId].links.push({indirect, direct, info});
   }
   return allImages;
 }
@@ -572,7 +599,11 @@ export function makeImagesMarkup(signatureImageLinks) {
     const indirectUrl = escapeHtml(v.indirect);
     const directUrl = escapeHtml(v.direct);
     const sourceLabel = escapeHtml(imageSourceLabel(v.indirect));
-    directImages += `<figure class="rundata-image-item"><a href="${indirectUrl}" contentEditable="false" target="_blank" class="rundata-image-link"><img src="${directUrl}" class="rundata-image-avatar" alt="Inscription image"></a><figcaption class="rundata-image-source">source: <a href="${indirectUrl}" contentEditable="false" target="_blank">${sourceLabel}</a></figcaption></figure>`;
+    const infoText = (v.info || "").toString().trim();
+    const caption = infoText.length > 0
+      ? escapeHtml(infoText)
+      : `source: <a href="${indirectUrl}" contentEditable="false" target="_blank">${sourceLabel}</a>`;
+    directImages += `<figure class="rundata-image-item"><a href="${indirectUrl}" contentEditable="false" target="_blank" class="rundata-image-link"><img src="${directUrl}" class="rundata-image-avatar" alt="Inscription image"></a><figcaption class="rundata-image-source">${caption}</figcaption></figure>`;
   });
   directImages += '</div>';
 
@@ -976,11 +1007,7 @@ export function inscriptions2markup(inscriptions) {
                 // Encoded link: "<label>:::<url-or-blob-filename>"
                 const label = ref.substring(0, sep);
                 const urlOrBlob = ref.substring(sep + 3);
-                // If the value is not an absolute URL it is a bare blob filename;
-                // prepend the configured base URL to make it a full link.
-                const url = (urlOrBlob.startsWith('http://') || urlOrBlob.startsWith('https://'))
-                  ? urlOrBlob
-                  : (window.BLOB_BASE_URL ? window.BLOB_BASE_URL.replace(/\/$/, '') + '/' + urlOrBlob : urlOrBlob);
+                const url = resolveUrlOrBlob(urlOrBlob);
                 paragraph += `<li><a href="${url}" target="_blank" contenteditable="false">${escapeHtml(label)}</a></li>`;
               } else if (ref.includes('https://')) {
                 // Legacy unencoded URL (no label stored)
