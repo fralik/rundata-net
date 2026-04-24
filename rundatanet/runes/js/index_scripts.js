@@ -778,7 +778,11 @@ function renderSignatures() {
 
   try {
     const selectedSignatureIds = $('#jstree').jstree(true).get_selected();
-    const selectedSignatures = gViewModel.getInscriptions(selectedSignatureIds);
+    // When a search is active, render all active search hits in the main window.
+    // This ensures users can inspect the full result set without selecting each ID.
+    const selectedSignatures = (gViewModel && gViewModel.searchResults !== null)
+      ? gViewModel.getActiveInscriptions()
+      : gViewModel.getInscriptions(selectedSignatureIds);
 
     const html = inscriptions2markup(selectedSignatures);
     document.getElementById('mainDisplay').innerHTML = html.join('');

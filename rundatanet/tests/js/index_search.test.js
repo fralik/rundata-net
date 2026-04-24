@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { doSearch, stripSpecialSymbols, getWordSearchFunction, getTranslationSearchTokens, getTranslationSearchTokenCount, getTranslationOccurrenceCount } from '../../runes/js/index_search.js';
+import { doSearch, stripSpecialSymbols, getWordSearchFunction, getTranslationSearchTokens, getTranslationSearchTokenCount, getTranslationOccurrenceCount, shouldSuggestIncludeSymbols } from '../../runes/js/index_search.js';
 import { mockDb } from './mockDb.js';
 import { convertDbToKeyMap, highlightWordsFromWordBoundaries } from '../../runes/js/index_scripts.js';
 
@@ -90,6 +90,39 @@ test('getTranslationOccurrenceCount sums translation field match ranges', () => 
   ];
 
   assert.is(getTranslationOccurrenceCount(mockResults), 4);
+});
+
+test('shouldSuggestIncludeSymbols returns true for symbol query when include symbols is off', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [{
+      id: 'normalization_norse_to_transliteration',
+      field: 'normalisation_norse',
+      data: { multiField: true },
+      operator: 'contains',
+      value: { normalization: '?', transliteration: '', names_mode: 'all' },
+      includeSpecialSymbols: false,
+    }],
+    valid: true,
+  };
+
+  assert.ok(shouldSuggestIncludeSymbols(rules));
+});
+
+test('shouldSuggestIncludeSymbols returns false when include symbols is on', () => {
+  const rules = {
+    condition: 'AND',
+    rules: [{
+      id: 'normalization_norse_to_transliteration',
+      field: 'normalisation_norse',
+      operator: 'contains',
+      value: { normalization: '?', transliteration: '', names_mode: 'all' },
+      includeSpecialSymbols: true,
+    }],
+    valid: true,
+  };
+
+  assert.not.ok(shouldSuggestIncludeSymbols(rules));
 });
 
 // Test suite for highlightWordsFromWordBoundaries function
@@ -527,6 +560,46 @@ test('getWordSearchFunction includes mode preserves symbols when includeSpecialS
   // With symbols kept, "[hello]world" does NOT contain "helloworld" as a literal substring.
   // (stripping brackets would make it match; keeping them means it does not)
   assert.is(fn('[hello]world', 'helloworld'), false, 'includes with symbols kept should not match when query is only valid after stripping');
+});
+
+test('doSearch does not match all records for symbol-only query when include symbols is off', () => {
+  const records = [
+    {
+      id: 1,
+      signature_text: 'T 1',
+      normalisation_norse_words: ['foo'],
+      normalisation_scandinavian_words: ['foo'],
+      transliteration_words: ['foo'],
+      normalisation_norse_word_boundaries: [{ start: 0, end: 3, text: 'foo' }],
+      normalisation_scandinavian_word_boundaries: [{ start: 0, end: 3, text: 'foo' }],
+      transliteration_word_boundaries: [{ start: 0, end: 3, text: 'foo' }],
+    },
+    {
+      id: 2,
+      signature_text: 'T 2',
+      normalisation_norse_words: ['bar'],
+      normalisation_scandinavian_words: ['bar'],
+      transliteration_words: ['bar'],
+      normalisation_norse_word_boundaries: [{ start: 0, end: 3, text: 'bar' }],
+      normalisation_scandinavian_word_boundaries: [{ start: 0, end: 3, text: 'bar' }],
+      transliteration_word_boundaries: [{ start: 0, end: 3, text: 'bar' }],
+    },
+  ];
+  const rules = {
+    condition: 'AND',
+    rules: [{
+      id: 'normalization_norse_to_transliteration',
+      field: 'normalisation_norse',
+      data: { multiField: true },
+      operator: 'contains',
+      value: { normalization: '?', transliteration: '', names_mode: 'all' },
+      includeSpecialSymbols: false,
+      ignoreCase: false,
+    }],
+    valid: true,
+  };
+
+  assert.is(doSearch(rules, records).length, 0);
 });
 
 // ── doSearch – ignoreCase integration ─────────────────────────────────────────

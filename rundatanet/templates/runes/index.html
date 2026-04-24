@@ -325,7 +325,6 @@
         background-color: #0b5ed7 !important;
         border-color: #0a58ca !important;
       }
-
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -516,8 +515,8 @@
       <div class="col-xs-12">&nbsp;</div>
     </div>
 
-    <div class="row py-3" role="group" aria-label="">
-      <div class="col d-flex flex-wrap align-items-start gap-2">
+    <div class="row py-3 justify-content-center" role="group" aria-label="">
+      <div class="col-12 col-xl-10 d-flex flex-wrap justify-content-start align-items-start gap-2">
         <div class="btn-group flex-wrap" role="group">
           <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
           <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
@@ -546,8 +545,8 @@
     </div>
 
     <!-- pb-6 is our custom class to make more vertical space -->
-    <div class="row">
-      <div id="builder" class="col"></div>
+    <div class="row justify-content-center">
+      <div id="builder" class="col-12 col-xl-10"></div>
     </div>
     <div class="row mt-4 mb-3 pb-6">
       <div class="col-md-10 offset-md-1">
@@ -770,6 +769,8 @@ let inpQueryBuilder = "builder";
 let gViewModel = null; // Global view model for the runic inscriptions
 let gExportInProgress = false;
 let gTranslationOccurrenceCount = null;
+let gSearchHintMessage = null;
+const INCLUDE_SYMBOLS_HINT = 'Your query includes symbols. To search symbols, enable the "Include symbols" filter.';
 
 function applyStatsDisplayMode() {
   const wordsRow = document.getElementById('statsWordsRow');
@@ -787,6 +788,21 @@ function applyStatsDisplayMode() {
   wordsRow.style.display = '';
   namesRow.style.display = '';
   tokensRow.style.display = 'none';
+}
+
+function renderMainDisplayHintIfNeeded() {
+  if (!gSearchHintMessage) {
+    return;
+  }
+  if (!gViewModel || gViewModel.searchResults === null) {
+    return;
+  }
+  if (gViewModel.searchResults.size > 0) {
+    return;
+  }
+  document.getElementById('mainDisplay').innerHTML = `
+    <div class="alert alert-info m-2" role="status">${INCLUDE_SYMBOLS_HINT}</div>
+  `;
 }
 
 function getCrossUrl(crossName) {
@@ -964,6 +980,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('btnSearch').addEventListener('click', function() {
     const rules = $(`#${inpQueryBuilder}`).queryBuilder('getRules');
+    if (shouldSuggestIncludeSymbols(rules)) {
+      gSearchHintMessage = INCLUDE_SYMBOLS_HINT;
+      gTranslationOccurrenceCount = null;
+      gViewModel.setSearchResults([]);
+      return;
+    }
+
+    gSearchHintMessage = null;
     const hasTranslationWordSearch = getTranslationSearchTokenCount(rules) > 0;
     const results = doSearch(rules, gViewModel.getAllInscriptions().values());
     gTranslationOccurrenceCount = hasTranslationWordSearch ? getTranslationOccurrenceCount(results) : null;
@@ -972,6 +996,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   document.getElementById('btnResetSearch').addEventListener('click', function() {
+    gSearchHintMessage = null;
     gTranslationOccurrenceCount = null;
     gViewModel.clearSearchResults();
     $(`#${inpQueryBuilder}`).queryBuilder('reset');
@@ -1095,6 +1120,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showMarkersWrapper();
     calcWordsAndPersonalNames(data.model.getActiveInscriptions());
     applyStatsDisplayMode();
+    renderMainDisplayHintIfNeeded();
   });
 
   initDragAndDrop();

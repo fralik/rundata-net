@@ -5,6 +5,7 @@ import {
   isPersonalName,
   prepareForComparison,
   splitPhraseTokens,
+  stripSpecialSymbols,
 } from './search_core.js';
 
 export {
@@ -378,6 +379,23 @@ const doWordSearch = (entry, ruleValue, searchDirection, searchMode, ignoreCase 
   const normalWords = entry[`${normalizationField}_words`];
   const transliterationWords = entry['transliteration_words'];
 
+  const hasEffectiveToken = (query) => {
+    if (query === null || query === undefined) return false;
+    const tokens = splitPhraseTokens(String(query));
+    if (tokens.length === 0) return false;
+    if (includeSpecialSymbols) return tokens.some(token => token.length > 0);
+    return tokens.some(token => stripSpecialSymbols(token).length > 0);
+  };
+
+  // If symbols are excluded and the query is made only of stripped symbols,
+  // prevent accidental "match everything" behavior via includes('').
+  if (normalisationQuery && !hasEffectiveToken(normalisationQuery)) {
+    return { match: false, details: null };
+  }
+  if (transliterationQuery && !hasEffectiveToken(transliterationQuery)) {
+    return { match: false, details: null };
+  }
+
   // Build matching windows for a single query against a word list.
   // Returns Map<startIndex, number[]> where value is the window of indices.
   // For single-word queries, windows are of length 1.
@@ -644,6 +662,11 @@ const customSearchFunctions = {
 
 const TRANSLATION_FIELDS = new Set(['english_translation', 'swedish_translation']);
 const VALUELESS_OPERATORS = new Set(['is_empty', 'is_not_empty', 'is_null', 'is_not_null']);
+const SYMBOL_AWARE_RULE_IDS = new Set([
+  'normalization_norse_to_transliteration',
+  'normalization_scandinavian_to_transliteration',
+]);
+const SPECIAL_SYMBOL_PATTERN = /(&quot;|&lt;|&gt;|["<>|[\](){}^\u00b4?])/;
 
 function trimToken(token) {
   return String(token || '').replace(/^[\s"'`.,;:!?()[\]{}<>]+|[\s"'`.,;:!?()[\]{}<>]+$/g, '');
@@ -711,6 +734,49 @@ export function getTranslationOccurrenceCount(searchResults) {
   }
 
   return totalOccurrences;
+}
+
+function collectStringValues(value, output) {
+  if (value === null || value === undefined) return;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) output.push(trimmed);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach(v => collectStringValues(v, output));
+    return;
+  }
+  if (typeof value === 'object') {
+    Object.values(value).forEach(v => collectStringValues(v, output));
+  }
+}
+
+function findRuleNeedingIncludeSymbols(group) {
+  if (!group || !Array.isArray(group.rules)) return false;
+
+  for (const rule of group.rules) {
+    if (!rule) continue;
+    if (Array.isArray(rule.rules)) {
+      if (findRuleNeedingIncludeSymbols(rule)) return true;
+      continue;
+    }
+    if (!SYMBOL_AWARE_RULE_IDS.has(rule.id)) continue;
+    if (rule.includeSpecialSymbols) continue;
+    if (VALUELESS_OPERATORS.has(rule.operator)) continue;
+
+    const values = [];
+    collectStringValues(rule.value, values);
+    if (values.some(v => SPECIAL_SYMBOL_PATTERN.test(v))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function shouldSuggestIncludeSymbols(rules) {
+  return findRuleNeedingIncludeSymbols(rules);
 }
 
 
