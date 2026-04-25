@@ -292,6 +292,36 @@ const transliterationWordsToSkip = {
 
 
 let gRenderInProgress = false;
+let gMainDisplayScrollTargetId = null;
+
+export function setMainDisplayScrollTarget(signatureId) {
+  const parsedId = parseInt(signatureId, 10);
+  gMainDisplayScrollTargetId = Number.isNaN(parsedId) ? null : parsedId;
+}
+
+function scrollMainDisplayToSignature(selectedSignatureIds) {
+  const mainDisplay = document.getElementById('mainDisplay');
+  if (!mainDisplay) return;
+
+  let targetId = gMainDisplayScrollTargetId;
+  if (targetId === null && Array.isArray(selectedSignatureIds) && selectedSignatureIds.length > 0) {
+    const fallbackId = parseInt(selectedSignatureIds[selectedSignatureIds.length - 1], 10);
+    if (!Number.isNaN(fallbackId)) {
+      targetId = fallbackId;
+    }
+  }
+  if (targetId === null) return;
+
+  const targetArticle = mainDisplay.querySelector(`article[rundata-db-id="${targetId}"]`);
+  if (!targetArticle) {
+    gMainDisplayScrollTargetId = null;
+    return;
+  }
+
+  const top = Math.max(0, targetArticle.offsetTop - 4);
+  mainDisplay.scrollTo({ top, behavior: 'auto' });
+  gMainDisplayScrollTargetId = null;
+}
 
 /**
  * Retrieves a human-readable name for a schema field in the specified language.
@@ -786,6 +816,7 @@ function renderSignatures() {
 
     const html = inscriptions2markup(selectedSignatures);
     document.getElementById('mainDisplay').innerHTML = html.join('');
+    scrollMainDisplayToSignature(selectedSignatureIds);
   } catch (e) {
     console.error(`Error rendering signatures: ${e}`);
   } finally {

@@ -163,19 +163,35 @@
         display: none;
       }
       .my-fixed-height {
+        height: clamp(320px, calc(100vh - 380px), 500px);
+        min-height: 320px;
         max-height: 500px;
-        min-height: 500px;
-        height: 500px;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
       }
       .signatures-fixed-height {
+        height: clamp(250px, calc(100vh - 460px), 420px);
+        min-height: 250px;
         max-height: 420px;
-        min-height: 420px;
-        height: 420px;
       }
       #mainDisplay {
         padding: 5mm;
         box-sizing: border-box;
+      }
+      @media (min-width: 768px) {
+        #leftPanel.left-panel-one-cm-narrow {
+          flex: 0 0 calc(16.666667% - 1cm);
+          max-width: calc(16.666667% - 1cm);
+        }
+        #leftPanel.left-panel-one-cm-narrow {
+          margin-right: 3mm;
+        }
+        #mainPanel {
+          margin-right: 5mm;
+        }
+        #mapDisplayWrapper.map-two-cm-narrow {
+          flex: 0 0 calc(33.333333% - 2cm);
+          max-width: calc(33.333333% - 2cm);
+        }
       }
       .jstree-scrollable {
         overflow-y: scroll;
@@ -476,7 +492,7 @@
     </div>-->
 
     <div class="row align-items-start">
-      <div id="leftPanel" class="col-md-2 col-sm-2 ps-0 d-flex flex-column my-2 me-3 my-md-0 ms-md-2">
+      <div id="leftPanel" class="left-panel-one-cm-narrow col-md-2 col-sm-2 ps-0 d-flex flex-column my-2 my-md-0">
         <!--<select id="inpInscriptions" class="form-select flex-grow-1 mb-2" multiple></select>-->
         <div id="jstree" class="overflow-scroll signatures-fixed-height"></div>
         <div class="mt-2 small">
@@ -488,7 +504,7 @@
         <!--<input type="text" class="form-control" id="txtQuickSearch" placeholder="Quick inscription selection, just type ID">-->
       </div>
 
-      <div class="col my-2 me-3 my-md-0 ms-md-2">
+      <div id="mainPanel" class="col my-2 my-md-0">
         <div id="mainDisplay" class="my-fixed-height overflow-scroll border" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
         <div class="mt-2">
@@ -496,7 +512,7 @@
         </div>
       </div>
 
-      <div id="mapDisplayWrapper" class="col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
+      <div id="mapDisplayWrapper" class="map-two-cm-narrow col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
         <div id="mapDisplay" class="my-fixed-height"></div>
         <div class="border rounded p-2 mt-2">
           <div class="form-check mb-1">
@@ -509,10 +525,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="row">
-      <div class="col-xs-12">&nbsp;</div>
     </div>
 
     <div class="row py-3 justify-content-center" role="group" aria-label="">
@@ -914,6 +926,7 @@ document.addEventListener('DOMContentLoaded', function() {
   })
   .on('changed.jstree', (node, eventObj) => {
     if (eventObj.action == 'select_node') {
+      setMainDisplayScrollTarget(eventObj.node.id);
       if ($('#chkShowSelectedInscriptions').is(':checked')) {
         showMarkersWrapper();
       }
