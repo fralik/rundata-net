@@ -293,6 +293,7 @@ const transliterationWordsToSkip = {
 
 let gRenderInProgress = false;
 let gMainDisplayScrollTargetId = null;
+const NORMALISATION_COLUMNS = new Set(['normalisation_norse', 'normalisation_scandinavian']);
 
 export function setMainDisplayScrollTarget(signatureId) {
   const parsedId = parseInt(signatureId, 10);
@@ -321,6 +322,13 @@ function scrollMainDisplayToSignature(selectedSignatureIds) {
   const top = Math.max(0, targetArticle.offsetTop - 4);
   mainDisplay.scrollTo({ top, behavior: 'auto' });
   gMainDisplayScrollTargetId = null;
+}
+
+function concealPersonalNameMarkersForDisplay(columnName, htmlValue) {
+  if (!NORMALISATION_COLUMNS.has(columnName)) {
+    return htmlValue;
+  }
+  return htmlValue.replace(/&quot;/g, '');
 }
 
 /**
@@ -1084,6 +1092,10 @@ export function inscriptions2markup(inscriptions) {
           }
         }
       }
+
+      // Keep personal-name markers in DB/search data, but hide them in
+      // rendered normalisation text shown in the main window.
+      columnData = concealPersonalNameMarkersForDisplay(columnName, columnData);
 
       if (columnData.indexOf(paragraphSymbol) !== -1) {
         const parts = columnData.split(paragraphSymbol);
