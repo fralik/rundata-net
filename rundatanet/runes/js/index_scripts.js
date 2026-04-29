@@ -294,6 +294,7 @@ const transliterationWordsToSkip = {
 let gRenderInProgress = false;
 let gMainDisplayScrollTargetId = null;
 const NORMALISATION_COLUMNS = new Set(['normalisation_norse', 'normalisation_scandinavian']);
+const MAX_VISIBLE_IMAGE_LINKS = 10;
 
 export function setMainDisplayScrollTarget(signatureId) {
   const parsedId = parseInt(signatureId, 10);
@@ -628,9 +629,9 @@ export function makeImagesMarkup(signatureImageLinks) {
     }
   };
 
-  // make image gallery of direct image links
-  const galleryLinks = signatureImageLinks.links.slice(0, 9);
-  const offsetIndirectImages = galleryLinks.length;
+  // Show up to 10 image links directly. If there are more, hide 11+ behind an expander.
+  const galleryLinks = signatureImageLinks.links.slice(0, MAX_VISIBLE_IMAGE_LINKS);
+  const hiddenLinks = signatureImageLinks.links.slice(MAX_VISIBLE_IMAGE_LINKS);
 
   directImages = '<div class="rundata-image-gallery">';
   galleryLinks.map(function (v) {
@@ -645,13 +646,13 @@ export function makeImagesMarkup(signatureImageLinks) {
   });
   directImages += '</div>';
 
-  const indirectImagesLinks = signatureImageLinks.links.slice(offsetIndirectImages);
-  if (indirectImagesLinks.length > 0) {
-    indirectImages = '<ul>';
-    indirectImagesLinks.map(function (v, i) {
-      indirectImages += `<li><a href="${v.indirect}" contentEditable="false" target="_blank">${v.indirect}</a></li>`;
+  if (hiddenLinks.length > 0) {
+    indirectImages = '<details class="rundata-more-image-links"><summary><span class="text-primary text-decoration-underline">Find more image links here</span></summary><ul>';
+    hiddenLinks.map(function (v) {
+      const indirectUrl = escapeHtml(v.indirect);
+      indirectImages += `<li><a href="${indirectUrl}" contentEditable="false" target="_blank">${indirectUrl}</a></li>`;
     });
-    indirectImages += '</ul>';
+    indirectImages += '</ul></details>';
   }
 
   return {directImages, indirectImages};
