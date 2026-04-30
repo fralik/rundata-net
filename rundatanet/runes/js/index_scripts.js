@@ -851,6 +851,50 @@ function escapeHtml(string) {
 }
 
 /**
+ * Replace any raw fornvannen.se PDF URL inside a plain-text reference with
+ * a labelled anchor, preserving all surrounding citation text.
+ *
+ * Example:
+ *   "... http://fornvannen.se/pdf/...pdf; ..."
+ * becomes
+ *   "... <a ...>Fornvännen PDF</a>; ..."
+ *
+ * Returns null when no matching URL is found.
+ */
+function renderFornvannenReferenceText(refText) {
+  const raw = String(refText || '');
+  const re = /http:\/\/fornvannen\.se\/[^\s;|]+/gi;
+
+  let result = '';
+  let lastIndex = 0;
+  let found = false;
+
+  for (const match of raw.matchAll(re)) {
+    const start = match.index ?? -1;
+    if (start < 0) {
+      continue;
+    }
+    found = true;
+
+    const fullUrl = match[0];
+    const cleanUrl = fullUrl.replace(/[),.;]+$/, '');
+    const trailing = fullUrl.slice(cleanUrl.length);
+
+    result += escapeHtml(raw.slice(lastIndex, start));
+    result += `<a href="${escapeHtml(cleanUrl)}" target="_blank" contenteditable="false">Fornvännen PDF</a>`;
+    result += escapeHtml(trailing);
+    lastIndex = start + fullUrl.length;
+  }
+
+  if (!found) {
+    return null;
+  }
+
+  result += escapeHtml(raw.slice(lastIndex));
+  return result;
+}
+
+/**
  * Highlight whole words in a string given their pre-computed character
  * boundaries. Used for word-aligned fields (transliteration and the two
  * normalisations). The boundaries are sorted in-place before rendering.
@@ -1053,11 +1097,18 @@ export function inscriptions2markup(inscriptions) {
                 const urlOrBlob = ref.substring(sep + 3);
                 const url = resolveUrlOrBlob(urlOrBlob);
                 paragraph += `<li><a href="${url}" target="_blank" contenteditable="false">${escapeHtml(label)}</a></li>`;
-              } else if (ref.includes('https://')) {
-                // Legacy unencoded URL (no label stored)
-                paragraph += `<li><a href="${ref}" target="_blank" contenteditable="false">${ref}</a></li>`;
               } else {
-                paragraph += `<li>${escapeHtml(ref)}</li>`;
+                const fornvannenMarkup = renderFornvannenReferenceText(ref);
+                if (fornvannenMarkup !== null) {
+                  paragraph += `<li>${fornvannenMarkup}</li>`;
+                  return;
+                }
+                if (ref.includes('https://')) {
+                // Legacy unencoded URL (no label stored)
+                  paragraph += `<li><a href="${ref}" target="_blank" contenteditable="false">${ref}</a></li>`;
+                } else {
+                  paragraph += `<li>${escapeHtml(ref)}</li>`;
+                }
               }
             });
             paragraph += '</ul>';

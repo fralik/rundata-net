@@ -602,6 +602,43 @@ const searchCountryOrProvince = (entry, ruleValues) => {
   return { match: false };
 }
 
+function stripDiacritics(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeReferencesSearchValue(value, ignoreCase) {
+  // References often mix plain URLs and human labels; fold diacritics so
+  // "Fornvännen" can match "fornvannen.se" style URLs.
+  return stripDiacritics(prepareForComparison(value, ignoreCase));
+}
+
+function searchReferencesCombined(fieldValue, ruleValue, operatorName, rule) {
+  const ignoreCase = !!(rule && rule.ignoreCase);
+  const value = normalizeReferencesSearchValue(fieldValue, ignoreCase);
+  const query = normalizeReferencesSearchValue(ruleValue, ignoreCase);
+
+  switch (operatorName) {
+    case 'contains':
+      return { match: value.includes(query) };
+    case 'not_contains':
+      return { match: !value.includes(query) };
+    case 'begins_with':
+      return { match: value.startsWith(query) };
+    case 'not_begins_with':
+      return { match: !value.startsWith(query) };
+    case 'ends_with':
+      return { match: value.endsWith(query) };
+    case 'not_ends_with':
+      return { match: !value.endsWith(query) };
+    case 'equal':
+      return { match: value === query };
+    case 'not_equal':
+      return { match: value !== query };
+    default:
+      return { match: false };
+  }
+}
+
 const customSearchFunctions = {
   inscription_id: {
     in: (record, ruleValue, rule) => searchSignatureWrapper(record, ruleValue, operators.equal, false, !!rule.ignoreCase),
@@ -658,6 +695,16 @@ const customSearchFunctions = {
   },
   english_translation: buildTranslationSearchFunctions('english_translation'),
   swedish_translation: buildTranslationSearchFunctions('swedish_translation'),
+  references_combined: {
+    contains: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'contains', rule),
+    not_contains: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'not_contains', rule),
+    begins_with: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'begins_with', rule),
+    not_begins_with: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'not_begins_with', rule),
+    ends_with: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'ends_with', rule),
+    not_ends_with: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'not_ends_with', rule),
+    equal: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'equal', rule),
+    not_equal: (fieldValue, ruleValue, rule) => searchReferencesCombined(fieldValue, ruleValue, 'not_equal', rule),
+  },
 };
 
 const TRANSLATION_FIELDS = new Set(['english_translation', 'swedish_translation']);
