@@ -432,6 +432,11 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="{% url 'runes:about' %}" target="_blank">Read about Rundata-net</a></li>
+          <li class="nav-item"><a class="nav-link" href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+        </ul>
         <ul id="topControlButtons" class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item d-flex align-items-center ms-2">
             <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#divFormatDialog">
@@ -443,17 +448,9 @@
               Choose what to show on the map
             </button>
           </li>
-          <li class="nav-item d-flex align-items-center ms-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#containerRuleIo">
-              Search code
-            </button>
-          </li>
         </ul>
         <form class="d-flex" role="about">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link" href="{% url 'runes:about' %}" target="_blank">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
             <li class="nav-item d-flex align-items-center ms-2">
               <button type="button" class="btn btn-outline-secondary btn-sm" id="mHideMap">Hide map</button>
             </li>
@@ -566,6 +563,7 @@
         </div>
         <button type="button" class="btn btn-success px-4" id="btnSearch">Search</button>
         <button type="button" class="btn btn-danger" id="btnResetSearch">Delete search</button>
+        <button type="button" class="btn btn-default" id="btnOpenSearchParameters" data-bs-toggle="modal" data-bs-target="#containerRuleIo">Search parameters</button>
         <button type="button" class="btn btn-default" id="btnOpenImportId" data-bs-toggle="modal" data-bs-target="#modalResultsIo" data-results-mode="import">Import ID</button>
         <button type="button" class="btn btn-default" id="btnOpenExportResults" data-bs-toggle="modal" data-bs-target="#modalResultsIo" data-results-mode="export">Export</button>
       </div>
