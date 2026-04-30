@@ -181,6 +181,7 @@
         #leftPanel.left-panel-one-cm-narrow {
           flex: 0 0 calc(16.666667% - 1cm);
           max-width: calc(16.666667% - 1cm);
+          margin-left: 5mm;
         }
         #leftPanel.left-panel-one-cm-narrow {
           margin-right: 3mm;
@@ -341,6 +342,23 @@
         background-color: #0b5ed7 !important;
         border-color: #0a58ca !important;
       }
+      .query-builder [data-text-options-row="rule"] {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+        overflow-x: auto;
+        width: 100%;
+      }
+      .query-builder [data-text-options-row="rule"] .form-check {
+        margin-right: 0;
+        margin-bottom: 0;
+        flex: 0 0 auto;
+      }
+      .query-builder [data-text-options-row="rule"] .form-check-label {
+        font-size: 0.88rem;
+      }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -409,16 +427,26 @@
   <h1 class="visually-hidden">Rundata-net: Search and Explore Scandinavian Runic Inscriptions</h1>
   <nav class="navbar navbar-expand-md bg-body-tertiary rundata-navbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Rundata-net</a>
+      <a class="navbar-brand" href="#">Inscriptions ID</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#containerRuleIo">
+        <ul id="topControlButtons" class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item d-flex align-items-center ms-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#divFormatDialog">
+              Choose what to show about inscriptions in the main display
+            </button>
+          </li>
+          <li class="nav-item d-flex align-items-center ms-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#mapDisplayOptionsDialog">
+              Choose what to show on the map
+            </button>
+          </li>
+          <li class="nav-item d-flex align-items-center ms-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#containerRuleIo">
               Search code
-            </a>
+            </button>
           </li>
         </ul>
         <form class="d-flex" role="about">
@@ -507,28 +535,15 @@
       <div id="mainPanel" class="col my-2 my-md-0">
         <div id="mainDisplay" class="my-fixed-height overflow-scroll border" contentEditable="true" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
-        <div class="mt-2">
-          <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#divFormatDialog">Choose what to show about each inscription</button>
-        </div>
       </div>
 
       <div id="mapDisplayWrapper" class="map-two-cm-narrow col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
         <div id="mapDisplay" class="my-fixed-height"></div>
-        <div class="border rounded p-2 mt-2">
-          <div class="form-check mb-1">
-            <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
-            <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="" id="chkShowOriginalLocation" aria-label="Checkbox for showing original location">
-            <label class="form-check-label" for="chkShowOriginalLocation">Show inscriptions based on original location</label>
-          </div>
-        </div>
       </div>
     </div>
 
-    <div class="row py-3 justify-content-center" role="group" aria-label="">
-      <div class="col-12 col-xl-10 d-flex flex-wrap justify-content-start align-items-start gap-2">
+    <div class="row py-3" role="group" aria-label="">
+      <div id="searchControlsContainer" class="col d-flex flex-wrap justify-content-start align-items-start gap-2">
         <div class="btn-group flex-wrap" role="group">
           <button type="button" class="btn btn-default clip" id="btnOUmlautSmall">ö</button>
           <button type="button" class="btn btn-default clip" id="btnOUmlaut">Ö</button>
@@ -557,11 +572,13 @@
     </div>
 
     <!-- pb-6 is our custom class to make more vertical space -->
-    <div class="row justify-content-center">
-      <div id="builder" class="col-12 col-xl-10"></div>
+    <div class="row">
+      <div id="builderContainer" class="col">
+        <div id="builder"></div>
+      </div>
     </div>
     <div class="row mt-4 mb-3 pb-6">
-      <div class="col-md-10 offset-md-1">
+      <div id="aiAssistantContainer" class="col">
         <div class="border border-warning rounded-3 p-3 bg-body-tertiary shadow-sm">
           <div class="small text-muted mb-2">Let the AI assistent help you with your search: write your question in any language</div>
           <div class="row g-2 align-items-start">
@@ -630,6 +647,27 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-bs-dismiss="modal" id="btnDismissDisplayFormat">Close</button>
           <button type="button" class="btn btn-primary" id="btnApplyDisplayFormat">Apply changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mapDisplayOptionsDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mapDisplayOptionsDialogLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="mapDisplayOptionsDialogLabel">Choose What To Show On The Map</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" value="" id="chkShowSelectedInscriptions" aria-label="Checkbox for showing selected inscriptions only">
+            <label class="form-check-label" for="chkShowSelectedInscriptions">Show selected inscriptions only</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="chkShowOriginalLocation" aria-label="Checkbox for showing original location">
+            <label class="form-check-label" for="chkShowOriginalLocation">Show inscriptions based on original location</label>
+          </div>
         </div>
       </div>
     </div>
@@ -837,6 +875,7 @@ function onDbLoaded() {
 
   // populate jstree with data
   $('#jstree').jstree(true).refresh();
+  applyWindowAlignments();
 }
 
 /**
@@ -879,6 +918,63 @@ function showMarkersWrapper({preserveMapArea = false} = {}) {
   });
 }
 
+function alignLowerSectionsToMainWindow() {
+  const mainDisplay = document.getElementById('mainDisplay');
+  const pageContainer = document.querySelector('.container-fluid');
+  const sections = [
+    document.getElementById('searchControlsContainer'),
+    document.getElementById('builderContainer'),
+    document.getElementById('aiAssistantContainer'),
+  ];
+  if (!mainDisplay || !pageContainer) {
+    return;
+  }
+
+  // Keep default mobile layout.
+  if (!window.matchMedia('(min-width: 768px)').matches) {
+    sections.forEach(el => {
+      if (!el) return;
+      el.style.marginLeft = '';
+      el.style.width = '';
+    });
+    return;
+  }
+
+  const mainLeft = mainDisplay.getBoundingClientRect().left;
+  const containerLeft = pageContainer.getBoundingClientRect().left;
+  const offset = Math.max(0, Math.round(mainLeft - containerLeft));
+
+  sections.forEach(el => {
+    if (!el) return;
+    el.style.marginLeft = `${offset}px`;
+    el.style.width = `calc(100% - ${offset}px)`;
+  });
+}
+
+function alignTopButtonsToMainWindow() {
+  const mainDisplay = document.getElementById('mainDisplay');
+  const topButtons = document.getElementById('topControlButtons');
+  const navContainer = document.querySelector('.rundata-navbar .container-fluid');
+  if (!mainDisplay || !topButtons || !navContainer) {
+    return;
+  }
+
+  if (!window.matchMedia('(min-width: 768px)').matches) {
+    topButtons.style.marginLeft = '';
+    return;
+  }
+
+  const mainLeft = mainDisplay.getBoundingClientRect().left;
+  const navLeft = navContainer.getBoundingClientRect().left;
+  const offset = Math.max(0, Math.round(mainLeft - navLeft));
+  topButtons.style.marginLeft = `${offset}px`;
+}
+
+function applyWindowAlignments() {
+  alignLowerSectionsToMainWindow();
+  alignTopButtonsToMainWindow();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Initialization happens in 3 steps:
   // 1. code here on page load
@@ -913,7 +1009,10 @@ document.addEventListener('DOMContentLoaded', function() {
   ({ map: gMyMap, markers: gMarkersLayer } = initMap("mapDisplay"));
   document.getElementById('mHideMap').addEventListener('click', function() {
     onHideMapClicked('mapDisplayWrapper', 'mHideMap');
+    applyWindowAlignments();
   });
+  applyWindowAlignments();
+  window.addEventListener('resize', applyWindowAlignments);
 
   // Configure jsTree even before we have the data
   $("#jstree")
@@ -1134,6 +1233,7 @@ document.addEventListener('DOMContentLoaded', function() {
     calcWordsAndPersonalNames(data.model.getActiveInscriptions());
     applyStatsDisplayMode();
     renderMainDisplayHintIfNeeded();
+    applyWindowAlignments();
   });
 
   initDragAndDrop();

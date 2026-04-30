@@ -582,7 +582,7 @@ function createWordSearchRule(config) {
           <div class="mt-2">
             <div class="form-check form-check-inline">
               <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="includeAll" id="${name}_includeAddInput" checked>
-              <label class="form-check-label" for="${name}_includeAddInput">Include personal names</label>
+              <label class="form-check-label" for="${name}_includeAddInput">Include names</label>
             </div>
             <div class="form-check form-check-inline">
               <input class="form-check-input" type="radio" name="${name}_personalNamesMode" value="excludeNames" id="${name}_excludeNamesInput">
@@ -723,7 +723,7 @@ export function initQueryBuilder(containerId, viewModel, getHumanName) {
     prepareAutoComplete('swedish_translation', dbMap, getHumanName, { optgroup: 'gr_texts', operators: ["contains", "not_contains", "is_empty", 'is_not_empty'] }),
     {
       id: 'has_personal_name',
-      label: "Contains personal names",
+      label: "Contains names",
       field: 'num_names',
       optgroup: 'gr_texts',
       type: 'integer',
