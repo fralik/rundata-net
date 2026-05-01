@@ -194,6 +194,37 @@
           max-width: calc(33.333333% - 2cm);
         }
       }
+      #mapDisplayWrapper {
+        position: relative;
+      }
+      #mapDisplayWrapper.map-hidden {
+        flex: 0 0 44px !important;
+        max-width: 44px !important;
+        min-width: 44px;
+        padding-right: 0 !important;
+      }
+      #mapDisplayWrapper.map-hidden #mapDisplay {
+        display: none;
+      }
+      .map-corner-toggle {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 500;
+        width: 30px;
+        height: 30px;
+        border-radius: 9999px;
+        line-height: 1;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+      #mapDisplay.leaflet-pseudo-fullscreen,
+      #mapDisplay.leaflet-fullscreen-on {
+        margin: 0 !important;
+      }
       .jstree-scrollable {
         overflow-y: scroll;
         max-height: 100%;
@@ -449,13 +480,6 @@
             </button>
           </li>
         </ul>
-        <form class="d-flex" role="about">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item d-flex align-items-center ms-2">
-              <button type="button" class="btn btn-outline-secondary btn-sm" id="mHideMap">Hide map</button>
-            </li>
-          </ul>
-        </form>
       </div>
     </div>
   </nav>
@@ -535,6 +559,7 @@
       </div>
 
       <div id="mapDisplayWrapper" class="map-two-cm-narrow col-md-4 col-sm-2 ps-0 pe-3 pe-md-0 mt-3 mt-md-0">
+        <button type="button" class="btn btn-outline-secondary btn-sm map-corner-toggle" id="mHideMap" aria-label="Hide map" title="Hide map">×</button>
         <div id="mapDisplay" class="my-fixed-height"></div>
       </div>
     </div>
@@ -1005,8 +1030,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   initClipboardButtons();
   ({ map: gMyMap, markers: gMarkersLayer } = initMap("mapDisplay"));
+  gMyMap.on('fullscreenchange enterFullscreen exitFullscreen', function() {
+    // Force tile/layout recalculation after fullscreen toggle to avoid grey bands.
+    setTimeout(() => {
+      gMyMap.invalidateSize();
+    }, 50);
+  });
   document.getElementById('mHideMap').addEventListener('click', function() {
-    onHideMapClicked('mapDisplayWrapper', 'mHideMap');
+    const mapWrapper = document.getElementById('mapDisplayWrapper');
+    const isHidden = mapWrapper.classList.toggle('map-hidden');
+    this.textContent = isHidden ? '+' : '×';
+    this.title = isHidden ? 'Show map' : 'Hide map';
+    this.setAttribute('aria-label', isHidden ? 'Show map' : 'Hide map');
+    if (!isHidden && gMyMap) {
+      setTimeout(() => gMyMap.invalidateSize(), 0);
+    }
     applyWindowAlignments();
   });
   applyWindowAlignments();

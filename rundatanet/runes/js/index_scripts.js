@@ -851,43 +851,63 @@ function escapeHtml(string) {
 }
 
 /**
- * Replace any raw fornvannen.se PDF URL inside a plain-text reference with
- * a labelled anchor, preserving all surrounding citation text.
+ * Replace specific raw URLs inside a plain-text reference with labelled
+ * anchors, preserving surrounding citation text.
  *
- * Example:
- *   "... http://fornvannen.se/pdf/...pdf; ..."
- * becomes
- *   "... <a ...>Fornvännen PDF</a>; ..."
+ * Current mappings:
+ * - http://fornvannen.se/... -> "Fornvännen PDF"
+ * - http://kulturarvsdata.se/raa/samla/html/<number> -> "ATA Rapport"
  *
  * Returns null when no matching URL is found.
  */
-function renderFornvannenReferenceText(refText) {
+function renderSpecialReferenceLinks(refText) {
   const raw = String(refText || '');
-  const re = /http:\/\/fornvannen\.se\/[^\s;|]+/gi;
+  const urlRules = [
+    {
+      regex: /http:\/\/fornvannen\.se\/[^\s;|]+/gi,
+      label: 'Fornvännen PDF',
+    },
+    {
+      regex: /http:\/\/kulturarvsdata\.se\/raa\/samla\/html\/\d+/gi,
+      label: 'ATA Rapport',
+    },
+  ];
+  const matches = [];
+  urlRules.forEach(rule => {
+    for (const match of raw.matchAll(rule.regex)) {
+      const start = match.index ?? -1;
+      if (start < 0) {
+        continue;
+      }
+      matches.push({
+        start,
+        end: start + match[0].length,
+        fullUrl: match[0],
+        label: rule.label,
+      });
+    }
+  });
+
+  if (matches.length === 0) {
+    return null;
+  }
+  matches.sort((a, b) => (a.start - b.start) || (b.end - a.end));
 
   let result = '';
   let lastIndex = 0;
-  let found = false;
-
-  for (const match of raw.matchAll(re)) {
-    const start = match.index ?? -1;
-    if (start < 0) {
+  for (const match of matches) {
+    if (match.start < lastIndex) {
+      // Skip overlaps, keeping the earliest non-overlapping match.
       continue;
     }
-    found = true;
-
-    const fullUrl = match[0];
+    const fullUrl = match.fullUrl;
     const cleanUrl = fullUrl.replace(/[),.;]+$/, '');
     const trailing = fullUrl.slice(cleanUrl.length);
 
-    result += escapeHtml(raw.slice(lastIndex, start));
-    result += `<a href="${escapeHtml(cleanUrl)}" target="_blank" contenteditable="false">Fornvännen PDF</a>`;
+    result += escapeHtml(raw.slice(lastIndex, match.start));
+    result += `<a href="${escapeHtml(cleanUrl)}" target="_blank" contenteditable="false">${escapeHtml(match.label)}</a>`;
     result += escapeHtml(trailing);
-    lastIndex = start + fullUrl.length;
-  }
-
-  if (!found) {
-    return null;
+    lastIndex = match.end;
   }
 
   result += escapeHtml(raw.slice(lastIndex));
@@ -1098,9 +1118,9 @@ export function inscriptions2markup(inscriptions) {
                 const url = resolveUrlOrBlob(urlOrBlob);
                 paragraph += `<li><a href="${url}" target="_blank" contenteditable="false">${escapeHtml(label)}</a></li>`;
               } else {
-                const fornvannenMarkup = renderFornvannenReferenceText(ref);
-                if (fornvannenMarkup !== null) {
-                  paragraph += `<li>${fornvannenMarkup}</li>`;
+                const specialLinksMarkup = renderSpecialReferenceLinks(ref);
+                if (specialLinksMarkup !== null) {
+                  paragraph += `<li>${specialLinksMarkup}</li>`;
                   return;
                 }
                 if (ref.includes('https://')) {
