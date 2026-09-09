@@ -118,6 +118,14 @@ test('stored desktop preference overrides compact auto detection', () => {
   assert.is(isCompactDbLayout(windowObject), false);
 });
 
+test('stored mobile preference overrides desktop auto detection', () => {
+  const windowObject = makeCapabilityWindow({innerWidth: 1440, coarsePointer: false});
+
+  assert.is(setCompactDbLayoutPreference('mobile', windowObject), 'mobile');
+  assert.is(getCompactDbLayoutPreference(windowObject), 'mobile');
+  assert.is(isCompactDbLayout(windowObject), true);
+});
+
 test('stored layout preference can return to automatic detection', () => {
   const windowObject = makeCapabilityWindow({innerWidth: 1280, coarsePointer: true});
 

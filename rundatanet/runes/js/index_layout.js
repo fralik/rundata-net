@@ -5,6 +5,7 @@ export const COMPACT_DB_LAYOUT_PREFERENCE_KEY = 'rundata.dbLayoutPreference';
 
 const TABLET_MAX_WIDTH = 1366;
 const DESKTOP_LAYOUT_PREFERENCE = 'desktop';
+const MOBILE_LAYOUT_PREFERENCE = 'mobile';
 
 function getViewportWidth(windowObject) {
   const documentWidth = windowObject.document
@@ -31,8 +32,9 @@ export function getCompactDbLayoutPreference(
   }
 
   try {
-    return storage.getItem(COMPACT_DB_LAYOUT_PREFERENCE_KEY) === DESKTOP_LAYOUT_PREFERENCE
-      ? DESKTOP_LAYOUT_PREFERENCE
+    const preference = storage.getItem(COMPACT_DB_LAYOUT_PREFERENCE_KEY);
+    return [DESKTOP_LAYOUT_PREFERENCE, MOBILE_LAYOUT_PREFERENCE].includes(preference)
+      ? preference
       : 'auto';
   } catch (error) {
     return 'auto';
@@ -49,8 +51,8 @@ export function setCompactDbLayoutPreference(
   }
 
   try {
-    if (preference === DESKTOP_LAYOUT_PREFERENCE) {
-      storage.setItem(COMPACT_DB_LAYOUT_PREFERENCE_KEY, DESKTOP_LAYOUT_PREFERENCE);
+    if ([DESKTOP_LAYOUT_PREFERENCE, MOBILE_LAYOUT_PREFERENCE].includes(preference)) {
+      storage.setItem(COMPACT_DB_LAYOUT_PREFERENCE_KEY, preference);
     } else {
       storage.removeItem(COMPACT_DB_LAYOUT_PREFERENCE_KEY);
     }
@@ -98,8 +100,12 @@ export function isCompactDbLayout(
     return false;
   }
 
-  if (getCompactDbLayoutPreference(windowObject) === DESKTOP_LAYOUT_PREFERENCE) {
+  const preference = getCompactDbLayoutPreference(windowObject);
+  if (preference === DESKTOP_LAYOUT_PREFERENCE) {
     return false;
+  }
+  if (preference === MOBILE_LAYOUT_PREFERENCE) {
+    return true;
   }
 
   return isAutomaticCompactDbLayout(windowObject, navigatorObject);
@@ -109,21 +115,23 @@ export function syncCompactDbLayoutClass() {
   if (typeof document === 'undefined' || !document.documentElement) {
     return false;
   }
-  const desktopPreference = getCompactDbLayoutPreference() === DESKTOP_LAYOUT_PREFERENCE;
+  const preference = getCompactDbLayoutPreference();
+  const desktopPreference = preference === DESKTOP_LAYOUT_PREFERENCE;
+  const mobilePreference = preference === MOBILE_LAYOUT_PREFERENCE;
   const compact = isCompactDbLayout();
   document.documentElement.classList.toggle('db-desktop-layout', desktopPreference);
+  document.documentElement.classList.toggle('db-mobile-layout', mobilePreference);
   document.documentElement.classList.toggle('db-compact-layout', compact);
   return compact;
 }
 
 function updateLayoutPreferenceControl(button) {
-  const desktopPreference = getCompactDbLayoutPreference() === DESKTOP_LAYOUT_PREFERENCE;
   const compact = syncCompactDbLayoutClass();
 
-  button.hidden = !desktopPreference && !compact;
-  button.textContent = desktopPreference ? 'Auto view' : 'Desktop view';
-  button.title = desktopPreference ? 'Return to automatic layout' : 'Use desktop layout on this device';
-  button.setAttribute('aria-pressed', String(desktopPreference));
+  button.hidden = false;
+  button.textContent = compact ? 'Desktop vy' : 'Mobil view';
+  button.title = compact ? 'Use desktop layout on this device' : 'Use mobile layout on this device';
+  button.setAttribute('aria-label', compact ? 'Switch to desktop view' : 'Switch to mobile view');
 }
 
 export function initLayoutPreferenceControl() {
@@ -137,8 +145,7 @@ export function initLayoutPreferenceControl() {
   }
 
   button.addEventListener('click', () => {
-    const desktopPreference = getCompactDbLayoutPreference() === DESKTOP_LAYOUT_PREFERENCE;
-    setCompactDbLayoutPreference(desktopPreference ? 'auto' : DESKTOP_LAYOUT_PREFERENCE);
+    setCompactDbLayoutPreference(isCompactDbLayout() ? DESKTOP_LAYOUT_PREFERENCE : MOBILE_LAYOUT_PREFERENCE);
     updateLayoutPreferenceControl(button);
 
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
