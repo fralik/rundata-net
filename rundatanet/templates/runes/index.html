@@ -5,6 +5,18 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+      (function() {
+        try {
+          var dbLayoutPreference = window.localStorage.getItem('rundata.dbLayoutPreference');
+          if (dbLayoutPreference === 'desktop') {
+            document.documentElement.classList.add('db-desktop-layout');
+          } else if (dbLayoutPreference === 'mobile') {
+            document.documentElement.classList.add('db-mobile-layout', 'db-compact-layout');
+          }
+        } catch (error) {}
+      }());
+    </script>
     <meta name="description" content="Search and explore thousands of Scandinavian runic inscriptions online. Rundata.info is a free web version of the Scandinavian Runic-text Data Base (Rundata).">
     <title>Rundata-net: Search Scandinavian Runic Inscriptions Online - sofia addition</title>
     {% get_from_settings 'CANONICAL_DOMAIN' as canonical_domain %}
@@ -207,6 +219,10 @@
         max-width: 100%;
         white-space: normal;
       }
+      #btnLayoutPreference {
+        background: transparent;
+        border: 0;
+      }
       .my-fixed-height {
         height: clamp(320px, calc(100vh - 380px), 500px);
         min-height: 320px;
@@ -269,45 +285,45 @@
           display: none !important;
         }
       }
-      @media (max-width: 767.98px), (max-width: 1366px) and (any-pointer: coarse) {
+      @media (max-width: 767.98px), (max-width: 1366px) and (pointer: coarse) {
         /* Mobile: three panes for map, inscription info, and search controls. */
-        .db-compact-inline {
+html:not(.db-desktop-layout) .db-compact-inline{
           display: inline !important;
         }
-        .db-compact-block {
+        html:not(.db-desktop-layout) .db-compact-block{
           display: block !important;
         }
-        .db-compact-inline-block {
+        html:not(.db-desktop-layout) .db-compact-inline-block{
           display: inline-block !important;
         }
-        .db-desktop-inline,
-        .db-desktop-block,
-        .db-desktop-inline-block {
+        html:not(.db-desktop-layout) .db-desktop-inline,
+html:not(.db-desktop-layout) .db-desktop-block,
+html:not(.db-desktop-layout) .db-desktop-inline-block{
           display: none !important;
         }
-        .rundata-navbar.navbar-expand-md {
+        html:not(.db-desktop-layout) .rundata-navbar.navbar-expand-md{
           flex-wrap: wrap;
         }
-        .rundata-navbar.navbar-expand-md .navbar-toggler {
+        html:not(.db-desktop-layout) .rundata-navbar.navbar-expand-md .navbar-toggler{
           display: block;
         }
-        .rundata-navbar.navbar-expand-md .navbar-collapse {
+        html:not(.db-desktop-layout) .rundata-navbar.navbar-expand-md .navbar-collapse{
           flex-basis: 100%;
           flex-grow: 1;
         }
-        .rundata-navbar.navbar-expand-md .navbar-collapse:not(.show) {
+        html:not(.db-desktop-layout) .rundata-navbar.navbar-expand-md .navbar-collapse:not(.show){
           display: none !important;
         }
-        .rundata-navbar.navbar-expand-md .navbar-collapse.show {
+        html:not(.db-desktop-layout) .rundata-navbar.navbar-expand-md .navbar-collapse.show{
           display: block !important;
         }
-        .rundata-navbar.navbar-expand-md .navbar-nav {
+        html:not(.db-desktop-layout) .rundata-navbar.navbar-expand-md .navbar-nav{
           flex-direction: column;
         }
-        #leftPanel {
+        html:not(.db-desktop-layout) #leftPanel{
           display: none !important;
         }
-        #mobileDbPaneSwitcher {
+        html:not(.db-desktop-layout) #mobileDbPaneSwitcher{
           display: block !important;
           position: sticky;
           top: 0;
@@ -318,63 +334,63 @@
           width: 100%;
           box-sizing: border-box;
         }
-        .mobile-db-tabs {
+        html:not(.db-desktop-layout) .mobile-db-tabs{
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 8px;
         }
-        .mobile-db-tab {
+        html:not(.db-desktop-layout) .mobile-db-tab{
           min-height: 42px;
           border-radius: 6px;
           font-weight: 600;
         }
-        .mobile-db-tab[aria-selected="true"] {
+        html:not(.db-desktop-layout) .mobile-db-tab[aria-selected="true"]{
           color: #fff;
           background: #243b53;
           border-color: #243b53;
         }
-        body.mobile-db-map-view #mainPanel,
-        body.mobile-db-map-view #searchControlsRow,
-        body.mobile-db-map-view #builderContainer,
-        body.mobile-db-map-view #aiAssistantRow,
-        body.mobile-db-map-view #aiAssistantContainer,
-        body.mobile-db-map-view #mobileSearchBuilderRow,
-        body.mobile-db-info-view #mapDisplayWrapper,
-        body.mobile-db-info-view #mobileSearchBuilderRow,
-        body.mobile-db-info-view #searchControlsRow,
-        body.mobile-db-info-view #builderContainer,
-        body.mobile-db-info-view #aiAssistantRow,
-        body.mobile-db-search-view #mapDisplayWrapper,
-        body.mobile-db-search-view #mainPanel,
-        body.mobile-db-search-view #searchControlsRow,
-        body.mobile-db-search-view #builderContainer {
+        html:not(.db-desktop-layout) body.mobile-db-map-view #mainPanel,
+html:not(.db-desktop-layout) body.mobile-db-map-view #searchControlsRow,
+html:not(.db-desktop-layout) body.mobile-db-map-view #builderContainer,
+html:not(.db-desktop-layout) body.mobile-db-map-view #aiAssistantRow,
+html:not(.db-desktop-layout) body.mobile-db-map-view #aiAssistantContainer,
+html:not(.db-desktop-layout) body.mobile-db-map-view #mobileSearchBuilderRow,
+html:not(.db-desktop-layout) body.mobile-db-info-view #mapDisplayWrapper,
+html:not(.db-desktop-layout) body.mobile-db-info-view #mobileSearchBuilderRow,
+html:not(.db-desktop-layout) body.mobile-db-info-view #searchControlsRow,
+html:not(.db-desktop-layout) body.mobile-db-info-view #builderContainer,
+html:not(.db-desktop-layout) body.mobile-db-info-view #aiAssistantRow,
+html:not(.db-desktop-layout) body.mobile-db-search-view #mapDisplayWrapper,
+html:not(.db-desktop-layout) body.mobile-db-search-view #mainPanel,
+html:not(.db-desktop-layout) body.mobile-db-search-view #searchControlsRow,
+html:not(.db-desktop-layout) body.mobile-db-search-view #builderContainer{
           display: none !important;
         }
-        #dbPageContainer {
+        html:not(.db-desktop-layout) #dbPageContainer{
           display: flex;
           flex-direction: column;
         }
-        #mobileSearchBuilderRow {
+        html:not(.db-desktop-layout) #mobileSearchBuilderRow{
           display: flex !important;
           order: 2;
         }
-        #mainLayoutRow {
+        html:not(.db-desktop-layout) #mainLayoutRow{
           order: 3;
         }
-        #aiAssistantRow {
+        html:not(.db-desktop-layout) #aiAssistantRow{
           order: 4;
         }
-        body.mobile-db-search-view #aiAssistantRow {
+        html:not(.db-desktop-layout) body.mobile-db-search-view #aiAssistantRow{
           display: flex !important;
           order: 3;
           margin-top: 0.75rem !important;
         }
-        body.mobile-db-info-view #mainLayoutRow,
-        body.mobile-db-search-view #mainLayoutRow {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mainLayoutRow,
+html:not(.db-desktop-layout) body.mobile-db-search-view #mainLayoutRow{
           order: 3;
         }
-        #mapDisplayWrapper,
-        #mapDisplayWrapper.map-two-cm-narrow {
+        html:not(.db-desktop-layout) #mapDisplayWrapper,
+html:not(.db-desktop-layout) #mapDisplayWrapper.map-two-cm-narrow{
           order: 1;
           width: 100%;
           max-width: 100% !important;
@@ -383,11 +399,11 @@
           margin-top: 0 !important;
           margin-bottom: 8px;
         }
-        #mapDisplayContainer,
-        #mapDisplay {
+        html:not(.db-desktop-layout) #mapDisplayContainer,
+html:not(.db-desktop-layout) #mapDisplay{
           width: 100% !important;
         }
-        #mainPanel {
+        html:not(.db-desktop-layout) #mainPanel{
           order: 2;
           width: 100%;
           max-width: 100%;
@@ -395,59 +411,59 @@
           margin-top: 0 !important;
           margin-right: 0 !important;
         }
-        #searchControlsRow {
+        html:not(.db-desktop-layout) #searchControlsRow{
           padding-top: 0.75rem !important;
           padding-bottom: 0.75rem !important;
         }
-        #searchControlsContainer {
+        html:not(.db-desktop-layout) #searchControlsContainer{
           gap: 0.5rem !important;
         }
-        #searchControlsContainer .btn-group {
+        html:not(.db-desktop-layout) #searchControlsContainer .btn-group{
           width: 100%;
         }
-        #searchControlsContainer > .btn {
+        html:not(.db-desktop-layout) #searchControlsContainer > .btn{
           flex: 1 1 auto;
         }
-        #builderContainer,
-        #aiAssistantContainer {
+        html:not(.db-desktop-layout) #builderContainer,
+html:not(.db-desktop-layout) #aiAssistantContainer{
           width: 100%;
           max-width: 100%;
           flex: 0 0 100%;
         }
-        #aiAssistantContainer .row {
+        html:not(.db-desktop-layout) #aiAssistantContainer .row{
           --bs-gutter-y: 0.5rem;
         }
-        #aiAssistantContainer .col-auto {
+        html:not(.db-desktop-layout) #aiAssistantContainer .col-auto{
           width: 100%;
         }
-        #mapDisplayWrapper.map-hidden {
+        html:not(.db-desktop-layout) #mapDisplayWrapper.map-hidden{
           flex: 0 0 100% !important;
           max-width: 100% !important;
           min-width: 0;
           padding-right: 0 !important;
         }
-        #miniQueryBuilder,
-        #mHideMap {
+        html:not(.db-desktop-layout) #miniQueryBuilder,
+html:not(.db-desktop-layout) #mHideMap{
           display: none !important;
         }
-        body.mobile-db-search-view #miniQueryBuilder {
+        html:not(.db-desktop-layout) body.mobile-db-search-view #miniQueryBuilder{
           display: block !important;
           margin: 8px 0 0;
           padding-right: 8px;
         }
-        body.mobile-db-search-view #miniQueryBuilder .d-flex {
+        html:not(.db-desktop-layout) body.mobile-db-search-view #miniQueryBuilder .d-flex{
           flex-wrap: wrap;
         }
-        body.mobile-db-search-view #miniQueryBuilder .btn {
+        html:not(.db-desktop-layout) body.mobile-db-search-view #miniQueryBuilder .btn{
           flex: 1 1 auto;
         }
-        body.mobile-db-map-view #mapDisplay {
+        html:not(.db-desktop-layout) body.mobile-db-map-view #mapDisplay{
           height: min(720px, calc(100dvh - 128px)) !important;
           min-height: 360px;
           max-height: none;
           margin-bottom: 0;
         }
-        body.mobile-db-map-view #mobileMapPopupHint {
+        html:not(.db-desktop-layout) body.mobile-db-map-view #mobileMapPopupHint{
           display: block;
           background: #fff7df;
           border: 1px solid #edc56b;
@@ -458,27 +474,27 @@
           margin: 0 0 8px;
           padding: 8px 10px;
         }
-        body.mobile-db-map-view .leaflet-popup-content {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .leaflet-popup-content{
           font-size: 0.88rem;
           line-height: 1.3;
           margin: 10px 12px;
         }
-        body.mobile-db-map-view .map-popup-warning {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .map-popup-warning{
           color: #9f2f24;
           display: block;
           font-size: 0.86rem;
           font-weight: 700;
           margin: 0.15rem 0 0.35rem;
         }
-        body.mobile-db-map-view .map-popup-note {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .map-popup-note{
           color: #243b53;
           display: block;
           font-size: 0.84rem;
           font-weight: 700;
           margin: 0.1rem 0 0.35rem;
         }
-        body.mobile-db-map-view .map-drive-link,
-        body.mobile-db-map-view .map-open-info-link {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .map-drive-link,
+html:not(.db-desktop-layout) body.mobile-db-map-view .map-open-info-link{
           border: 1px solid transparent;
           border-radius: 6px;
           display: block;
@@ -491,20 +507,20 @@
           width: 100%;
           text-align: center;
         }
-        body.mobile-db-map-view .map-drive-link {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .map-drive-link{
           background: #243b53;
           color: #fff !important;
         }
-        body.mobile-db-map-view .map-open-info-link {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .map-open-info-link{
           background: #d1e7dd;
           border-color: #75b798;
           color: #0f5132 !important;
           cursor: pointer;
         }
-        body.mobile-db-map-view .mobile-map-id-tooltip {
+        html:not(.db-desktop-layout) body.mobile-db-map-view .mobile-map-id-tooltip{
           cursor: pointer;
         }
-        body.mobile-db-info-view #mainDisplay {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay{
           height: auto;
           min-height: 0;
           max-height: none;
@@ -516,25 +532,25 @@
           margin-bottom: 0;
           padding: 2mm 0 0;
         }
-        body.mobile-db-info-view #mainDisplay .inscription-section {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay .inscription-section{
           padding-bottom: 0.35rem;
           margin-bottom: 0.45rem;
         }
-        body.mobile-db-info-view #mainDisplay .inscription-section h4 {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay .inscription-section h4{
           font-size: 0.98rem;
           line-height: 1.2;
           font-weight: 700;
           margin: 0.35rem 0 0.15rem;
         }
-        body.mobile-db-info-view #mainDisplay .inscription-section span,
-        body.mobile-db-info-view #mainDisplay .inscription-section i,
-        body.mobile-db-info-view #mainDisplay .inscription-section table {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay .inscription-section span,
+html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay .inscription-section i,
+html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay .inscription-section table{
           font-size: 0.86rem;
         }
-        body.mobile-db-info-view #mainDisplay .inscription-section table {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mainDisplay .inscription-section table{
           line-height: 1.2;
         }
-        body.mobile-db-info-view #mobileSearchResultsSummary {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mobileSearchResultsSummary{
           display: flex;
           flex-wrap: wrap;
           gap: 0.35rem 0.65rem;
@@ -549,22 +565,22 @@
           margin-bottom: 8px;
           padding: 8px 10px;
         }
-        body.mobile-db-info-view #mobileSearchResultsSummary .mobile-stat-label {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mobileSearchResultsSummary .mobile-stat-label{
           font-weight: 700;
         }
-        body.mobile-db-info-view #mobileSearchResultsSummary .mobile-stat-value {
+        html:not(.db-desktop-layout) body.mobile-db-info-view #mobileSearchResultsSummary .mobile-stat-value{
           font-weight: 500;
         }
 
-        body.mobile-map-fullscreen .rundata-navbar,
-        body.mobile-map-fullscreen #mobileDbPaneSwitcher,
-        body.mobile-map-fullscreen #mainPanel,
-        body.mobile-map-fullscreen #searchControlsRow,
-        body.mobile-map-fullscreen #builderContainer,
-        body.mobile-map-fullscreen #aiAssistantContainer {
+        html:not(.db-desktop-layout) body.mobile-map-fullscreen .rundata-navbar,
+html:not(.db-desktop-layout) body.mobile-map-fullscreen #mobileDbPaneSwitcher,
+html:not(.db-desktop-layout) body.mobile-map-fullscreen #mainPanel,
+html:not(.db-desktop-layout) body.mobile-map-fullscreen #searchControlsRow,
+html:not(.db-desktop-layout) body.mobile-map-fullscreen #builderContainer,
+html:not(.db-desktop-layout) body.mobile-map-fullscreen #aiAssistantContainer{
           display: none !important;
         }
-        body.mobile-map-fullscreen #mapDisplayWrapper {
+        html:not(.db-desktop-layout) body.mobile-map-fullscreen #mapDisplayWrapper{
           position: fixed !important;
           inset: 0 !important;
           z-index: 5000 !important;
@@ -574,17 +590,458 @@
           max-width: 100vw !important;
           flex: none !important;
         }
-        body.mobile-map-fullscreen #miniQueryBuilder,
-        body.mobile-map-fullscreen #mHideMap {
+        html:not(.db-desktop-layout) body.mobile-map-fullscreen #miniQueryBuilder,
+html:not(.db-desktop-layout) body.mobile-map-fullscreen #mHideMap{
           display: none !important;
         }
-        body.mobile-map-fullscreen #mapDisplay {
+        html:not(.db-desktop-layout) body.mobile-map-fullscreen #mapDisplay{
           height: 100vh !important;
           min-height: 100vh !important;
           max-height: 100vh !important;
           margin: 0 !important;
         }
       }
+      /* Forced mobile layout preference. */
+
+        /* Mobile: three panes for map, inscription info, and search controls. */
+html.db-mobile-layout .db-compact-inline{
+          display: inline !important;
+        }
+        html.db-mobile-layout .db-compact-block{
+          display: block !important;
+        }
+        html.db-mobile-layout .db-compact-inline-block{
+          display: inline-block !important;
+        }
+        html.db-mobile-layout .db-desktop-inline,
+html.db-mobile-layout .db-desktop-block,
+html.db-mobile-layout .db-desktop-inline-block{
+          display: none !important;
+        }
+        html.db-mobile-layout .rundata-navbar.navbar-expand-md{
+          flex-wrap: wrap;
+        }
+        html.db-mobile-layout .rundata-navbar.navbar-expand-md .navbar-toggler{
+          display: block;
+        }
+        html.db-mobile-layout .rundata-navbar.navbar-expand-md .navbar-collapse{
+          flex-basis: 100%;
+          flex-grow: 1;
+        }
+        html.db-mobile-layout .rundata-navbar.navbar-expand-md .navbar-collapse:not(.show){
+          display: none !important;
+        }
+        html.db-mobile-layout .rundata-navbar.navbar-expand-md .navbar-collapse.show{
+          display: block !important;
+        }
+        html.db-mobile-layout .rundata-navbar.navbar-expand-md .navbar-nav{
+          flex-direction: column;
+        }
+        html.db-mobile-layout #leftPanel{
+          display: none !important;
+        }
+        html.db-mobile-layout #mobileDbPaneSwitcher{
+          display: block !important;
+          position: sticky;
+          top: 0;
+          z-index: 1030;
+          background: #fff;
+          border-bottom: 1px solid #d9dee3;
+          padding: 8px 12px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        html.db-mobile-layout .mobile-db-tabs{
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+        html.db-mobile-layout .mobile-db-tab{
+          min-height: 42px;
+          border-radius: 6px;
+          font-weight: 600;
+        }
+        html.db-mobile-layout .mobile-db-tab[aria-selected="true"]{
+          color: #fff;
+          background: #243b53;
+          border-color: #243b53;
+        }
+        html.db-mobile-layout body.mobile-db-map-view #mainPanel,
+html.db-mobile-layout body.mobile-db-map-view #searchControlsRow,
+html.db-mobile-layout body.mobile-db-map-view #builderContainer,
+html.db-mobile-layout body.mobile-db-map-view #aiAssistantRow,
+html.db-mobile-layout body.mobile-db-map-view #aiAssistantContainer,
+html.db-mobile-layout body.mobile-db-map-view #mobileSearchBuilderRow,
+html.db-mobile-layout body.mobile-db-info-view #mapDisplayWrapper,
+html.db-mobile-layout body.mobile-db-info-view #mobileSearchBuilderRow,
+html.db-mobile-layout body.mobile-db-info-view #searchControlsRow,
+html.db-mobile-layout body.mobile-db-info-view #builderContainer,
+html.db-mobile-layout body.mobile-db-info-view #aiAssistantRow,
+html.db-mobile-layout body.mobile-db-search-view #mapDisplayWrapper,
+html.db-mobile-layout body.mobile-db-search-view #mainPanel,
+html.db-mobile-layout body.mobile-db-search-view #searchControlsRow,
+html.db-mobile-layout body.mobile-db-search-view #builderContainer{
+          display: none !important;
+        }
+        html.db-mobile-layout #dbPageContainer{
+          display: flex;
+          flex-direction: column;
+        }
+        html.db-mobile-layout #mobileSearchBuilderRow{
+          display: flex !important;
+          order: 2;
+        }
+        html.db-mobile-layout #mainLayoutRow{
+          order: 3;
+        }
+        html.db-mobile-layout #aiAssistantRow{
+          order: 4;
+        }
+        html.db-mobile-layout body.mobile-db-search-view #aiAssistantRow{
+          display: flex !important;
+          order: 3;
+          margin-top: 0.75rem !important;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mainLayoutRow,
+html.db-mobile-layout body.mobile-db-search-view #mainLayoutRow{
+          order: 3;
+        }
+        html.db-mobile-layout #mapDisplayWrapper,
+html.db-mobile-layout #mapDisplayWrapper.map-two-cm-narrow{
+          order: 1;
+          width: 100%;
+          max-width: 100% !important;
+          flex: 0 0 100% !important;
+          padding-right: 0 !important;
+          margin-top: 0 !important;
+          margin-bottom: 8px;
+        }
+        html.db-mobile-layout #mapDisplayContainer,
+html.db-mobile-layout #mapDisplay{
+          width: 100% !important;
+        }
+        html.db-mobile-layout #mainPanel{
+          order: 2;
+          width: 100%;
+          max-width: 100%;
+          flex: 0 0 100%;
+          margin-top: 0 !important;
+          margin-right: 0 !important;
+        }
+        html.db-mobile-layout #searchControlsRow{
+          padding-top: 0.75rem !important;
+          padding-bottom: 0.75rem !important;
+        }
+        html.db-mobile-layout #searchControlsContainer{
+          gap: 0.5rem !important;
+        }
+        html.db-mobile-layout #searchControlsContainer .btn-group{
+          width: 100%;
+        }
+        html.db-mobile-layout #searchControlsContainer > .btn{
+          flex: 1 1 auto;
+        }
+        html.db-mobile-layout #builderContainer,
+html.db-mobile-layout #aiAssistantContainer{
+          width: 100%;
+          max-width: 100%;
+          flex: 0 0 100%;
+        }
+        html.db-mobile-layout #aiAssistantContainer .row{
+          --bs-gutter-y: 0.5rem;
+        }
+        html.db-mobile-layout #aiAssistantContainer .col-auto{
+          width: 100%;
+        }
+        html.db-mobile-layout #mapDisplayWrapper.map-hidden{
+          flex: 0 0 100% !important;
+          max-width: 100% !important;
+          min-width: 0;
+          padding-right: 0 !important;
+        }
+        html.db-mobile-layout #miniQueryBuilder,
+html.db-mobile-layout #mHideMap{
+          display: none !important;
+        }
+        html.db-mobile-layout body.mobile-db-search-view #miniQueryBuilder{
+          display: block !important;
+          margin: 8px 0 0;
+          padding-right: 8px;
+        }
+        html.db-mobile-layout body.mobile-db-search-view #miniQueryBuilder .d-flex{
+          flex-wrap: wrap;
+        }
+        html.db-mobile-layout body.mobile-db-search-view #miniQueryBuilder .btn{
+          flex: 1 1 auto;
+        }
+        html.db-mobile-layout body.mobile-db-map-view #mapDisplay{
+          height: min(720px, calc(100dvh - 128px)) !important;
+          min-height: 360px;
+          max-height: none;
+          margin-bottom: 0;
+        }
+        html.db-mobile-layout body.mobile-db-map-view #mobileMapPopupHint{
+          display: block;
+          background: #fff7df;
+          border: 1px solid #edc56b;
+          border-radius: 8px;
+          color: #4f3b06;
+          font-size: 0.78rem;
+          line-height: 1.25;
+          margin: 0 0 8px;
+          padding: 8px 10px;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .leaflet-popup-content{
+          font-size: 0.88rem;
+          line-height: 1.3;
+          margin: 10px 12px;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .map-popup-warning{
+          color: #9f2f24;
+          display: block;
+          font-size: 0.86rem;
+          font-weight: 700;
+          margin: 0.15rem 0 0.35rem;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .map-popup-note{
+          color: #243b53;
+          display: block;
+          font-size: 0.84rem;
+          font-weight: 700;
+          margin: 0.1rem 0 0.35rem;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .map-drive-link,
+html.db-mobile-layout body.mobile-db-map-view .map-open-info-link{
+          border: 1px solid transparent;
+          border-radius: 6px;
+          display: block;
+          font-family: inherit;
+          font-size: 0.9rem;
+          font-weight: 700;
+          margin-top: 0.25rem;
+          padding: 0.35rem 0.6rem;
+          text-decoration: none;
+          width: 100%;
+          text-align: center;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .map-drive-link{
+          background: #243b53;
+          color: #fff !important;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .map-open-info-link{
+          background: #d1e7dd;
+          border-color: #75b798;
+          color: #0f5132 !important;
+          cursor: pointer;
+        }
+        html.db-mobile-layout body.mobile-db-map-view .mobile-map-id-tooltip{
+          cursor: pointer;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mainDisplay{
+          height: auto;
+          min-height: 0;
+          max-height: none;
+          overflow: visible !important;
+          border: 0 !important;
+          background: transparent;
+          font-size: 0.86rem;
+          line-height: 1.3;
+          margin-bottom: 0;
+          padding: 2mm 0 0;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mainDisplay .inscription-section{
+          padding-bottom: 0.35rem;
+          margin-bottom: 0.45rem;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mainDisplay .inscription-section h4{
+          font-size: 0.98rem;
+          line-height: 1.2;
+          font-weight: 700;
+          margin: 0.35rem 0 0.15rem;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mainDisplay .inscription-section span,
+html.db-mobile-layout body.mobile-db-info-view #mainDisplay .inscription-section i,
+html.db-mobile-layout body.mobile-db-info-view #mainDisplay .inscription-section table{
+          font-size: 0.86rem;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mainDisplay .inscription-section table{
+          line-height: 1.2;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mobileSearchResultsSummary{
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.35rem 0.65rem;
+          align-items: center;
+          background: #eef4ef;
+          border: 1px solid #c7dacb;
+          border-radius: 8px;
+          color: #233426;
+          font-size: 0.78rem;
+          font-weight: 600;
+          line-height: 1.25;
+          margin-bottom: 8px;
+          padding: 8px 10px;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mobileSearchResultsSummary .mobile-stat-label{
+          font-weight: 700;
+        }
+        html.db-mobile-layout body.mobile-db-info-view #mobileSearchResultsSummary .mobile-stat-value{
+          font-weight: 500;
+        }
+
+        html.db-mobile-layout body.mobile-map-fullscreen .rundata-navbar,
+html.db-mobile-layout body.mobile-map-fullscreen #mobileDbPaneSwitcher,
+html.db-mobile-layout body.mobile-map-fullscreen #mainPanel,
+html.db-mobile-layout body.mobile-map-fullscreen #searchControlsRow,
+html.db-mobile-layout body.mobile-map-fullscreen #builderContainer,
+html.db-mobile-layout body.mobile-map-fullscreen #aiAssistantContainer{
+          display: none !important;
+        }
+        html.db-mobile-layout body.mobile-map-fullscreen #mapDisplayWrapper{
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 5000 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+          flex: none !important;
+        }
+        html.db-mobile-layout body.mobile-map-fullscreen #miniQueryBuilder,
+html.db-mobile-layout body.mobile-map-fullscreen #mHideMap{
+          display: none !important;
+        }
+        html.db-mobile-layout body.mobile-map-fullscreen #mapDisplay{
+          height: 100vh !important;
+          min-height: 100vh !important;
+          max-height: 100vh !important;
+          margin: 0 !important;
+        }
+
+
+        html.db-mobile-layout body.display-options-open #mHideMap{
+          display: none !important;
+        }
+
+
+        html.db-mobile-layout .display-options-checklist{
+          max-height: 52vh;
+          overflow-y: auto;
+          border: 1px solid #dee2e6;
+          border-radius: 0.5rem;
+          padding: 0.5rem;
+          background: #fff;
+        }
+        html.db-mobile-layout .display-options-mobile-row{
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.45rem 0.35rem;
+          border-bottom: 1px solid #edf0f2;
+        }
+        html.db-mobile-layout .display-options-mobile-row:last-child{
+          border-bottom: 0;
+        }
+        html.db-mobile-layout .display-options-mobile-order{
+          display: flex;
+          gap: 0.25rem;
+          flex: 0 0 auto;
+        }
+        html.db-mobile-layout .display-options-mobile-order .btn{
+          min-width: 34px;
+          min-height: 34px;
+          padding: 0.25rem 0.35rem;
+        }
+
+
+        html.db-mobile-layout .rundata-image-gallery{
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scroll-snap-type: x mandatory;
+          padding-bottom: 0.25rem;
+        }
+        html.db-mobile-layout .rundata-image-item{
+          flex: 0 0 auto;
+          width: min(72vw, 4.5cm);
+          scroll-snap-align: start;
+        }
+        html.db-mobile-layout .rundata-image-link,
+html.db-mobile-layout .rundata-image-avatar{
+          width: 100%;
+        }
+
+
+        html.db-mobile-layout #topControlButtons{
+          width: 100%;
+          margin-top: 0.25rem;
+        }
+        html.db-mobile-layout #topControlButtons .nav-item{
+          width: 100%;
+          margin-left: 0 !important;
+          align-items: stretch !important;
+        }
+        html.db-mobile-layout #topControlButtons .top-control-link{
+          width: 100%;
+          text-align: left;
+          background: transparent;
+          border: 0;
+          border-radius: 0;
+          color: var(--bs-nav-link-color);
+          padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+          font-size: var(--bs-nav-link-font-size);
+          font-weight: var(--bs-nav-link-font-weight);
+        }
+        html.db-mobile-layout #topControlButtons .top-control-link:hover,
+html.db-mobile-layout #topControlButtons .top-control-link:focus{
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+          color: var(--bs-nav-link-hover-color);
+        }
+
+
+        html.db-mobile-layout .query-builder .rule-container .rule-filter-container,
+html.db-mobile-layout .query-builder .rule-container .rule-operator-container,
+html.db-mobile-layout .query-builder .rule-container .rule-value-container{
+          display: block;
+          width: 100%;
+          margin: 5px 0;
+        }
+
+        html.db-mobile-layout .query-builder .rule-container .rule-value-container{
+          border-left: none;
+          padding-left: 0;
+          border-top: 1px solid #DDD;
+          padding-top: 5px;
+        }
+
+        html.db-mobile-layout .query-builder .form-control{
+          width: 100%;
+        }
+
+        html.db-mobile-layout .query-builder .rule-container{
+          padding: 10px;
+          display: block !important;
+        }
+
+        html.db-mobile-layout .query-builder .rule-header{
+          margin-bottom: 5px;
+        }
+
+        html.db-mobile-layout .query-builder .rule-footer{
+          margin-left: 0 !important;
+          margin-top: 6px;
+        }
+
+        html.db-mobile-layout .query-builder .rule-clear-value-btn{
+          margin-top: 6px;
+        }
+
+        html.db-mobile-layout .query-builder .rule-actions{
+          flex-wrap: wrap;
+        }
+      /* End forced mobile layout preference. */
       #mapDisplayWrapper {
         position: relative;
       }
@@ -617,8 +1074,8 @@
         justify-content: center;
         font-size: 1.1rem;
       }
-      @media (max-width: 767.98px), (max-width: 1366px) and (any-pointer: coarse) {
-        body.display-options-open #mHideMap {
+      @media (max-width: 767.98px), (max-width: 1366px) and (pointer: coarse) {
+        html:not(.db-desktop-layout) body.display-options-open #mHideMap{
           display: none !important;
         }
       }
@@ -729,8 +1186,8 @@
       .display-options-selected-column #multiselect_to {
         border-color: #b9d9c2;
       }
-      @media (max-width: 767.98px), (max-width: 1366px) and (any-pointer: coarse) {
-        .display-options-checklist {
+      @media (max-width: 767.98px), (max-width: 1366px) and (pointer: coarse) {
+        html:not(.db-desktop-layout) .display-options-checklist{
           max-height: 52vh;
           overflow-y: auto;
           border: 1px solid #dee2e6;
@@ -738,22 +1195,22 @@
           padding: 0.5rem;
           background: #fff;
         }
-        .display-options-mobile-row {
+        html:not(.db-desktop-layout) .display-options-mobile-row{
           display: flex;
           align-items: center;
           gap: 0.5rem;
           padding: 0.45rem 0.35rem;
           border-bottom: 1px solid #edf0f2;
         }
-        .display-options-mobile-row:last-child {
+        html:not(.db-desktop-layout) .display-options-mobile-row:last-child{
           border-bottom: 0;
         }
-        .display-options-mobile-order {
+        html:not(.db-desktop-layout) .display-options-mobile-order{
           display: flex;
           gap: 0.25rem;
           flex: 0 0 auto;
         }
-        .display-options-mobile-order .btn {
+        html:not(.db-desktop-layout) .display-options-mobile-order .btn{
           min-width: 34px;
           min-height: 34px;
           padding: 0.25rem 0.35rem;
@@ -814,21 +1271,21 @@
         color: inherit;
         text-decoration: underline;
       }
-      @media (max-width: 767.98px), (max-width: 1366px) and (any-pointer: coarse) {
-        .rundata-image-gallery {
+      @media (max-width: 767.98px), (max-width: 1366px) and (pointer: coarse) {
+        html:not(.db-desktop-layout) .rundata-image-gallery{
           flex-wrap: nowrap;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
           padding-bottom: 0.25rem;
         }
-        .rundata-image-item {
+        html:not(.db-desktop-layout) .rundata-image-item{
           flex: 0 0 auto;
           width: min(72vw, 4.5cm);
           scroll-snap-align: start;
         }
-        .rundata-image-link,
-        .rundata-image-avatar {
+        html:not(.db-desktop-layout) .rundata-image-link,
+html:not(.db-desktop-layout) .rundata-image-avatar{
           width: 100%;
         }
       }
@@ -973,17 +1430,17 @@
       .query-builder [data-text-options-row="rule"] .form-check-label {
         font-size: 0.88rem;
       }
-      @media (max-width: 767.98px), (max-width: 1366px) and (any-pointer: coarse) {
-        #topControlButtons {
+      @media (max-width: 767.98px), (max-width: 1366px) and (pointer: coarse) {
+        html:not(.db-desktop-layout) #topControlButtons{
           width: 100%;
           margin-top: 0.25rem;
         }
-        #topControlButtons .nav-item {
+        html:not(.db-desktop-layout) #topControlButtons .nav-item{
           width: 100%;
           margin-left: 0 !important;
           align-items: stretch !important;
         }
-        #topControlButtons .top-control-link {
+        html:not(.db-desktop-layout) #topControlButtons .top-control-link{
           width: 100%;
           text-align: left;
           background: transparent;
@@ -994,8 +1451,8 @@
           font-size: var(--bs-nav-link-font-size);
           font-weight: var(--bs-nav-link-font-weight);
         }
-        #topControlButtons .top-control-link:hover,
-        #topControlButtons .top-control-link:focus {
+        html:not(.db-desktop-layout) #topControlButtons .top-control-link:hover,
+html:not(.db-desktop-layout) #topControlButtons .top-control-link:focus{
           background: transparent;
           border: 0;
           box-shadow: none;
@@ -1026,45 +1483,45 @@
 
     <!-- modifications for query builder to make it responsive -->
     <style>
-      @media (max-width: 767.98px), (max-width: 1366px) and (any-pointer: coarse) {
-        .query-builder .rule-container .rule-filter-container,
-        .query-builder .rule-container .rule-operator-container,
-        .query-builder .rule-container .rule-value-container {
+      @media (max-width: 767.98px), (max-width: 1366px) and (pointer: coarse) {
+        html:not(.db-desktop-layout) .query-builder .rule-container .rule-filter-container,
+html:not(.db-desktop-layout) .query-builder .rule-container .rule-operator-container,
+html:not(.db-desktop-layout) .query-builder .rule-container .rule-value-container{
           display: block;
           width: 100%;
           margin: 5px 0;
         }
 
-        .query-builder .rule-container .rule-value-container {
+        html:not(.db-desktop-layout) .query-builder .rule-container .rule-value-container{
           border-left: none;
           padding-left: 0;
           border-top: 1px solid #DDD;
           padding-top: 5px;
         }
 
-        .query-builder .form-control {
+        html:not(.db-desktop-layout) .query-builder .form-control{
           width: 100%;
         }
 
-        .query-builder .rule-container {
+        html:not(.db-desktop-layout) .query-builder .rule-container{
           padding: 10px;
           display: block !important;
         }
 
-        .query-builder .rule-header {
+        html:not(.db-desktop-layout) .query-builder .rule-header{
           margin-bottom: 5px;
         }
 
-        .query-builder .rule-footer {
+        html:not(.db-desktop-layout) .query-builder .rule-footer{
           margin-left: 0 !important;
           margin-top: 6px;
         }
 
-        .query-builder .rule-clear-value-btn {
+        html:not(.db-desktop-layout) .query-builder .rule-clear-value-btn{
           margin-top: 6px;
         }
 
-        .query-builder .rule-actions {
+        html:not(.db-desktop-layout) .query-builder .rule-actions{
           flex-wrap: wrap;
         }
       }
@@ -1083,6 +1540,7 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'runes:about' %}" target="_blank">About</a></li>
           <li class="nav-item"><a class="nav-link" href="http://rundata-net.rtfd.io/" target="_blank">Help</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'runes:references' %}" target="_blank">Bibliography</a></li>
+          <li class="nav-item"><button type="button" class="nav-link btn btn-link px-md-2" id="btnLayoutPreference" hidden></button></li>
         </ul>
       </div>
     </div>
@@ -3633,6 +4091,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   initMultiselect();
   initMobileDbPaneSwitcher();
+  initLayoutPreferenceControl();
 
   $('#multiselect, #displayOptionsChecklist').on('displayUpdated', () => {
     displaySignatureInfo();
