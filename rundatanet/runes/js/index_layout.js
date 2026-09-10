@@ -129,7 +129,7 @@ function updateLayoutPreferenceControl(button) {
   const compact = syncCompactDbLayoutClass();
 
   button.hidden = false;
-  button.textContent = compact ? 'Desktop vy' : 'Mobil view';
+  button.textContent = compact ? 'Desktop view' : 'Mobile view';
   button.title = compact ? 'Use desktop layout on this device' : 'Use mobile layout on this device';
   button.setAttribute('aria-label', compact ? 'Switch to desktop view' : 'Switch to mobile view');
 }
