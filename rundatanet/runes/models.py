@@ -216,6 +216,8 @@ class ImageLink(models.Model):
     meta = models.ForeignKey(MetaInformation, on_delete=models.CASCADE, related_name="images")
     link_url = models.URLField()
     direct_url = models.URLField(blank=True)
+    info = models.CharField(max_length=1500, blank=True, default="")
+    original_info = models.CharField(max_length=1500, blank=True, default="")
 
 
 class PersonalName(models.Model):

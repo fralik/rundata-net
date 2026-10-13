@@ -724,6 +724,9 @@
                 <img src="{{ img.direct_url }}" alt="Image of {{ signature }}">
                 {% endif %}
               </a>
+              {% if img.info %}
+              <span class="image-caption">{{ img.info }}</span>
+              {% endif %}
               <span class="image-source">source: {{ img.link_url }}</span>
             </li>
             {% endfor %}
