@@ -28,7 +28,7 @@ DEFAULT_DB = ROOT / "rundatanet/static/runes/runes.sqlite3"
 DEFAULT_REPORT_DIR = ROOT / "audit/runer_ku_images"
 CAPTION = "Source: Runer.ku.dk"
 
-VISGENSTAND_RE = re.compile(r"https?://runer\.ku\.dk/VisGenstand\.aspx\?Titel=([^\s,;]+)", re.I)
+VISGENSTAND_RE = re.compile(r"https?://runer\.ku\.dk/VisGenstand\.aspx\?Titel=([^\s<>'\"]+)", re.I)
 Q_PAGE_RE = re.compile(r"https?://runer\.ku\.dk/q\.php\?p=runer/genstande/genstand/[0-9]+", re.I)
 
 
@@ -48,7 +48,7 @@ def canonical_runer_url(reference_text: str) -> str | None:
 
     old_match = VISGENSTAND_RE.search(reference_text)
     if old_match:
-        title = old_match.group(1)
+        title = old_match.group(1).rstrip(".,;)")
         return f"https://runer.ku.dk/q.php?p=runer/genstande/genstandfratitel&Titel={title}"
 
     return None
@@ -232,10 +232,10 @@ def import_images(conn: sqlite3.Connection, candidate: Candidate, final_url: str
             SELECT 1
             FROM runes_imagelink
             WHERE meta_id = ?
-              AND (direct_url = ? OR link_url = ?)
+              AND direct_url = ?
             LIMIT 1
             """,
-            (candidate.meta_id, image_url, final_url),
+            (candidate.meta_id, image_url),
         ).fetchone()
         if exists:
             continue
