@@ -1,0 +1,17 @@
+{
+  "signa": 460,
+  "search_errors": 0,
+  "missing_documents_checked": 607,
+  "errors": 0,
+  "proposed_links": 594,
+  "affected_signa": 344,
+  "proposed_documents": 512,
+  "already_over_limit": 19,
+  "database_changed": false,
+  "max_total": 10,
+  "photographs_only": false,
+  "images_only": true,
+  "unlimited_signa": [
+    "Sö 101"
+  ]
+}
