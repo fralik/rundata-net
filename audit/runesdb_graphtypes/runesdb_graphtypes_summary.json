@@ -1,0 +1,13 @@
+{
+  "eligible": 558,
+  "eligible_exact": 342,
+  "eligible_unmatched": 216,
+  "http_error": 608,
+  "http_error_unmatched": 608,
+  "image_without_graphtypes": 799,
+  "image_without_graphtypes_exact": 780,
+  "image_without_graphtypes_unmatched": 19,
+  "no_image": 3035,
+  "no_image_exact": 2846,
+  "no_image_unmatched": 189
+}
