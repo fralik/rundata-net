@@ -1099,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', function() {
   Promise.all([initSqlJs(sqlConfig), lemmaIndexPromise]).then(function([SQL, loadedLemmaIndex]) {
     lemmaIndex = loadedLemmaIndex;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=20261013-runer-ku-images-v2", true);
+    xhr.open('GET', "{% static 'runes/runes.sqlite3' %}?v=20261017-runes-graphtypes", true);
     xhr.responseType = 'arraybuffer';
     xhr.addEventListener("load", function() {
       console.log('we got sql data from server');
