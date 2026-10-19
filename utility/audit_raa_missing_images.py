@@ -86,6 +86,7 @@ def fetch_json(url, cache, body=None):
 def search(signature, cache):
     hits, seen_pages = {}, set()
     page = 0
+    capacity = None
     while True:
         data = fetch_json(SEARCH, cache, {
             'criterias': [{'key': 'runsignum', 'values': [signature]}],
@@ -101,7 +102,13 @@ def search(signature, cache):
             if not ident:
                 raise ValueError('Search hit lacks a recognized document URI')
             hits[ident] = hit
-        total_pages = int(data['totalPages'])
+        if capacity is None:
+            capacity = int(data.get('pageSize') or 100)
+        # RAÄ sometimes rounds totalPages down (e.g. 196 results, pageSize 100,
+        # totalPages 1). Preserve the first page's capacity; the last page's
+        # pageSize may be the smaller actual number of returned records.
+        expected_pages = (int(data['totalElements']) + capacity - 1) // capacity
+        total_pages = max(int(data['totalPages']), expected_pages)
         if page + 1 >= total_pages:
             if len(hits) != int(data['totalElements']):
                 raise ValueError('Search result count does not match totalElements')

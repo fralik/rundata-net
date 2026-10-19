@@ -48,6 +48,19 @@ class RaaAuditTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'repeated'):
                 audit.search('Sö 1', Path('/unused'))
 
+    def test_rounded_down_page_count_does_not_hide_last_page(self):
+        def hit(i):
+            return {'uri': 'https://pub.raa.se/dokumentation/' + uuid(i)}
+
+        pages = [
+            dict(indexResults=[hit(i) for i in range(1, 101)], pageSize=100,
+                 totalPages=1, totalElements=101),
+            dict(indexResults=[hit(101)], pageSize=1, totalPages=1, totalElements=101),
+        ]
+        with patch.object(audit, 'fetch_json', side_effect=pages) as fetch:
+            self.assertEqual(len(audit.search('Ög 136', Path('/unused'))), 101)
+        self.assertEqual([call.args[2]['page'] for call in fetch.call_args_list], [0, 1])
+
     def test_archive_volume_is_not_an_automatic_candidate(self):
         doc = dict(securityLevel='PUBLIC', attributes=[
             dict(name='runsignum', value=['Sö 1']),
