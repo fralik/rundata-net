@@ -1,0 +1,12 @@
+{
+  "signa": 460,
+  "search_errors": 0,
+  "missing_documents_checked": 607,
+  "errors": 0,
+  "proposed_links": 580,
+  "affected_signa": 343,
+  "proposed_documents": 498,
+  "already_over_limit": 19,
+  "database_changed": false,
+  "max_total": 10
+}

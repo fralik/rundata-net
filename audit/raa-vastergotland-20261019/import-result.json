@@ -1,0 +1,14 @@
+{
+  "import_date": "2026-10-19",
+  "imported_links": 46,
+  "affected_signa": 15,
+  "backup": "/tmp/runes.before-raa-ostergotland-vastergotland-20261019-130600.sqlite3",
+  "integrity_check": "ok",
+  "foreign_key_check_unchanged": true,
+  "existing_image_rows_unchanged": true,
+  "max_total": 15,
+  "unlimited_signa": [
+    "Ög 136",
+    "Vg 119"
+  ]
+}

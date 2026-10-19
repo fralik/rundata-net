@@ -1,0 +1,9 @@
+{
+  "imported_links": 594,
+  "affected_signa": 344,
+  "so101_additions": 15,
+  "so101_total": 115,
+  "backup": "/tmp/runes.before-raa-sodermanland-import-20261017-215745.sqlite3",
+  "integrity_check": "ok",
+  "existing_image_rows_unchanged": true
+}

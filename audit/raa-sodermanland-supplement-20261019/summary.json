@@ -1,0 +1,20 @@
+{
+  "signa": 460,
+  "search_errors": 0,
+  "missing_documents_checked": 109,
+  "errors": 0,
+  "proposed_links": 47,
+  "affected_signa": 28,
+  "proposed_documents": 46,
+  "excluded_without_image_links": 4,
+  "already_over_limit": 8,
+  "database_changed": false,
+  "max_total": 15,
+  "photographs_only": false,
+  "images_only": true,
+  "unlimited_signa": [
+    "Sö 101"
+  ],
+  "all_provinces": false,
+  "excluded_provinces": []
+}

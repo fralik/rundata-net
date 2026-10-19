@@ -1,0 +1,25 @@
+{
+  "signa": 3412,
+  "search_errors": 0,
+  "missing_documents_checked": 88,
+  "errors": 0,
+  "proposed_links": 47,
+  "affected_signa": 30,
+  "proposed_documents": 44,
+  "excluded_without_image_links": 9,
+  "already_over_limit": 53,
+  "database_changed": false,
+  "max_total": 15,
+  "photographs_only": false,
+  "images_only": true,
+  "unlimited_signa": [],
+  "all_provinces": true,
+  "excluded_provinces": [
+    "Sö",
+    "U",
+    "Öl",
+    "G",
+    "Ög",
+    "Vg"
+  ]
+}

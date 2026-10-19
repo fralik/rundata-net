@@ -1,0 +1,12 @@
+{
+  "imported_links": 94,
+  "affected_signa": 58,
+  "removed_links": 1,
+  "removed_image_id": 77557,
+  "other_existing_rows_unchanged": true,
+  "integrity_check": "ok",
+  "source_import_reports": [
+    "audit/raa-remaining-20261019/import-result.json",
+    "audit/raa-sodermanland-supplement-20261019/import-result.json"
+  ]
+}

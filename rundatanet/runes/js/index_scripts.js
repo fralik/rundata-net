@@ -620,6 +620,19 @@ function resolveUrlOrBlob(urlOrBlob) {
   return urlOrBlob;
 }
 
+function imageSourcePriority(url) {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
+    if (hostname === 'raa.se' || hostname.endsWith('.raa.se')) return 0;
+    if (['digitaltmuseum.se', 'digitaltmuseum.no', 'digitaltmuseum.org'].includes(hostname)) return 1;
+    if (hostname === 'shm.se' || hostname.endsWith('.shm.se')) return 2;
+    if (hostname === 'sokisamlingar.sormlandsmuseum.se') return 3;
+  } catch {
+    // Keep unrecognized links after the preferred image sources.
+  }
+  return 4;
+}
+
 export function fetchAllImages(db) {
   let content = [];
   try {
@@ -653,6 +666,9 @@ export function fetchAllImages(db) {
       allImages[metaId] = {links: []};
     }
     allImages[metaId].links.push({id, indirect, direct, info});
+  }
+  for (const images of Object.values(allImages)) {
+    images.links.sort((a, b) => imageSourcePriority(a.indirect) - imageSourcePriority(b.indirect));
   }
   return allImages;
 }
