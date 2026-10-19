@@ -1,0 +1,16 @@
+{
+  "signa": 190,
+  "search_errors": 0,
+  "missing_documents_checked": 37,
+  "errors": 0,
+  "proposed_links": 70,
+  "affected_signa": 55,
+  "proposed_documents": 24,
+  "already_over_limit": 10,
+  "database_changed": false,
+  "max_total": 15,
+  "photographs_only": false,
+  "images_only": true,
+  "unlimited_signa": [],
+  "excluded_without_image_links": 1
+}

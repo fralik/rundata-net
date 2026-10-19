@@ -82,7 +82,7 @@ class RaaAuditTests(unittest.TestCase):
                             reason='', title=ident, genre='Plansch', image_url='https://pub.raa.se/image')
 
             args = ['audit', '--db', str(dbpath), '--output', str(root / 'out'),
-                    '--cache', str(root / 'cache')]
+                    '--cache', str(root / 'cache'), '--max-total', '10']
             with patch('sys.argv', args), patch.object(audit, 'search', return_value=hits), \
                     patch.object(audit, 'inspect_document', side_effect=inspect), \
                     contextlib.redirect_stdout(io.StringIO()):
@@ -108,6 +108,30 @@ class RaaAuditTests(unittest.TestCase):
             self.assertEqual([r for r in unlimited_rows if r['signature'] == 'Sö 2'],
                              [r for r in rows if r['signature'] == 'Sö 2'])
             self.assertFalse(any(r['document_id'] == uuid(12) for r in unlimited_rows))
+            self.assertEqual(list(db.iterdump()), before)
+            # At the new default of fifteen, a photographic plate must win the
+            # last slot even when a single-signum photograph is also available.
+            db.executemany('INSERT INTO runes_imagelink VALUES(?,?,?)', [
+                (101, 'https://pub.raa.se/visa/dokumentation/' + uuid(i), '') for i in range(13, 18)
+            ])
+            db.commit()
+            before = list(db.iterdump())
+
+            def inspect_with_photographic_plate(ident, cache):
+                row = inspect(ident, cache)
+                row['technique'] = 'Fotografi'
+                if ident == uuid(11):
+                    row.update(genre='Fotografi', signa=['Sö 1'])
+                return row
+
+            with patch('sys.argv', args[:-2]), patch.object(audit, 'search', return_value=hits), \
+                    patch.object(audit, 'inspect_document', side_effect=inspect_with_photographic_plate), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                audit.main()
+            with (root / 'out/proposed-additions.csv').open(encoding='utf-8-sig') as stream:
+                preferred_rows = list(csv.DictReader(stream))
+            self.assertEqual([r['document_id'] for r in preferred_rows if r['signature'] == 'Sö 1'],
+                             [uuid(10)])
             self.assertEqual(list(db.iterdump()), before)
             db.close()
 

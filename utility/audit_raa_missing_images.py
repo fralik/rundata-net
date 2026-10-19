@@ -10,6 +10,8 @@ from pathlib import Path
 import re
 import sqlite3
 import subprocess
+import threading
+import time
 import unicodedata
 from urllib.parse import unquote, urlparse
 
@@ -17,6 +19,9 @@ from urllib.parse import unquote, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 SEARCH = 'https://arkivsok.raa.se/api/dokumentation/search/advanced'
 UUID = re.compile(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', re.I)
+REQUEST_INTERVAL = 0.2
+REQUEST_LOCK = threading.Lock()
+LAST_REQUEST = 0.0
 
 
 def normalize(value):
@@ -54,10 +59,17 @@ def is_visual_material(genre):
 
 
 def fetch_json(url, cache, body=None):
+    global LAST_REQUEST
     key = hashlib.sha256((url + json.dumps(body, sort_keys=True)).encode()).hexdigest()
     path = cache / (key + '.json')
     if path.exists():
         return json.loads(path.read_text())
+    # Share a rate limit across workers; cached results need no delay.
+    with REQUEST_LOCK:
+        delay = REQUEST_INTERVAL - (time.monotonic() - LAST_REQUEST)
+        if delay > 0:
+            time.sleep(delay)
+        LAST_REQUEST = time.monotonic()
     command = ['curl', '--fail', '--silent', '--show-error', '--location',
                '--retry', '2', '--retry-delay', '1', '--max-time', '25',
                '--user-agent', 'Rundata-net RAÄ image audit']
@@ -154,7 +166,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--db', type=Path, default=ROOT / 'rundatanet/static/runes/runes.sqlite3')
     parser.add_argument('--province', default='Sö')
-    parser.add_argument('--max-total', type=int, default=10)
+    parser.add_argument('--max-total', type=int, default=15)
     parser.add_argument('--unlimited-signum', action='append', default=[],
                         help='Signum exempt from the total-link cap; may be repeated.')
     parser.add_argument('--output', type=Path, required=True)
@@ -236,10 +248,12 @@ def main():
             else:
                 doc = docs[ident]
                 row.update(doc)
-                if normalize(sig) not in {normalize(s) for s in doc['signa']}:
-                    row.update(status='review', reason='Assigned signum absent from structured runsignum field')
-                elif args.images_only and normalize(doc['genre']) in {'karta', 'handskrift', 'arkivvolym'}:
+                if args.images_only and normalize(doc['genre']) in {'karta', 'handskrift', 'arkivvolym', 'dokument'}:
                     row.update(status='excluded_map_or_text', reason='Map or text material excluded by selection')
+                elif not doc.get('image_url'):
+                    row.update(status='excluded_no_image', reason=doc['reason'] or 'No public full-size image resource')
+                elif normalize(sig) not in {normalize(s) for s in doc['signa']}:
+                    row.update(status='review', reason='Assigned signum absent from structured runsignum field')
                 elif doc['reason']:
                     row.update(status='review')
                 elif args.images_only and not is_visual_material(doc['genre']):
@@ -260,7 +274,10 @@ def main():
                     row.update(status='eligible')
                     eligible.append(row)
             audit.append(row)
-        eligible.sort(key=lambda row: (len(row['signa']), row['genre'] == 'Plansch',
+        # Prefer photographic plates before applying the per-signum cap.
+        eligible.sort(key=lambda row: (not (normalize(row['genre']) == 'plansch'
+                                            and normalize(row.get('technique', '')) == 'fotografi'),
+                                       len(row['signa']),
                                        row['title'], row['document_id']))
         for n, row in enumerate(eligible):
             row['status'] = 'proposed_addition' if n < available else 'over_limit'
@@ -284,6 +301,8 @@ def main():
               [r for r in audit if r['status'] == 'excluded_non_photographic'], fields)
     write_csv(args.output / 'excluded-maps-and-text.csv',
               [r for r in audit if r['status'] == 'excluded_map_or_text'], fields)
+    write_csv(args.output / 'excluded-without-images.csv',
+              [r for r in audit if r['status'] == 'excluded_no_image'], fields)
     summary_fields = ['signature', 'meta_id', 'existing_raa_links', 'link_limit', 'search_hits', 'eligible_missing',
                       'proposed_additions', 'projected_total', 'search_status']
     write_csv(args.output / 'per-signum.csv', summaries, summary_fields)
@@ -294,6 +313,7 @@ def main():
                  missing_documents_checked=len(docs), errors=len(errors),
                  proposed_links=len(candidates), affected_signa=len({r['meta_id'] for r in candidates}),
                  proposed_documents=len({r['document_id'] for r in candidates}),
+                 excluded_without_image_links=sum(r['status'] == 'excluded_no_image' for r in audit),
                  already_over_limit=sum(s['existing_raa_links'] > args.max_total for s in summaries),
                  database_changed=False, max_total=args.max_total, photographs_only=args.photographs_only,
                  images_only=args.images_only, unlimited_signa=args.unlimited_signum)
