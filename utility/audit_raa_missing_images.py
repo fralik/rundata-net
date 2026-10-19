@@ -28,6 +28,28 @@ def normalize(value):
     return ' '.join(unicodedata.normalize('NFC', value).split()).casefold()
 
 
+def has_conflicting_text_signum(signature, title, description):
+    """Flag explicit contradictory references, not captions lacking signa."""
+    text = unicodedata.normalize('NFC', title + ' ' + description)
+    signature = unicodedata.normalize('NFC', signature)
+    exact = r'(?<!\w)' + re.escape(signature).replace(r'\ ', r'\s*') + r'(?!\w)'
+    if re.search(exact, text, re.I):
+        return False
+    prefix = signature.split(' ', 1)[0]
+    numeric = re.fullmatch(re.escape(prefix) + r'\s+(\d+)', signature, re.I)
+    # Shared captions may omit repeated prefixes, e.g. "Sö 167 och 168".
+    if numeric:
+        target = int(numeric.group(1))
+        pattern = r'(?<!\w)' + re.escape(prefix) + r'\s*(\d+)((?:\s*(?:,|och|&|samt|[-–])\s*\d+)+)'
+        for match in re.finditer(pattern, text, re.I):
+            numbers = [int(n) for n in re.findall(r'\d+', match.group())]
+            if target in numbers:
+                return False
+            if re.search(r'[-–]', match.group()) and len(numbers) == 2 and numbers[0] <= target <= numbers[1]:
+                return False
+    return bool(re.search(r'(?<!\w)' + re.escape(prefix) + r'\s*\d+', text, re.I))
+
+
 def document_id(url):
     decoded = unquote(unquote(url))
     match = re.search(r'pub\.raa\.se/(?:visa/)?dokumentation/(' + UUID.pattern + ')', decoded, re.I)
@@ -173,6 +195,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--db', type=Path, default=ROOT / 'rundatanet/static/runes/runes.sqlite3')
     parser.add_argument('--province', default='Sö')
+    parser.add_argument('--all-provinces', action='store_true',
+                        help='Search all signum groups instead of one province.')
+    parser.add_argument('--exclude-province', action='append', default=[],
+                        help='Skip this exact signum prefix; may be repeated.')
     parser.add_argument('--max-total', type=int, default=15)
     parser.add_argument('--unlimited-signum', action='append', default=[],
                         help='Signum exempt from the total-link cap; may be repeated.')
@@ -200,10 +226,17 @@ def main():
                     parser.error('Photo decisions must be include or exclude')
                 decisions[row['document_id']] = row
     db = sqlite3.connect(args.db.resolve().as_uri() + '?mode=ro', uri=True)
-    targets = db.execute('''SELECT m.id, s.signature_text FROM meta_information m
+    target_query = '''SELECT m.id, s.signature_text FROM meta_information m
         JOIN signatures s ON s.id=m.signature_id
-        WHERE s.parent_id IS NULL AND s.signature_text LIKE ? ORDER BY s.signature_text''',
-                         (args.province + ' %',)).fetchall()
+        WHERE s.parent_id IS NULL'''
+    if args.all_provinces:
+        targets = db.execute(target_query + ' ORDER BY s.signature_text').fetchall()
+    else:
+        targets = db.execute(target_query + ' AND s.signature_text LIKE ? ORDER BY s.signature_text',
+                             (args.province + ' %',)).fetchall()
+    excluded = {normalize(prefix) for prefix in args.exclude_province}
+    targets = [(mid, sig) for mid, sig in targets
+               if normalize(sig.split(' ', 1)[0]) not in excluded]
     if args.limit:
         targets = targets[:args.limit]
     unlimited = {normalize(sig) for sig in args.unlimited_signum}
@@ -261,6 +294,8 @@ def main():
                     row.update(status='excluded_no_image', reason=doc['reason'] or 'No public full-size image resource')
                 elif normalize(sig) not in {normalize(s) for s in doc['signa']}:
                     row.update(status='review', reason='Assigned signum absent from structured runsignum field')
+                elif has_conflicting_text_signum(sig, doc['title'], doc.get('description', '')):
+                    row.update(status='review', reason='Structured signum conflicts with explicit signa in title/description')
                 elif doc['reason']:
                     row.update(status='review')
                 elif args.images_only and not is_visual_material(doc['genre']):
@@ -323,7 +358,8 @@ def main():
                  excluded_without_image_links=sum(r['status'] == 'excluded_no_image' for r in audit),
                  already_over_limit=sum(s['existing_raa_links'] > args.max_total for s in summaries),
                  database_changed=False, max_total=args.max_total, photographs_only=args.photographs_only,
-                 images_only=args.images_only, unlimited_signa=args.unlimited_signum)
+                 images_only=args.images_only, unlimited_signa=args.unlimited_signum,
+                 all_provinces=args.all_provinces, excluded_provinces=args.exclude_province)
     (args.output / 'summary.json').write_text(json.dumps(stats, ensure_ascii=False, indent=2), encoding='utf-8')
     print(json.dumps(stats, ensure_ascii=False), flush=True)
 

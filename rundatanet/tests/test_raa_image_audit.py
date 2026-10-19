@@ -1,4 +1,5 @@
 import contextlib
+import csv
 import io
 import json
 from pathlib import Path
@@ -8,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from utility import audit_raa_missing_images as audit
+from utility import audit_imported_raa_images as imported_audit
 
 
 def uuid(number):
@@ -15,6 +17,86 @@ def uuid(number):
 
 
 class RaaAuditTests(unittest.TestCase):
+    def test_import_verification_recognizes_only_matching_documented_removals(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / 'audit/raa-test'
+            folder.mkdir(parents=True)
+            dbpath = root / 'test.sqlite3'
+            db = sqlite3.connect(dbpath)
+            db.executescript('''
+                CREATE TABLE signatures(id INTEGER, signature_text TEXT);
+                CREATE TABLE meta_information(id INTEGER, signature_id INTEGER);
+                CREATE TABLE runes_imagelink(id INTEGER, meta_id INTEGER, link_url TEXT, direct_url TEXT);
+                INSERT INTO signatures VALUES(1,'Sö 1'),(2,'Sö 2');
+                INSERT INTO meta_information VALUES(101,1),(102,2);
+            ''')
+            rows = [dict(image_id=str(i), meta_id=str(100+i), signature=f'Sö {i}', document_id=uuid(i),
+                         link_url='https://pub.raa.se/visa/dokumentation/' + uuid(i),
+                         direct_url='https://pub.raa.se/dokumentation/' + uuid(i) + '/visning/1/miniatyr')
+                    for i in [1, 2]]
+            db.execute('INSERT INTO runes_imagelink VALUES(?,?,?,?)',
+                       (2, 102, rows[1]['link_url'], rows[1]['direct_url']))
+            db.commit()
+            before = list(db.iterdump())
+            with (folder / 'imported-links.csv').open('w', newline='') as stream:
+                writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
+            removal = {key: value for key, value in rows[0].items() if key != 'image_id'}
+            removal['id'] = '1'
+            args = ['audit', '--db', str(dbpath), '--cache', str(root / 'cache'), '--output', str(root / 'out')]
+            for matches in [True, False]:
+                removal['link_url'] = rows[0]['link_url'] if matches else 'https://example.com/wrong'
+                with (folder / 'removed-test.csv').open('w', newline='') as stream:
+                    writer = csv.DictWriter(stream, fieldnames=removal.keys())
+                    writer.writeheader()
+                    writer.writerow(removal)
+                doc = dict(signa=['Sö 2'], title='Sö 2', description='', image_url='https://pub.raa.se/image')
+                with patch('sys.argv', args), patch.object(imported_audit, 'ROOT', root), \
+                        patch.object(imported_audit, 'inspect_document', return_value=doc), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    imported_audit.main()
+                summary = json.loads((root / 'out/summary.json').read_text())
+                expected = 'removed_by_request' if matches else 'database_mismatch'
+                self.assertEqual(summary['statuses'][expected], 1)
+                self.assertEqual(summary['statuses']['text_and_structured_match'], 1)
+                self.assertEqual(list(db.iterdump()), before)
+            db.close()
+
+    def test_text_conflicts_catch_wrong_metadata_without_substring_matches(self):
+        self.assertTrue(audit.has_conflicting_text_signum('DR 32', 'Runsignum DR 328', 'Bild 1: DR 328.'))
+        self.assertFalse(audit.has_conflicting_text_signum('DR 328', 'Runsignum DR 328', ''))
+        self.assertFalse(audit.has_conflicting_text_signum('Sö 168', 'Runstenar', 'Sö 167 och 168'))
+        self.assertFalse(audit.has_conflicting_text_signum('Sö 90', 'Sö 89–91', ''))
+        self.assertFalse(audit.has_conflicting_text_signum('DR 303', 'Kamskena av horn', 'Arngunn gav mig kammen.'))
+        self.assertTrue(audit.has_conflicting_text_signum('Sö 47', 'Bild 9: Sö 32', ''))
+
+    def test_remaining_groups_exclude_exact_prefix_without_excluding_similar_prefix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            dbpath = root / 'test.sqlite3'
+            db = sqlite3.connect(dbpath)
+            db.executescript('''
+                CREATE TABLE signatures(id INTEGER, signature_text TEXT, parent_id INTEGER);
+                CREATE TABLE meta_information(id INTEGER, signature_id INTEGER);
+                CREATE TABLE runes_imagelink(meta_id INTEGER, link_url TEXT, direct_url TEXT);
+                INSERT INTO signatures VALUES(1,'G 1',NULL),(2,'Gs 1',NULL),(3,'N 1',NULL),
+                    (4,'U 1',NULL),(5,'Sö 1',NULL),(6,'G 1a',1);
+                INSERT INTO meta_information VALUES(1,1),(2,2),(3,3),(4,4),(5,5),(6,6);
+            ''')
+            db.commit()
+            before = list(db.iterdump())
+            args = ['audit', '--db', str(dbpath), '--output', str(root / 'out'),
+                    '--cache', str(root / 'cache'), '--all-provinces',
+                    '--exclude-province', 'G', '--exclude-province', 'U', '--exclude-province', 'Sö']
+            with patch('sys.argv', args), patch.object(audit, 'search', return_value={}) as search, \
+                    contextlib.redirect_stdout(io.StringIO()):
+                audit.main()
+            self.assertEqual({call.args[0] for call in search.call_args_list}, {'Gs 1', 'N 1'})
+            self.assertEqual(list(db.iterdump()), before)
+            db.close()
+
     def test_visual_material_includes_drawings_but_excludes_maps_and_text(self):
         for genre in ['Fotografi', 'Teckning', 'Plansch', 'Tryck']:
             self.assertTrue(audit.is_visual_material(genre), genre)

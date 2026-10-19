@@ -1,0 +1,18 @@
+{
+  "remaining_signa": 3412,
+  "remaining_groups": 36,
+  "remaining_proposed_links": 47,
+  "remaining_affected_signa": 30,
+  "sodermanland_supplement_links": 47,
+  "sodermanland_supplement_affected_signa": 28,
+  "total_proposed_links": 94,
+  "total_affected_signa": 58,
+  "errors": 0,
+  "database_changed": false,
+  "sources": [
+    "audit/raa-remaining-20261019",
+    "audit/raa-sodermanland-supplement-20261019"
+  ],
+  "confirmed_wrong_signum_excluded": 1,
+  "additional_text_conflict_withheld": 1
+}

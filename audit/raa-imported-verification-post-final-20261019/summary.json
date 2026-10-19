@@ -1,0 +1,11 @@
+{
+  "imported_links": 1124,
+  "unique_documents": 912,
+  "affected_signa": 630,
+  "statuses": {
+    "text_and_structured_match": 871,
+    "structured_match_only": 252,
+    "removed_by_request": 1
+  },
+  "database_changed": false
+}
