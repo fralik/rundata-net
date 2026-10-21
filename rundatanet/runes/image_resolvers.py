@@ -4,7 +4,7 @@ import ssl
 from html import unescape
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote, unquote, urljoin, urlparse
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -77,13 +77,69 @@ def resolve_image_link(link_url: str, direct_url: str = "", timeout: int = 15) -
         return resolve_sormlandsmuseum_image(link_url, direct_url, timeout=timeout)
     if is_digitaltmuseum_url(link_url):
         return resolve_digitaltmuseum_image(link_url, direct_url, timeout=timeout)
+    if is_runer_ku_url(link_url) or is_runer_ku_url(direct_url):
+        return resolve_runer_ku_image(link_url, direct_url)
+    if is_arild_hauge_url(link_url) or is_arild_hauge_url(direct_url):
+        return resolve_arild_hauge_image(link_url, direct_url)
     raise ImageResolveError("No resolver is available for this image source.")
 
 
 def is_supported_image_source(*urls: str) -> bool:
     return bool(
         extract_raa_document_uuid(*urls)
-        or any(is_sormlandsmuseum_url(url) or is_digitaltmuseum_url(url) for url in urls)
+        or any(
+            is_sormlandsmuseum_url(url) or is_digitaltmuseum_url(url)
+            or is_runer_ku_url(url) or is_arild_hauge_url(url)
+            for url in urls
+        )
+    )
+
+
+def is_runer_ku_url(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.scheme in {"http", "https"} and parsed.hostname == "runer.ku.dk"
+
+
+def resolve_runer_ku_image(link_url: str, direct_url: str = "") -> ResolvedImage:
+    # Keep the selected image: an object page can contain several photographs.
+    image_url = direct_url or link_url
+    filename = unquote(_filename_from_url(image_url))
+    if not is_runer_ku_url(image_url) or _media_type_from_filename(filename) == "application/octet-stream":
+        raise ImageResolveError("No direct Runer KU image resource was found.")
+    return ResolvedImage(
+        provider="Runer KU",
+        source_url=link_url or direct_url,
+        download_url=quote(image_url, safe=":/?&=%+#"),
+        thumbnail_url=quote(image_url, safe=":/?&=%+#"),
+        file_name=filename,
+        media_type=_media_type_from_filename(filename),
+        file_size=None,
+        license_url="",
+        license_name="",
+    )
+
+
+def is_arild_hauge_url(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.scheme in {"http", "https"} and parsed.hostname in {"arild-hauge.com", "www.arild-hauge.com"}
+
+
+def resolve_arild_hauge_image(link_url: str, direct_url: str = "") -> ResolvedImage:
+    image_url = unescape(direct_url or link_url)
+    filename = unquote(_filename_from_url(image_url))
+    if not is_arild_hauge_url(image_url) or _media_type_from_filename(filename) == "application/octet-stream":
+        raise ImageResolveError("No direct Arild Hauge image resource was found.")
+    image_url = quote(image_url, safe=":/?&=%+#")
+    return ResolvedImage(
+        provider="Arild Hauge",
+        source_url=link_url or direct_url,
+        download_url=image_url,
+        thumbnail_url=image_url,
+        file_name=filename,
+        media_type=_media_type_from_filename(filename),
+        file_size=None,
+        license_url="",
+        license_name="",
     )
 
 
@@ -280,6 +336,8 @@ def _media_type_from_filename(filename: str) -> str:
         return "image/jpeg"
     if extension == "png":
         return "image/png"
+    if extension == "gif":
+        return "image/gif"
     if extension in {"tif", "tiff"}:
         return "image/tiff"
     return "application/octet-stream"
