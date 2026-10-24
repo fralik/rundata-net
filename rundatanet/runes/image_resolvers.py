@@ -2,6 +2,7 @@ import json
 import re
 import ssl
 from html import unescape
+from html.parser import HTMLParser
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import quote, unquote, urljoin, urlparse
@@ -27,6 +28,7 @@ DIGITALT_MUSEUM_RE = re.compile(
     r"digitaltmuseum\.(?:se|no|org)/(?P<dimu_code>\d+)",
     re.IGNORECASE,
 )
+SHM_UUID_PATTERN = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
 
 @dataclass(frozen=True)
@@ -40,6 +42,7 @@ class ResolvedImage:
     file_size: int | None
     license_url: str
     license_name: str
+    creator: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -52,6 +55,7 @@ class ResolvedImage:
             "file_size": self.file_size,
             "license_url": self.license_url,
             "license_name": self.license_name,
+            "creator": self.creator,
         }
 
 
@@ -81,6 +85,8 @@ def resolve_image_link(link_url: str, direct_url: str = "", timeout: int = 15) -
         return resolve_runer_ku_image(link_url, direct_url)
     if is_arild_hauge_url(link_url) or is_arild_hauge_url(direct_url):
         return resolve_arild_hauge_image(link_url, direct_url)
+    if is_shm_url(link_url):
+        return resolve_shm_image(link_url, direct_url, timeout=timeout)
     raise ImageResolveError("No resolver is available for this image source.")
 
 
@@ -90,8 +96,127 @@ def is_supported_image_source(*urls: str) -> bool:
         or any(
             is_sormlandsmuseum_url(url) or is_digitaltmuseum_url(url)
             or is_runer_ku_url(url) or is_arild_hauge_url(url)
+            or is_shm_url(url)
             for url in urls
         )
+    )
+
+
+def is_shm_url(url: str) -> bool:
+    parsed = urlparse(url)
+    return (
+        parsed.scheme in {"http", "https"}
+        and parsed.hostname == "samlingar.shm.se"
+        and bool(re.fullmatch(rf"/(?:object|media)/{SHM_UUID_PATTERN}/?", parsed.path, re.I))
+    )
+
+
+def _shm_image_id(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname != "media.samlingar.shm.se":
+        return ""
+    match = re.fullmatch(rf"/item/({SHM_UUID_PATTERN})(?:/(?:thumbnail|small|medium|large))?/?", parsed.path, re.I)
+    return match[1].lower() if match else ""
+
+
+class _ShmPageParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.urls = []
+        self.downloads = []
+        self.image_url = ""
+        self.fields = {}
+        self.license_slug = ""
+        self._cell = ""
+        self._header = ""
+        self._text = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        for key in ("href", "src", "content", "data-url"):
+            if attrs.get(key):
+                self.urls.append(attrs[key])
+        if tag == "meta" and attrs.get("property") == "og:image":
+            self.image_url = attrs.get("content", "")
+        if tag == "a" and "download" in attrs and attrs.get("href"):
+            self.downloads.append(attrs["href"])
+        if tag in {"th", "td"}:
+            self._cell = tag
+            self._text = []
+        if self._cell == "td" and self._header == "Licens för media":
+            match = re.search(r"\blicense-icon-collection--([\w-]+)", attrs.get("class", ""))
+            if match:
+                self.license_slug = match[1]
+
+    def handle_data(self, data):
+        if self._cell:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == self._cell:
+            value = " ".join(" ".join(self._text).split())
+            if tag == "th":
+                self._header = value
+            else:
+                self.fields[self._header] = value
+            self._cell = ""
+
+
+def resolve_shm_image(link_url: str, direct_url: str = "", timeout: int = 15) -> ResolvedImage:
+    source = _ShmPageParser()
+    source.feed(fetch_url_bytes(link_url, timeout=timeout).decode("utf-8", errors="replace"))
+    if "/object/" in urlparse(link_url).path:
+        image_id = _shm_image_id(direct_url or source.image_url)
+        if not image_id or image_id not in {_shm_image_id(url) for url in source.urls}:
+            raise ImageResolveError("The selected SHM image is not attached to this object.")
+        media = _ShmPageParser()
+        media.feed(fetch_url_bytes(f"https://samlingar.shm.se/media/{image_id}", timeout=timeout).decode("utf-8", errors="replace"))
+    else:
+        image_id = urlparse(link_url).path.rstrip("/").rsplit("/", 1)[-1].lower()
+        if direct_url and _shm_image_id(direct_url) != image_id:
+            raise ImageResolveError("The selected SHM image does not match the media page.")
+        media = source
+    download_url = next((url for url in media.downloads if _shm_image_id(url) == image_id
+                         and urlparse(url).path.rstrip("/").lower() == f"/item/{image_id}"), "")
+    media_type = media.fields.get("Mediatyp", "").lower()
+    file_size = None
+    if download_url and not media_type:
+        # Some SHM media pages omit Mediatyp; read the original's HTTP metadata.
+        request = Request(download_url, method="HEAD", headers={"User-Agent": "Rundata-net image export"})
+        ssl_context = ssl.create_default_context(cafile=certifi.where() if certifi else None)
+        try:
+            with urlopen(request, timeout=timeout, context=ssl_context) as response:
+                media_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+                length = response.headers.get("Content-Length", "")
+                file_size = int(length) if length.isdecimal() else None
+        except (HTTPError, URLError, TimeoutError) as error:
+            raise ImageResolveError("Could not read SHM image metadata.") from error
+    extensions = {"image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/tiff": "tif", "image/webp": "webp"}
+    if not download_url or media_type not in extensions:
+        raise ImageResolveError("No downloadable SHM image resource was found.")
+    slug = media.license_slug
+    license_url = ""
+    license_name = media.fields.get("Licens för media", "")
+    match = re.fullmatch(r"cc-(by(?:-nc)?(?:-nd|-sa)?)-(\d+)_(\d+)", slug)
+    if match:
+        version = f"{match[2]}.{match[3]}"
+        license_name = f"CC {match[1].upper()} {version}"
+        license_url = f"https://creativecommons.org/licenses/{match[1]}/{version}/"
+    elif slug in {"cc0", "cc0-1_0", "pdm", "public-domain", "public-domain-mark"}:
+        zero = slug.startswith("cc0")
+        license_name = "CC0 1.0" if zero else "Public Domain Mark"
+        license_url = f"https://creativecommons.org/publicdomain/{'zero' if zero else 'mark'}/1.0/"
+    return ResolvedImage(
+        provider="SHM",
+        source_url=link_url,
+        download_url=download_url,
+        thumbnail_url=direct_url or f"https://media.samlingar.shm.se/item/{image_id}/thumbnail",
+        file_name=f"shm-{image_id}.{extensions[media_type]}",
+        media_type=media_type,
+        file_size=file_size,
+        license_url=license_url,
+        license_name=license_name,
+        creator=media.fields.get("Fotograf", ""),
     )
 
 

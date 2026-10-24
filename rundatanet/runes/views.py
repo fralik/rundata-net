@@ -165,6 +165,7 @@ def export_raa_images_zip(request):
                     resolved.file_size or "",
                     resolved.license_name,
                     resolved.license_url,
+                    resolved.creator,
                 ]
             )
 
@@ -181,6 +182,7 @@ def export_raa_images_zip(request):
             "file_size",
             "license_name",
             "license_url",
+            "creator",
         ]))
         archive.writestr("skipped-images.csv", _image_export_csv(skipped_rows, [
             "signature",
@@ -191,7 +193,7 @@ def export_raa_images_zip(request):
         archive.writestr(
             "README.txt",
             "Images exported from Rundata-net search results.\n\n"
-            "This image export version supports RAÄ, Sörmlands museum, Digitalt museum, Runer KU, and Arild Hauge image sources.\n"
+            "This image export version supports RAÄ, Sörmlands museum, Digitalt museum, Runer KU, Arild Hauge, and SHM image sources.\n"
             "Users must check image licences and reuse conditions with the original source before publishing or sharing downloaded images.\n",
         )
 

@@ -2752,6 +2752,7 @@ function isRaaImageLink(link) {
       || /^https?:\/\/runer\.ku\.dk\//i.test(String(link.direct || ''))
       || /^https?:\/\/(?:www\.)?arild-hauge\.com\//i.test(String(link.indirect || ''))
       || /^https?:\/\/(?:www\.)?arild-hauge\.com\//i.test(String(link.direct || ''))
+      || /^https?:\/\/samlingar\.shm\.se\/(?:object|media)\/[0-9a-f-]+(?:[/?#]|$)/i.test(String(link.indirect || ''))
     )
   );
 }

@@ -1,6 +1,7 @@
+import csv
 import json
 import zipfile
-from io import BytesIO
+from io import BytesIO, StringIO
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, TestCase
@@ -29,6 +30,31 @@ DIGITALT_MUSEUM_DOWNLOAD_URL = (
 )
 DIGITALT_MUSEUM_THUMBNAIL_URL = "https://ems.dimu.org/image/022s93Xu15Yc?dimension=1200x1200"
 DIGITALT_MUSEUM_LICENSE_URL = "https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en"
+SHM_OBJECT_URL = "https://samlingar.shm.se/object/BD0ABD5C-09DE-4A1E-B271-7F04E724A059"
+SHM_IMAGE_ID = "f65a25f3-dc74-4f47-9e97-d1534fa5eae9"
+SHM_MEDIA_URL = f"https://samlingar.shm.se/media/{SHM_IMAGE_ID}"
+SHM_DOWNLOAD_URL = f"https://media.samlingar.shm.se/item/{SHM_IMAGE_ID}"
+SHM_THUMBNAIL_URL = SHM_DOWNLOAD_URL + "/thumbnail"
+SHM_OTHER_ID = "45b9f342-ecc4-44f2-89cd-43128fcf1e37"
+SHM_OBJECT_HTML = f"""
+<meta property="og:image" content="https://media.samlingar.shm.se/item/{SHM_OTHER_ID}/large">
+<a download href="{SHM_DOWNLOAD_URL}">Ladda ner media</a>
+""".encode()
+
+
+def shm_media_html(license_slug="cc-by-4_0", media_type="image/jpeg"):
+    return f"""
+    <table>
+      <tr><th>Mediatyp</th><td><div>{media_type}</div></td></tr>
+      <tr><th>Fotograf</th><td><a>Huber, John-Björn</a></td></tr>
+      <tr><th>Licens för media</th><td>
+        <span class="license-icon-collection license-icon-collection--{license_slug}"></span>
+      </td></tr>
+    </table>
+    <p>All textinformation (metadata) på denna sida är fri att använda enligt licensen CC0.</p>
+    <a href="https://media.samlingar.shm.se/item/{SHM_OTHER_ID}" download>Other image</a>
+    <a class="download-button" href="{SHM_DOWNLOAD_URL}" download>Ladda ner media</a>
+    """.encode()
 
 
 def raa_document_json():
@@ -121,6 +147,87 @@ class FakeDigitaltMuseumUrlopenResponse:
           </body>
         </html>
         """.encode("utf-8")
+
+
+class TestShmImageResolver(SimpleTestCase):
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_preserves_selected_photo_and_reads_its_own_rights(self, mocked_fetch):
+        mocked_fetch.side_effect = [SHM_OBJECT_HTML, shm_media_html()]
+        resolved = resolve_image_link(SHM_OBJECT_URL, SHM_THUMBNAIL_URL, timeout=7)
+        assert is_supported_image_source(SHM_OBJECT_URL)
+        assert resolved.provider == "SHM"
+        assert resolved.source_url == SHM_OBJECT_URL
+        assert resolved.download_url == SHM_DOWNLOAD_URL
+        assert resolved.thumbnail_url == SHM_THUMBNAIL_URL
+        assert resolved.file_name == f"shm-{SHM_IMAGE_ID}.jpg"
+        assert resolved.media_type == "image/jpeg"
+        assert resolved.license_name == "CC BY 4.0"
+        assert resolved.license_url == "https://creativecommons.org/licenses/by/4.0/"
+        assert resolved.creator == "Huber, John-Björn"
+        assert mocked_fetch.call_args.args[0] == SHM_MEDIA_URL
+        assert mocked_fetch.call_args.kwargs["timeout"] == 7
+
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_uses_object_image_when_no_thumbnail_was_saved(self, mocked_fetch):
+        mocked_fetch.side_effect = [f'<meta content="{SHM_DOWNLOAD_URL}/large" property="og:image">'.encode(), shm_media_html()]
+        assert resolve_image_link(SHM_OBJECT_URL).download_url == SHM_DOWNLOAD_URL
+
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_reads_media_pages_and_public_domain_license(self, mocked_fetch):
+        mocked_fetch.return_value = shm_media_html("pdm", "image/tiff")
+        resolved = resolve_image_link(SHM_MEDIA_URL)
+        assert resolved.media_type == "image/tiff"
+        assert resolved.file_name.endswith(".tif")
+        assert resolved.license_name == "Public Domain Mark"
+        assert resolved.license_url == "https://creativecommons.org/publicdomain/mark/1.0/"
+        mocked_fetch.assert_called_once_with(SHM_MEDIA_URL, timeout=15)
+
+    @patch("rundatanet.runes.image_resolvers.urlopen")
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_missing_media_type_is_read_from_the_original_headers(self, mocked_fetch, mocked_open):
+        mocked_fetch.return_value = shm_media_html().replace(
+            b'<tr><th>Mediatyp</th><td><div>image/jpeg</div></td></tr>', b'')
+        mocked_open.return_value.__enter__.return_value.headers = {
+            "Content-Type": "image/jpeg", "Content-Length": "12345"}
+        resolved = resolve_image_link(SHM_MEDIA_URL)
+        assert resolved.media_type == "image/jpeg"
+        assert resolved.file_size == 12345
+        assert mocked_open.call_args.args[0].get_method() == "HEAD"
+        assert mocked_open.call_args.args[0].full_url == SHM_DOWNLOAD_URL
+
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_preserves_restrictive_media_license(self, mocked_fetch):
+        mocked_fetch.return_value = shm_media_html("cc-by-nc-nd-2_5")
+        resolved = resolve_image_link(SHM_MEDIA_URL)
+        assert resolved.license_name == "CC BY-NC-ND 2.5"
+        assert resolved.license_url == "https://creativecommons.org/licenses/by-nc-nd/2.5/"
+
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes", return_value=SHM_OBJECT_HTML)
+    def test_rejects_a_thumbnail_that_is_not_attached_to_the_object(self, mocked_fetch):
+        for direct in (SHM_DOWNLOAD_URL.replace(SHM_IMAGE_ID, "00000000-0000-0000-0000-000000000000"),
+                       "https://example.org/image.jpg"):
+            with self.assertRaises(ImageResolveError):
+                resolve_image_link(SHM_OBJECT_URL, direct)
+
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_does_not_infer_a_license_from_the_metadata_cc0_notice(self, mocked_fetch):
+        mocked_fetch.return_value = shm_media_html("unknown-license")
+        resolved = resolve_image_link(SHM_MEDIA_URL)
+        assert resolved.license_name == resolved.license_url == ""
+
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_rejects_missing_original_or_non_image_media(self, mocked_fetch):
+        for page in (shm_media_html().replace(b" download", b" data-download"),
+                     shm_media_html(media_type="application/pdf"),
+                     b"<html>Service unavailable</html>"):
+            mocked_fetch.return_value = page
+            with self.assertRaises(ImageResolveError):
+                resolve_image_link(SHM_MEDIA_URL)
+
+    def test_rejects_lookalike_hosts_and_non_object_paths(self):
+        for url in (SHM_OBJECT_URL.replace("shm.se", "shm.se.example.org"),
+                    "https://example.org/samlingar.shm.se/object/test", "https://samlingar.shm.se/person/test"):
+            assert not is_supported_image_source(url)
 
 
 class TestArildHaugeImageResolver(SimpleTestCase):
@@ -289,6 +396,28 @@ class TestResolveImageDownloadView(TestCase):
             assert "Arild Hauge" in metadata
             assert "image/gif" in metadata
         mocked_fetch.assert_called_once_with(image_url)
+
+    @patch("rundatanet.runes.views.fetch_url_bytes", return_value=b"shm-original-image")
+    @patch("rundatanet.runes.image_resolvers.fetch_url_bytes")
+    def test_export_shm_zip_includes_original_and_attribution(self, mocked_metadata, mocked_image):
+        mocked_metadata.side_effect = [SHM_OBJECT_HTML, shm_media_html()]
+        self.image.link_url = SHM_OBJECT_URL
+        self.image.direct_url = SHM_THUMBNAIL_URL
+        self.image.save(using="runes_db")
+        response = self.client.post(
+            reverse("runes:export_raa_images_zip"),
+            data=json.dumps({"inscriptions": [{"signature": "Öl 26", "image_ids": [self.image.id]}]}),
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        with zipfile.ZipFile(BytesIO(response.content)) as archive:
+            assert archive.read("images/0001-ol-26.jpg") == b"shm-original-image"
+            metadata = list(csv.DictReader(StringIO(archive.read("metadata.csv").decode("utf-8-sig"))))
+            assert metadata[0]["provider"] == "SHM"
+            assert metadata[0]["download_url"] == SHM_DOWNLOAD_URL
+            assert metadata[0]["creator"] == "Huber, John-Björn"
+            assert metadata[0]["license_name"] == "CC BY 4.0"
+        mocked_image.assert_called_once_with(SHM_DOWNLOAD_URL)
 
     @patch("rundatanet.runes.image_resolvers.urlopen", return_value=FakeUrlopenResponse())
     def test_export_raa_images_zip_returns_archive_with_metadata(self, mocked_urlopen):
